@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Question } from "@/lib/types";
 import { formatDay } from "@/lib/format";
 import { WaxSeal, CancellationMark, PostageStamp } from "./stamp-badge";
@@ -15,6 +16,11 @@ interface RandomLetterModalProps {
 export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModalProps) {
   const [selected, setSelected] = useState<Question | null>(null);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen && letters.length > 0) {
@@ -23,16 +29,19 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
+      document.body.style.overflow = originalOverflow;
     };
   }, [isOpen, onClose]);
 
@@ -46,18 +55,21 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
     }, 280);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
-      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md"
+      className="modal-backdrop fixed inset-0 z-50 overflow-y-auto overscroll-contain backdrop-blur-md"
       style={{ backgroundColor: "rgba(20, 18, 16, 0.65)" }}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        className="modal-card relative w-full max-w-[540px]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex min-h-full min-h-dvh w-full justify-center p-4 py-8 sm:p-6 sm:py-12">
+        <div
+          className="modal-card relative my-auto w-full max-w-[540px]"
+          onClick={(e) => e.stopPropagation()}
+        >
         <div className="sheet-shadow relative overflow-hidden border border-rule bg-paper-soft p-7 md:p-10">
           {/* 顶部标签 */}
           <div className="flex items-center justify-between border-b border-rule/70 pb-4">
@@ -161,5 +173,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
         </div>
       </div>
     </div>
-  );
+  </div>,
+  document.body
+);
 }

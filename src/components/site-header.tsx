@@ -37,7 +37,21 @@ export function SiteHeader() {
       }`}
     >
       <div className="mx-auto flex h-[72px] max-w-[1180px] items-center justify-between px-6 md:px-10">
-        <Link href="/" className="group flex items-center gap-3">
+        <Link
+          href="/"
+          onClick={(e) => {
+            if (typeof window !== "undefined" && window.location.pathname === "/") {
+              e.preventDefault();
+              if (window.scrollY > 0 || window.location.hash) {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                if (window.location.hash) {
+                  history.pushState(null, "", "/");
+                }
+              }
+            }
+          }}
+          className="group flex items-center gap-3"
+        >
           <SealMark className="transition-transform duration-500 group-hover:rotate-0 group-hover:scale-108" />
           <span className="flex flex-col">
             <span className="font-song text-[16px] tracking-[0.24em] text-ink transition-colors group-hover:text-seal">

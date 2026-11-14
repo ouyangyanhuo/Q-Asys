@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Question } from "@/lib/types";
 import { formatFullDate } from "@/lib/format";
 import { PostageStamp, CancellationMark, WaxSeal } from "./stamp-badge";
@@ -15,22 +16,30 @@ interface ShareModalProps {
 
 export function ShareModal({ question, number, isOpen, onClose }: ShareModalProps) {
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
+      document.body.style.overflow = originalOverflow;
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/q/${question.id}`;
@@ -46,16 +55,19 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
     });
   };
 
-  return (
+  return createPortal(
     <div
-      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md"
+      className="modal-backdrop fixed inset-0 z-50 overflow-y-auto overscroll-contain backdrop-blur-md"
       style={{ backgroundColor: "rgba(20, 18, 16, 0.65)" }}
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        className="modal-card relative w-full max-w-[560px]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex min-h-full min-h-dvh w-full justify-center p-4 py-8 sm:p-6 sm:py-12">
+        <div
+          className="modal-card relative my-auto w-full max-w-[560px]"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* 卡片主体：传统八行笺雅致风格 */}
         <div
           ref={cardRef}
@@ -162,5 +174,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
         </div>
       </div>
     </div>
-  );
+  </div>,
+  document.body
+);
 }

@@ -35,7 +35,7 @@ export default async function HomePage() {
 
               <div className="reveal flex items-center gap-3 font-hei text-[11px] tracking-[0.38em] text-ink-faint">
                 <span className="h-1.5 w-1.5 rounded-full bg-seal/80" />
-                <span>独白与回信 · 自二〇二四年</span>
+                <span>独白与回信 · 始于二〇二六年十一月</span>
               </div>
 
               <h1
