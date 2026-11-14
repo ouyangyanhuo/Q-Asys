@@ -20,7 +20,7 @@ export function SiteFooter({
           </div>
 
           <div className="flex items-center gap-3">
-            <ThemeToggle />
+            <ThemeToggle placement="top" />
             <Link
               href="/admin"
               className="group flex items-center gap-2 border border-rule bg-paper px-4 py-2 font-hei text-[11px] tracking-[0.2em] text-ink-soft transition-colors hover:border-seal/50 hover:text-seal"

@@ -106,8 +106,9 @@ html[data-theme="night"] {
   background-position: 0 10px;
 }
 
-/* 只画横格、不设行高：铺满整块书写区（含便签区），
-   便签隐去之后纸面仍是完整的一张信纸 */
+/* 只画横格、不设行高：铺满整块书写区。
+   便签条是压在上面的一段纸带，隐去后格线自然接续成整张信纸。
+   末端的格线做淡出，避免裁在纸边留下一道半截线。 */
 .ruled-field {
   background-image: repeating-linear-gradient(
     to bottom,
@@ -117,6 +118,16 @@ html[data-theme="night"] {
     var(--color-rule) 34px
   );
   background-position: 0 10px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 18px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 18px),
+    transparent 100%
+  );
 }
 
 /* 传统八行笺红丝栏竖线 */

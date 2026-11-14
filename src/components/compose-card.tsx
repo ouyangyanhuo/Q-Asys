@@ -92,12 +92,13 @@ export function ComposeCard() {
           <div className="mt-3.5 h-px bg-rule" />
         </div>
 
-        {/* 输入区域：横格铺满整张纸，便签浮于其上。
-            写入后便签只淡出、不移除，纸面高度自始至终不变。 */}
+        {/* 输入区域：横格铺满整张纸。灵感笺条是一段压在上面的纸带，
+            自带底色盖住格线；落笔后只淡出、不移除，纸面高度自始至终不变。 */}
         <div className="px-6 md:px-9">
           <div className="relative pt-2">
+            {/* 横格层从输入框顶端起算（top-2 对应外层 pt-2），保证文字正好落在格线上 */}
             <div
-              className="ruled-field pointer-events-none absolute inset-0"
+              className="ruled-field pointer-events-none absolute inset-x-0 bottom-0 top-2"
               aria-hidden="true"
             />
 
@@ -119,12 +120,12 @@ export function ComposeCard() {
               rows={6}
               spellCheck={false}
               placeholder="有何见问？不必斟酌字句，如实写下便好…"
-              className="relative block w-full resize-none bg-transparent pb-1 pt-[10px] font-kai text-[17.5px] leading-[34px] text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/50"
+              className="relative block w-full resize-none bg-transparent pb-2 pt-[10px] font-kai text-[17.5px] leading-[34px] text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/50"
             />
 
             {/* 灵感便签条：常驻占位，仅淡出 */}
             <div
-              className={`relative pb-2 transition-opacity duration-500 ${
+              className={`relative mt-2 border-t border-dotted border-rule/70 bg-paper-soft pt-3 pb-3 transition-opacity duration-500 ${
                 count === 0
                   ? "opacity-100"
                   : "pointer-events-none opacity-0"

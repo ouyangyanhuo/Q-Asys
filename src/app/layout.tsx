@@ -25,13 +25,27 @@ export const viewport: Viewport = {
 const THEME_SCRIPT = `
 (function() {
   try {
-    var stored = localStorage.getItem('qasys-theme');
-    var isDark = stored === 'night' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (isDark) {
-      document.documentElement.setAttribute('data-theme', 'night');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
+    var root = document.documentElement;
+    var mode = localStorage.getItem('qasys-theme-mode');
+    if (mode !== 'day' && mode !== 'night' && mode !== 'clock' && mode !== 'system') {
+      var legacy = localStorage.getItem('qasys-theme');
+      mode = (legacy === 'day' || legacy === 'night') ? legacy : 'clock';
     }
+    var tone;
+    if (mode === 'day' || mode === 'night') {
+      tone = mode;
+    } else if (mode === 'system') {
+      tone = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
+    } else {
+      var hour = new Date().getHours();
+      tone = (hour >= 18 || hour < 7) ? 'night' : 'day';
+    }
+    if (tone === 'night') {
+      root.setAttribute('data-theme', 'night');
+    } else {
+      root.removeAttribute('data-theme');
+    }
+    root.style.colorScheme = tone === 'night' ? 'dark' : 'light';
   } catch (e) {}
 })();
 `;

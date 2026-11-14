@@ -12,7 +12,6 @@ const INSPIRATION_PROMPTS = [
   "深夜失眠的时候，你通常会想些什么？",
   "那些慢慢走散的朋友，你还会偶尔想起来吗？",
   "做过最勇敢、但没人知道的决定是什么？",
-  "今天，你过得开心吗？",
   "今晨推窗，可曾为哪一缕风驻足？",
   "近来可有一事，令你几欲落泪又忍住？",
   "你心中可有「虽千万人吾往矣」的倔强？",
@@ -73,7 +72,7 @@ export function PromptChips({ onSelectPrompt }: PromptChipsProps) {
   ];
 
   return (
-    <div className="mt-4 flex flex-col gap-2">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between font-hei text-[10.5px] tracking-[0.2em] text-ink-faint">
         <span className="flex items-center gap-1.5">
           <svg className="h-3 w-3 text-seal/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
