@@ -1,6 +1,34 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { formatDay } from "@/lib/format";
-import type { Question } from "@/lib/store";
+import { formatDay, formatFullDate } from "@/lib/format";
+import type { Question } from "@/lib/types";
+import { ShareModal } from "./share-modal";
+import { PostageStamp, CancellationMark, type StampTheme, type StampColor } from "./stamp-badge";
+import { showToast } from "./toast";
+
+const STAMP_THEMES: StampTheme[] = [
+  "lantern",
+  "moon",
+  "quill",
+  "boat",
+  "letter",
+  "sprout",
+];
+
+const STAMP_COLORS: StampColor[] = [
+  "seal",
+  "amber",
+  "forest",
+  "indigo",
+  "ink",
+];
+
+interface Spark {
+  id: number;
+  x: number;
+}
 
 export function Letter({
   q,
@@ -11,45 +39,213 @@ export function Letter({
   number: number;
   index?: number;
 }) {
+  const [resonated, setResonated] = useState(false);
+  const [resonanceCount, setResonanceCount] = useState(
+    Math.abs(q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % 24) + 6
+  );
+  const [shareOpen, setShareOpen] = useState(false);
+  const [sparks, setSparks] = useState<Spark[]>([]);
+
+  // 依据信件唯一 id 确定性推算专属邮票与印色
+  const hash = Math.abs(q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0));
+  const stampTheme = STAMP_THEMES[hash % STAMP_THEMES.length];
+  const stampColor = STAMP_COLORS[(hash >> 2) % STAMP_COLORS.length];
+  const stampPrice = String(50 + (hash % 50));
+
+  const handleResonate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!resonated) {
+      setResonated(true);
+      setResonanceCount((prev) => prev + 1);
+
+      // 产生向上漂浮消散的微光粒子
+      const newSparks: Spark[] = [
+        { id: Date.now() + 1, x: -14 },
+        { id: Date.now() + 2, x: 2 },
+        { id: Date.now() + 3, x: 16 },
+      ];
+      setSparks(newSparks);
+      setTimeout(() => setSparks([]), 900);
+
+      showToast("微光已共鸣，温意渐起");
+    }
+  };
+
   return (
-    <article
-      className="reveal group"
-      style={{ animationDelay: `${Math.min(index, 5) * 80}ms` }}
-    >
-      <div className="flex items-center gap-3 font-hei text-[10px] tracking-[0.24em] text-ink-faint">
-        <span className="font-mono tracking-normal text-ink-faint/90">
-          No.{String(number).padStart(3, "0")}
-        </span>
-        <span className="h-px flex-1 bg-rule" />
-        <time dateTime={q.createdAt}>{formatDay(q.createdAt)}</time>
-      </div>
+    <>
+      <article
+        className="reveal group relative overflow-hidden border border-rule/80 bg-paper-soft/80 p-6 transition-all duration-400 hover:-translate-y-1 hover:border-seal/40 hover:bg-paper-soft hover:shadow-[0_18px_40px_-20px_rgba(28,25,23,0.18)] md:p-8"
+        style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
+      >
+        {/* 信笺折角阴影暗纹 */}
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-10 w-10 bg-linear-to-bl from-paper-deep/70 via-transparent to-transparent transition-opacity duration-300 group-hover:opacity-100"
+          aria-hidden="true"
+        />
 
-      <Link href={`/q/${q.id}`} className="block">
-        <p className="mt-6 font-kai text-[20px] leading-[1.9] text-ink transition-colors duration-300 group-hover:text-seal md:text-[22px]">
-          {q.body}
-        </p>
-      </Link>
+        {/* 顶部元信息栏与邮票徽章 */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1.5 font-hei text-[10px] tracking-[0.2em] text-ink-faint">
+            <div className="flex items-center gap-2.5">
+              <span className="font-mono text-[11.5px] font-medium text-ink-faint/90">
+                NO.{String(number).padStart(3, "0")}
+              </span>
+              <span className="h-2 w-px bg-rule" />
+              <time dateTime={q.createdAt}>{formatDay(q.createdAt)}</time>
+            </div>
 
-      {q.nickname ? (
-        <p className="mt-3 text-right font-kai text-[12px] text-ink-faint">
-          —— {q.nickname}
-        </p>
-      ) : null}
+            <div className="flex items-center gap-2">
+              {q.answer ? (
+                <span className="inline-flex items-center gap-1 font-kai text-[11px] text-[#3f5f4b]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#3f5f4b]/80" />
+                  已回信
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 font-kai text-[11px] text-ink-faint/70">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rule" />
+                  等待回音
+                </span>
+              )}
+            </div>
+          </div>
 
-      {q.answer ? (
-        <div className="mt-7 flex gap-4">
-          <span className="mt-[7px] flex h-6 w-6 shrink-0 items-center justify-center border border-seal/45 font-kai text-[11px] leading-none text-seal">
-            答
-          </span>
-          <p className="whitespace-pre-wrap font-song text-[15.5px] leading-[2.05] text-ink-soft md:text-[16px]">
-            {q.answer}
-          </p>
+          {/* 右上角邮戳与迷你邮票：充满书信仪式感 */}
+          <div className="flex items-center gap-2 transition-transform duration-300 group-hover:scale-102">
+            <CancellationMark
+              date={q.createdAt ? q.createdAt.slice(0, 7).replace("-", ".") : "2026.11"}
+              location="拾光"
+              className="hidden scale-75 sm:inline-flex"
+            />
+            <PostageStamp
+              theme={stampTheme}
+              color={stampColor}
+              price={stampPrice}
+              size="sm"
+              className="shadow-xs transition-transform duration-300 group-hover:-rotate-2"
+            />
+          </div>
         </div>
-      ) : (
-        <p className="mt-7 pl-10 font-kai text-[12px] text-ink-faint/70">
-          尚未回信。
-        </p>
-      )}
-    </article>
+
+        {/* 问询信件正文 */}
+        <div className="mt-5">
+          <Link href={`/q/${q.id}`} className="block group/link">
+            <p className="font-kai text-[19px] leading-[1.88] text-ink transition-colors duration-300 group-hover/link:text-seal md:text-[21px]">
+              {q.body}
+            </p>
+          </Link>
+
+          {q.nickname ? (
+            <p className="mt-3 text-right font-kai text-[12.5px] text-ink-faint">
+              —— {q.nickname}
+            </p>
+          ) : (
+            <p className="mt-3 text-right font-kai text-[11.5px] text-ink-faint/60">
+              —— 匿名旅人
+            </p>
+          )}
+        </div>
+
+        {/* 回信区域 */}
+        {q.answer ? (
+          <div className="mt-6 border-t border-dashed border-rule/90 pt-5">
+            <div className="flex items-start gap-3.5">
+              <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11px] leading-none text-seal shadow-xs">
+                答
+              </span>
+              <div className="space-y-1.5">
+                <p className="whitespace-pre-wrap font-song text-[15px] leading-[2.1] text-ink-soft md:text-[15.5px]">
+                  {q.answer}
+                </p>
+                {q.answeredAt && (
+                  <p className="font-hei text-[9.5px] tracking-wider text-ink-faint/70">
+                    回于 {formatFullDate(q.answeredAt)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-5 border-t border-dashed border-rule/50 pt-3.5">
+            <p className="font-kai text-[12px] text-ink-faint/65">
+              这封信还在抽屉里，收信人读过后会慢慢写下回音。
+            </p>
+          </div>
+        )}
+
+        {/* 底部操作与微互动 */}
+        <div className="mt-7 flex items-center justify-between border-t border-rule/60 pt-4">
+          <div className="flex items-center gap-3">
+            {/* 共鸣微光按钮 */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleResonate}
+                title="送上一抹微光（共鸣）"
+                className={`relative flex items-center gap-1.5 rounded-full px-3 py-1 font-hei text-[11px] transition-all duration-300 ${
+                  resonated
+                    ? "bg-seal/10 text-seal font-medium shadow-xs"
+                    : "text-ink-faint hover:bg-paper-deep/40 hover:text-ink active:scale-95"
+                }`}
+              >
+                <svg
+                  className={`h-3.5 w-3.5 transition-transform duration-300 ${
+                    resonated ? "scale-110 text-seal" : ""
+                  }`}
+                  viewBox="0 0 24 24"
+                  fill={resonated ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z" />
+                </svg>
+                <span>{resonanceCount}</span>
+                <span className="hidden sm:inline">共鸣</span>
+              </button>
+
+              {/* 微光漂浮升腾粒子 */}
+              {sparks.map((spark) => (
+                <span
+                  key={spark.id}
+                  className="spark-rise pointer-events-none absolute left-1/2 top-0 h-2 w-2 rounded-full bg-[#f5b84c] shadow-[0_0_8px_#f5b84c]"
+                  style={{ "--spark-x": `${spark.x}px` } as React.CSSProperties}
+                />
+              ))}
+            </div>
+
+            {/* 分享 / 生成信笺按钮 */}
+            <button
+              type="button"
+              onClick={() => setShareOpen(true)}
+              className="flex items-center gap-1 rounded-full px-2.5 py-1 font-hei text-[11px] text-ink-faint transition-colors hover:bg-paper-deep/40 hover:text-ink active:scale-95"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+              <span>分享信笺</span>
+            </button>
+          </div>
+
+          <Link
+            href={`/q/${q.id}`}
+            className="group/arrow flex items-center gap-1 font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal"
+          >
+            <span>专属页</span>
+            <span className="transition-transform duration-300 group-hover/arrow:translate-x-1">→</span>
+          </Link>
+        </div>
+      </article>
+
+      {/* 分享弹窗 */}
+      <ShareModal
+        question={q}
+        number={number}
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+      />
+    </>
   );
 }

@@ -20,6 +20,19 @@
     monospace;
 }
 
+/* 烛光夜读模式：深墨暖烛色调 */
+html[data-theme="night"] {
+  --color-paper: #141210;
+  --color-paper-soft: #1c1815;
+  --color-paper-deep: #25201b;
+  --color-ink: #ede5d8;
+  --color-ink-soft: #b9ad9f;
+  --color-ink-faint: #7d7265;
+  --color-seal: #d24e3e;
+  --color-rule: #362e26;
+  --color-kraft: #27211b;
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
@@ -33,14 +46,16 @@
     font-family: var(--font-song);
     text-rendering: optimizeLegibility;
     overflow-x: clip;
+    transition: background-color 0.4s ease, color 0.4s ease;
   }
 
   ::selection {
-    background: rgba(178, 58, 44, 0.14);
+    background: rgba(178, 58, 44, 0.22);
+    color: inherit;
   }
 
   :focus-visible {
-    outline: 2px solid rgba(178, 58, 44, 0.4);
+    outline: 2px solid rgba(178, 58, 44, 0.45);
     outline-offset: 3px;
   }
 
@@ -48,21 +63,37 @@
   textarea {
     font-family: inherit;
   }
+
+  /* 仿古信笺滚动条 */
+  ::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-paper);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-rule);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-faint);
+  }
 }
 
-/* 纸纤维：整页一层极淡的噪点，让米白不是死板的纯色 */
+/* 纸纤维：淡噪点纹理 */
 .grain::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 60;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.4;
   mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.13'/%3E%3C/svg%3E");
 }
 
-/* 信纸横格：行高 34px，线落在每行底部 */
+/* 信纸横格：行高 34px */
 .ruled {
   line-height: 34px;
   background-image: repeating-linear-gradient(
@@ -75,11 +106,40 @@
   background-position: 0 10px;
 }
 
+/* 传统八行笺红丝栏竖线 */
+.ruled-vertical {
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0px,
+    transparent 42px,
+    rgba(178, 58, 44, 0.12) 42px,
+    rgba(178, 58, 44, 0.12) 43px
+  );
+  background-position: 14px 0;
+}
+
+html[data-theme="night"] .ruled-vertical {
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0px,
+    transparent 42px,
+    rgba(210, 78, 62, 0.15) 42px,
+    rgba(210, 78, 62, 0.15) 43px
+  );
+}
+
 .sheet-shadow {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.7),
     0 1px 2px rgba(28, 25, 23, 0.04),
     0 18px 40px -28px rgba(28, 25, 23, 0.45);
+}
+
+html[data-theme="night"] .sheet-shadow {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 20px 48px -20px rgba(0, 0, 0, 0.7);
 }
 
 .sheet-shadow-lift,
@@ -90,6 +150,36 @@
     0 28px 60px -30px rgba(28, 25, 23, 0.42);
 }
 
+/* 弹窗通用动画 */
+@keyframes modalBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  animation: modalBackdrop 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes modalCard {
+  from {
+    opacity: 0;
+    transform: scale(0.93) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-card {
+  animation: modalCard 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 渐起显现 */
 @keyframes rise {
   from {
     opacity: 0;
@@ -105,6 +195,7 @@
   animation: rise 0.75s cubic-bezier(0.22, 0.68, 0.25, 1) both;
 }
 
+/* 盖印落下动画 */
 @keyframes stampIn {
   0% {
     opacity: 0;
@@ -121,6 +212,29 @@
 
 .stamp-in {
   animation: stampIn 0.52s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+/* 火漆按压仪式 */
+@keyframes sealDrop {
+  0% {
+    opacity: 0;
+    transform: scale(2.2) rotate(-16deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(2deg);
+  }
+  80% {
+    transform: scale(1.05) rotate(-1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.seal-drop {
+  animation: sealDrop 0.5s cubic-bezier(0.2, 0.9, 0.25, 1) both;
 }
 
 @keyframes fadeUp {
@@ -156,9 +270,11 @@
   0%,
   100% {
     opacity: 0.35;
+    transform: scale(0.95);
   }
   50% {
     opacity: 1;
+    transform: scale(1.15);
   }
 }
 
@@ -166,14 +282,69 @@
   animation: breathe 3.4s ease-in-out infinite;
 }
 
+@keyframes candlePulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+.candle-pulse {
+  animation: candlePulse 2.8s ease-in-out infinite;
+}
+
+/* 微风轻浮动效 */
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(1.2deg);
+  }
+}
+
+.float-gentle {
+  animation: floatGentle 5.5s ease-in-out infinite;
+}
+
+/* 微光粒子升腾 */
+@keyframes sparkRise {
+  0% {
+    opacity: 0.9;
+    transform: translate(0, 0) scale(0.6);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--spark-x, 0px), -36px) scale(1.2);
+  }
+}
+
+.spark-rise {
+  animation: sparkRise 0.85s ease-out forwards;
+}
+
+/* 尊重减弱动态设置 */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .reveal,
   .stamp-in,
+  .seal-drop,
   .fade-up,
   .breathe,
+  .candle-pulse,
+  .float-gentle,
+  .modal-backdrop,
+  .modal-card,
+  .spark-rise,
   .underline-draw path {
     animation: none !important;
   }
