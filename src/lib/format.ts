@@ -55,16 +55,6 @@ export function formatStamp(iso: string): string {
   return `${y}.${String(m).padStart(2, "0")}.${String(d).padStart(2, "0")} ${hh}:${mm}`;
 }
 
-export function formatToday(): string {
-  const now = new Date();
-  const { y, m, d } = parts(now);
-  const weekday = new Intl.DateTimeFormat("zh-CN", {
-    timeZone: TZ,
-    weekday: "long",
-  }).format(now);
-  return `${yearCn(y)}年${cn(m)}月${cn(d)}日 · ${weekday}`;
-}
-
 export function formatMonth(): string {
   const now = new Date();
   const { y, m } = parts(now);

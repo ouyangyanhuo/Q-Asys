@@ -35,7 +35,7 @@ export default async function HomePage() {
 
               <div className="reveal flex items-center gap-3 font-hei text-[11px] tracking-[0.38em] text-ink-faint">
                 <span className="h-1.5 w-1.5 rounded-full bg-seal/80" />
-                <span>独白与回信 · 始于二〇二六年十一月</span>
+                <span>独白与回信</span>
               </div>
 
               <h1
@@ -95,13 +95,6 @@ export default async function HomePage() {
                     {stats.answered}
                   </span>
                   <span>封回音</span>
-                </div>
-
-                <span className="h-3 w-px bg-rule" />
-
-                <div className="flex items-center gap-2">
-                  <span className="breathe h-2 w-2 rounded-full bg-seal shadow-[0_0_8px_rgba(178,58,44,0.6)]" />
-                  <span className="text-ink-soft">信箱开放中</span>
                 </div>
               </div>
 

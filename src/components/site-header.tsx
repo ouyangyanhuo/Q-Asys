@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { formatToday } from "@/lib/format";
 import { ThemeToggle } from "./theme-toggle";
 
 export function SealMark({ className = "" }: { className?: string }) {
@@ -52,7 +51,6 @@ export function SiteHeader() {
           }}
           className="group flex items-center gap-3"
         >
-          <SealMark className="transition-transform duration-500 group-hover:rotate-0 group-hover:scale-108" />
           <span className="flex flex-col">
             <span className="font-song text-[16px] tracking-[0.24em] text-ink transition-colors group-hover:text-seal">
               拾光信箱
@@ -79,10 +77,6 @@ export function SiteHeader() {
 
           {/* 昼夜/烛光模式切换 */}
           <ThemeToggle />
-
-          <p className="hidden font-hei text-[10.5px] tracking-[0.1em] text-ink-faint lg:block">
-            {formatToday()}
-          </p>
         </nav>
       </div>
     </header>
