@@ -1,5 +1,5 @@
--- 拾光信箱 · 建表脚本
--- 用法：Neon 控制台 → SQL Editor → 整段粘贴执行
+-- 尺素 · 建表脚本
+-- 用法：Neon 控制台 → SQL Editor → 整段粘贴执行（首次部署前先跑一遍）
 
 create table if not exists questions (
   id          uuid primary key default gen_random_uuid(),
