@@ -20,7 +20,7 @@ export function LetterActions({ question }: { question: Question }) {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(window.location.href).then(() => {
-      showToast("信件专属链接已复制");
+      showToast("专笺之址已录");
     });
   };
 
@@ -37,20 +37,21 @@ export function LetterActions({ question }: { question: Question }) {
       setSparks(newSparks);
       setTimeout(() => setSparks([]), 900);
 
-      showToast("微光已传递", "seal");
+      showToast("微光已寄", "seal");
     }
   };
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* 左侧：微光共鸣交互 */}
+        <div className="relative shrink-0">
           <button
             type="button"
             onClick={handleResonate}
-            className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-hei text-[11px] tracking-wider transition-all duration-300 ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-hei text-[11px] tracking-wider transition-all duration-300 sm:px-3.5 ${
               resonated
-                ? "bg-seal/10 text-seal font-medium shadow-xs"
+                ? "border border-seal/30 bg-seal/10 text-seal font-medium shadow-xs"
                 : "border border-rule bg-paper text-ink-soft hover:border-seal/40 hover:text-seal active:scale-95"
             }`}
           >
@@ -63,7 +64,7 @@ export function LetterActions({ question }: { question: Question }) {
             >
               <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z" />
             </svg>
-            <span>{count} 微光</span>
+            <span className="whitespace-nowrap">{count} 微光</span>
           </button>
 
           {/* 粒子微光升腾效果 */}
@@ -76,30 +77,33 @@ export function LetterActions({ question }: { question: Question }) {
           ))}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShareOpen(true)}
-          className="flex items-center gap-1.5 border border-rule bg-paper px-3.5 py-1.5 font-hei text-[11px] tracking-wider text-ink-soft transition-colors hover:border-seal/40 hover:text-seal shadow-2xs active:translate-y-px"
-        >
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-            <polyline points="16 6 12 2 8 6" />
-            <line x1="12" y1="2" x2="12" y2="15" />
-          </svg>
-          <span>生成信笺卡片</span>
-        </button>
+        {/* 右侧：制笺存念 与 存其址 */}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2 sm:gap-2.5">
+          <button
+            type="button"
+            onClick={() => setShareOpen(true)}
+            className="flex shrink-0 items-center gap-1.5 border border-rule bg-paper px-2.5 py-1.5 font-hei text-[11px] tracking-wider text-ink-soft transition-colors hover:border-seal/40 hover:text-seal shadow-2xs active:translate-y-px sm:px-3.5 whitespace-nowrap"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+            <span>制 笺 存 念</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 border border-rule bg-paper px-3.5 py-1.5 font-hei text-[11px] tracking-wider text-ink-soft transition-colors hover:border-seal/40 hover:text-seal shadow-2xs active:translate-y-px"
-        >
-          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-          </svg>
-          <span>复制链接</span>
-        </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex shrink-0 items-center gap-1.5 border border-rule bg-paper px-2.5 py-1.5 font-hei text-[11px] tracking-wider text-ink-soft transition-colors hover:border-seal/40 hover:text-seal shadow-2xs active:translate-y-px sm:px-3.5 whitespace-nowrap"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+            <span>存 其 址</span>
+          </button>
+        </div>
       </div>
 
       <ShareModal

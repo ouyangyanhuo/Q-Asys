@@ -4,12 +4,12 @@ import { AmbientLight } from "@/components/ambient-light";
 import { ToastContainer } from "@/components/toast";
 
 export const metadata: Metadata = {
-  title: "拾光信箱 · 匿名提问箱",
+  title: "尺素 · 不署名的来信",
   description:
-    "有些话，不必署名。在这里留下一句想问的，我会一封一封读，慢慢回。",
+    "有言欲问，不必具名。世路匆忙，容我逐函细读，徐徐作复。",
   openGraph: {
-    title: "拾光信箱 · 匿名提问箱",
-    description: "有些话，不必署名。留下一封信，等一束微光与回音。",
+    title: "尺素 · 不署名的来信",
+    description: "见字如面，纸短情长。凡有所书，皆郑重受之。",
     type: "website",
     locale: "zh_CN",
   },

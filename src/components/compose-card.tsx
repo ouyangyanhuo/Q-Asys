@@ -41,7 +41,7 @@ export function ComposeCard() {
       if (result.status === "ok") {
         setBody("");
         setNickname("");
-        showToast("信件已投递入箱，静候回音", "seal");
+        showToast("已入信箱，静候回音", "seal");
       }
     });
   }
@@ -80,7 +80,7 @@ export function ComposeCard() {
           <div className="flex items-center justify-between font-hei text-[11px] tracking-[0.22em] text-ink-faint">
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-seal" />
-              <span>致 · 拾光收信人</span>
+              <span>呈 · 收信人</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="font-song tracking-[0.14em] text-ink-faint/80">
@@ -111,7 +111,7 @@ export function ComposeCard() {
             maxLength={MAX_BODY}
             rows={6}
             spellCheck={false}
-            placeholder="写下你想说、想问的话。不必斟酌字句，真实就好…"
+            placeholder="有何见问？不必斟酌字句，如实写下便好…"
             className="ruled block w-full resize-none bg-transparent pb-3 pt-[10px] font-kai text-[17.5px] leading-[34px] text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/50"
           />
 
@@ -122,7 +122,7 @@ export function ComposeCard() {
         {/* 印章主题微选 */}
         <div className="mt-3 flex items-center justify-between border-t border-dashed border-rule/70 px-6 py-2.5 md:px-9">
           <div className="flex items-center gap-1.5 font-hei text-[10.5px] tracking-wider text-ink-faint">
-            <span>选枚火漆印：</span>
+            <span>钤一枚闲印：</span>
             <div className="flex items-center gap-1">
               {SEAL_OPTIONS.map((char) => (
                 <button
@@ -154,14 +154,14 @@ export function ComposeCard() {
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-4 border-t border-rule bg-paper/30 px-6 py-4 md:px-9">
           <label className="flex items-center gap-2">
             <span className="font-hei text-[11px] tracking-[0.2em] text-ink-faint">
-              署名
+              落款
             </span>
             <input
               name="nickname"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               maxLength={16}
-              placeholder="留空即为匿名"
+              placeholder="留白即隐名"
               autoComplete="off"
               className="w-28 border-b border-rule bg-transparent pb-0.5 font-kai text-[13px] text-ink outline-none transition-colors placeholder:text-ink-faint/50 focus:border-seal/70"
             />
@@ -169,7 +169,7 @@ export function ComposeCard() {
 
           <div className="flex items-center gap-3">
             <span className="hidden font-hei text-[10px] tracking-wider text-ink-faint/70 lg:inline">
-              ⌘ + Enter 投递
+              ⌘ + Enter 投函
             </span>
             <button
               type="submit"
@@ -182,7 +182,7 @@ export function ComposeCard() {
                     <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
                     <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                   </svg>
-                  <span>封缄中…</span>
+                  <span>缄封中…</span>
                 </>
               ) : (
                 <>
@@ -190,7 +190,7 @@ export function ComposeCard() {
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
                   </svg>
-                  <span>投 递</span>
+                  <span>投 函</span>
                 </>
               )}
             </button>
@@ -228,13 +228,13 @@ export function ComposeCard() {
               </div>
 
               <div className="my-5 border-y border-dashed border-seal/40 py-2.5 font-song text-[22px] tracking-[0.35em] text-seal">
-                已 投 递
+                已 投 函
               </div>
 
               <p className="font-kai text-[13.5px] leading-[1.9] text-ink-soft">
-                这一封信已经悄然落入信筒。
+                此函已入信筒。
                 <br />
-                我会一封封读，慢慢写下答复。
+                必逐封细读，徐徐作复。
               </p>
 
               <div className="mt-6 flex flex-col gap-2 pt-2">
@@ -243,13 +243,13 @@ export function ComposeCard() {
                   onClick={writeAnother}
                   className="bg-seal py-2 font-hei text-[11px] tracking-[0.25em] text-paper-soft transition-colors hover:bg-[#9d3125] shadow-xs active:translate-y-px"
                 >
-                  再写一封信
+                  再 修 一 笺
                 </button>
                 <a
                   href="#letters"
                   className="font-hei text-[10.5px] tracking-[0.18em] text-ink-faint hover:text-seal transition-colors"
                 >
-                  去信箱看其他回信 ↓
+                  往 信 箱 观 他 人 回 音 ↓
                 </a>
               </div>
             </div>

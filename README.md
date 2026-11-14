@@ -1,4 +1,4 @@
-# 拾光信箱
+# 尺素
 
 一个纸与墨水气质的匿名提问箱。前端 Next.js，数据存 Neon Postgres，部署在 Vercel。
 

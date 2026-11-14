@@ -74,7 +74,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 : "text-ink-faint hover:text-ink hover:bg-paper-deep/30"
             }`}
           >
-            全部来信 ({initialLetters.length})
+            全部来鸿 ({initialLetters.length})
           </button>
           <button
             type="button"
@@ -85,7 +85,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 : "text-ink-faint hover:text-ink hover:bg-paper-deep/30"
             }`}
           >
-            已回信 ({answeredCount})
+            已 复 ({answeredCount})
           </button>
           <button
             type="button"
@@ -96,7 +96,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 : "text-ink-faint hover:text-ink hover:bg-paper-deep/30"
             }`}
           >
-            等待回音 ({waitingCount})
+            候 复 ({waitingCount})
           </button>
         </div>
 
@@ -107,7 +107,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="搜寻信件或署名…"
+              placeholder="寻笺，或寻一个名字…"
               className="w-full border-b border-rule bg-transparent py-1.5 pl-6 pr-6 font-kai text-[12.5px] text-ink outline-none transition-colors placeholder:text-ink-faint/50 focus:border-seal/70"
             />
             <svg
@@ -142,7 +142,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
             <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span>偶遇一封</span>
+            <span>随手一拈</span>
           </button>
         </div>
       </div>
@@ -151,7 +151,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       {visibleLetters.length === 0 ? (
         <div className="border border-dashed border-rule/80 px-6 py-16 text-center">
           <p className="font-kai text-[15px] leading-relaxed text-ink-faint">
-            {keyword ? "没有找到符合条件的信件。" : "这一栏还没有信件。"}
+            {keyword ? "未得相应之笺。" : "此栏尚无来函。"}
           </p>
           {keyword && (
             <button
@@ -159,7 +159,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
               onClick={() => setKeyword("")}
               className="mt-3 font-hei text-[11px] tracking-wider text-seal underline underline-offset-4 hover:text-[#9d3125]"
             >
-              清空搜索
+              重新寻过
             </button>
           )}
         </div>
@@ -182,7 +182,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 onClick={() => setDisplayCount((prev) => prev + 10)}
                 className="group relative inline-flex items-center gap-2 border border-rule bg-paper-soft px-8 py-3 font-hei text-[12px] tracking-[0.25em] text-ink-soft shadow-xs transition-all duration-300 hover:border-seal/50 hover:text-seal active:scale-98"
               >
-                <span>翻看更早的来信</span>
+                <span>展读旧笺</span>
                 <span className="font-mono text-[10px] text-ink-faint">
                   ({visibleLetters.length}/{filteredLetters.length})
                 </span>

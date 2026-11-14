@@ -15,7 +15,7 @@ interface PostageStampProps {
 
 export function PostageStamp({
   theme = "letter",
-  title = "拾光",
+  title = "尺素",
   year = "2026",
   price = "80",
   className = "",
@@ -110,7 +110,7 @@ export function PostageStamp({
 
 export function CancellationMark({
   date = "2026.11",
-  location = "拾光",
+  location = "尺素",
   className = "",
 }: {
   date?: string;

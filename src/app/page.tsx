@@ -1,6 +1,6 @@
 import { ComposeCard } from "@/components/compose-card";
 import { LettersStream } from "@/components/letters-stream";
-import { SealMark, SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { PostageStamp, CancellationMark } from "@/components/stamp-badge";
 import { getStats, listPublished } from "@/lib/store";
 
@@ -11,13 +11,11 @@ export default async function HomePage() {
   const total = stats.published;
 
   return (
-    <div className="relative min-h-dvh">
-      <SiteHeader />
-
-      <main>
+    <div className="relative flex min-h-dvh flex-col">
+      <main className="flex-1">
         {/* 首屏：写信台与题头 */}
         <section className="mx-auto max-w-[1180px] px-6 md:px-10">
-          <div className="grid items-start gap-12 pb-20 pt-12 md:pt-18 lg:grid-cols-[minmax(0,1fr)_460px] lg:gap-16">
+          <div className="grid items-start gap-12 pb-20 pt-16 md:pt-24 lg:grid-cols-[minmax(0,1fr)_460px] lg:gap-16">
             {/* 左侧诗意题头与信箱状态 */}
             <div className="relative lg:pt-2">
               {/* 背景装饰：微风中轻浮的折纸信笺暗纹 */}
@@ -33,9 +31,14 @@ export default async function HomePage() {
                 </svg>
               </div>
 
-              <div className="reveal flex items-center gap-3 font-hei text-[11px] tracking-[0.38em] text-ink-faint">
-                <span className="h-1.5 w-1.5 rounded-full bg-seal/80" />
-                <span>独白与回信</span>
+              <div className="reveal flex items-center gap-3">
+                <span className="font-song text-[15px] tracking-[0.3em] text-ink-soft">
+                  尺素
+                </span>
+                <span className="h-3 w-px bg-rule" />
+                <span className="font-hei text-[9.5px] tracking-[0.3em] text-ink-faint">
+                  LETTERS, UNSIGNED
+                </span>
               </div>
 
               <h1
@@ -69,9 +72,9 @@ export default async function HomePage() {
                 className="reveal mt-9 max-w-[24em] font-kai text-[17px] leading-[2.15] text-ink-soft md:text-[18px]"
                 style={{ animationDelay: "160ms" }}
               >
-                在这里留下一句想问的话，可以不留姓名。
+                有言欲问，不必具名。
                 <br />
-                世事匆忙，我会一封一封慢读，写下回音。
+                世路匆忙，容我逐函细读，徐徐作复。
               </p>
 
               {/* 实时统计与状态标牌 */}
@@ -80,21 +83,21 @@ export default async function HomePage() {
                 style={{ animationDelay: "220ms" }}
               >
                 <div className="flex items-center gap-1.5">
-                  <span>已收</span>
+                  <span>收函</span>
                   <span className="font-mono text-[14.5px] font-medium text-ink">
                     {total}
                   </span>
-                  <span>封来信</span>
+                  <span>通</span>
                 </div>
 
                 <span className="h-3 w-px bg-rule" />
 
                 <div className="flex items-center gap-1.5">
-                  <span>已回</span>
+                  <span>复函</span>
                   <span className="font-mono text-[14.5px] font-medium text-ink">
                     {stats.answered}
                   </span>
-                  <span>封回音</span>
+                  <span>通</span>
                 </div>
               </div>
 
@@ -103,11 +106,11 @@ export default async function HomePage() {
                 className="reveal mt-12 hidden items-center gap-5 sm:flex"
                 style={{ animationDelay: "280ms" }}
               >
-                <CancellationMark date="2026.11" location="拾光" />
+                <CancellationMark date="2026.11" location="尺素" />
                 <div className="font-kai text-[12px] leading-relaxed text-ink-faint/80">
                   见字如面 · 纸短情长
                   <br />
-                  所有的字，都在这里被郑重收下
+                  凡有所书，皆郑重受之。
                 </div>
               </div>
             </div>
@@ -141,7 +144,7 @@ export default async function HomePage() {
               </p>
 
               <div className="mt-7 hidden flex-col gap-5 lg:flex">
-                <PostageStamp theme="lantern" color="seal" price="80" title="拾光" />
+                <PostageStamp theme="lantern" color="seal" price="80" title="尺素" />
                 <div className="flex h-11 w-11 -rotate-6 items-center justify-center border border-seal/35 font-kai text-[16px] text-seal/80 shadow-2xs">
                   笺
                 </div>
@@ -156,31 +159,7 @@ export default async function HomePage() {
         </section>
       </main>
 
-      {/* 底部页脚 */}
-      <footer className="border-t border-rule/80 bg-paper-soft/40">
-        <div className="mx-auto flex max-w-[1180px] flex-col items-start justify-between gap-6 px-6 py-12 md:flex-row md:items-center md:px-10">
-          <div>
-            <p className="font-kai text-[14px] text-ink-soft">
-              所有的字都会被认真读。
-            </p>
-            <p className="mt-1 font-hei text-[10.5px] tracking-wider text-ink-faint">
-              不必追问谁写下，只需知道曾有人这样思念与生活。
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <SealMark className="h-8 w-8 text-[13px]" />
-            <div className="text-right">
-              <p className="font-hei text-[10px] tracking-[0.24em] text-ink-faint">
-                匿名 · 不记录身份 · 拾光信箱
-              </p>
-              <p className="font-mono text-[9px] text-ink-faint/70">
-                TIMELESS POSTBOX © 2026
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

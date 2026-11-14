@@ -36,15 +36,18 @@ export async function submitQuestion(
 
   // 蜜罐命中：假装成功，不给对方任何反馈
   if (trap) return { status: "ok", at: Date.now() };
-  if (length === 0) return { status: "error", message: "还没写下什么呢。" };
+  if (length === 0) return { status: "error", message: "尚无一字。" };
   if (length > MAX_BODY) {
-    return { status: "error", message: `最多 ${MAX_BODY} 字，再删一点吧。` };
+    return {
+      status: "error",
+      message: `至多 ${MAX_BODY} 字，请删减几分。`,
+    };
   }
 
   const ipHash = await clientIpHash();
   const recent = await countRecentByIp(ipHash);
   if (recent >= RATE_LIMIT_PER_HOUR) {
-    return { status: "error", message: "信箱今天有点满了，过一会儿再来。" };
+    return { status: "error", message: "今日信箧已满，请稍后再投。" };
   }
 
   const nickname = rawNickname

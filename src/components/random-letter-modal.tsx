@@ -94,7 +94,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
               <svg className={`h-3 w-3 ${isFlipping ? "animate-spin" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span>再抽一封</span>
+              <span>再拈一封</span>
             </button>
           </div>
 
@@ -138,25 +138,25 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
                   </div>
                 ) : (
                   <p className="mt-6 pl-8 font-kai text-[12px] text-ink-faint/70">
-                    这封信静候回信中…
+                    此函静候复音…
                   </p>
                 )}
 
                 <div className="mt-7 flex items-center justify-between border-t border-rule/50 pt-4">
-                  <CancellationMark date="2026.11" location="拾光" className="scale-75" />
+                  <CancellationMark date="2026.11" location="尺素" className="scale-75" />
                   <Link
                     href={`/q/${selected.id}`}
                     onClick={onClose}
                     className="group/arr flex items-center gap-1 font-hei text-[11px] tracking-wider text-seal transition-colors hover:text-[#9d3125]"
                   >
-                    <span>查看此信专属页</span>
+                    <span>展 阅 此 笺</span>
                     <span className="transition-transform duration-300 group-hover/arr:translate-x-1">→</span>
                   </Link>
                 </div>
               </div>
             ) : (
               <p className="py-8 text-center font-kai text-ink-faint">
-                信箱里还没有可抽取的信件。
+                信箱尚空，无笺可拈。
               </p>
             )}
           </div>
@@ -168,7 +168,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
             onClick={onClose}
             className="px-2 py-1 font-hei text-[11px] tracking-wider text-paper-soft/80 transition-colors hover:text-white"
           >
-            关闭 ESC
+            掩 卷 ESC
           </button>
         </div>
       </div>

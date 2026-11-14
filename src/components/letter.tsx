@@ -69,7 +69,7 @@ export function Letter({
       setSparks(newSparks);
       setTimeout(() => setSparks([]), 900);
 
-      showToast("微光已共鸣，温意渐起");
+      showToast("微光相应，温意渐起");
     }
   };
 
@@ -100,12 +100,12 @@ export function Letter({
               {q.answer ? (
                 <span className="inline-flex items-center gap-1 font-kai text-[11px] text-[#3f5f4b]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#3f5f4b]/80" />
-                  已回信
+                  已 复
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 font-kai text-[11px] text-ink-faint/70">
                   <span className="h-1.5 w-1.5 rounded-full bg-rule" />
-                  等待回音
+                  候 复
                 </span>
               )}
             </div>
@@ -115,7 +115,7 @@ export function Letter({
           <div className="flex items-center gap-2 transition-transform duration-300 group-hover:scale-102">
             <CancellationMark
               date={q.createdAt ? q.createdAt.slice(0, 7).replace("-", ".") : "2026.11"}
-              location="拾光"
+              location="尺素"
               className="hidden scale-75 sm:inline-flex"
             />
             <PostageStamp
@@ -160,7 +160,7 @@ export function Letter({
                 </p>
                 {q.answeredAt && (
                   <p className="font-hei text-[9.5px] tracking-wider text-ink-faint/70">
-                    回于 {formatFullDate(q.answeredAt)}
+                    复于 {formatFullDate(q.answeredAt)}
                   </p>
                 )}
               </div>
@@ -169,14 +169,14 @@ export function Letter({
         ) : (
           <div className="mt-5 border-t border-dashed border-rule/50 pt-3.5">
             <p className="font-kai text-[12px] text-ink-faint/65">
-              这封信还在抽屉里，收信人读过后会慢慢写下回音。
+              此函尚在箧中，俟收信人展读，徐徐作复。
             </p>
           </div>
         )}
 
         {/* 底部操作与微互动 */}
-        <div className="mt-7 flex items-center justify-between border-t border-rule/60 pt-4">
-          <div className="flex items-center gap-3">
+        <div className="mt-7 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {/* 共鸣微光按钮 */}
             <div className="relative">
               <button
@@ -218,20 +218,20 @@ export function Letter({
             <button
               type="button"
               onClick={() => setShareOpen(true)}
-              className="flex items-center gap-1 rounded-full px-2.5 py-1 font-hei text-[11px] text-ink-faint transition-colors hover:bg-paper-deep/40 hover:text-ink active:scale-95"
+              className="flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-hei text-[11px] text-ink-faint transition-colors hover:bg-paper-deep/40 hover:text-ink active:scale-95 whitespace-nowrap"
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                 <polyline points="16 6 12 2 8 6" />
                 <line x1="12" y1="2" x2="12" y2="15" />
               </svg>
-              <span>分享信笺</span>
+              <span>传 阅</span>
             </button>
           </div>
 
           <Link
             href={`/q/${q.id}`}
-            className="group/arrow flex items-center gap-1 font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal"
+            className="ml-auto flex shrink-0 items-center gap-1 font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal whitespace-nowrap"
           >
             <span>专属页</span>
             <span className="transition-transform duration-300 group-hover/arrow:translate-x-1">→</span>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { PostageStamp, CancellationMark, WaxSeal, type StampTheme, type StampColor } from "@/components/stamp-badge";
 import { LetterActions } from "@/components/letter-actions";
 import { formatFullDate } from "@/lib/format";
@@ -31,10 +31,10 @@ const STAMP_COLORS: StampColor[] = [
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const q = await getQuestion(id);
-  if (!q) return { title: "未找到 · 拾光信箱" };
+  if (!q) return { title: "未得此笺 · 尺素" };
   const excerpt = [...q.body].slice(0, 40).join("");
   return {
-    title: `${excerpt} · 拾光信箱`,
+    title: `${excerpt} · 尺素`,
     description: [...q.body].slice(0, 120).join(""),
   };
 }
@@ -51,10 +51,8 @@ export default async function QuestionPage({ params }: Props) {
   const postmarkDate = q.createdAt ? q.createdAt.slice(0, 7).replace("-", ".") : "2026.11";
 
   return (
-    <div className="min-h-dvh">
-      <SiteHeader />
-
-      <main className="mx-auto max-w-[780px] px-5 py-12 md:px-8 md:py-20">
+    <div className="flex min-h-dvh flex-col">
+      <main className="mx-auto w-full max-w-[780px] flex-1 px-5 py-12 md:px-8 md:py-20">
         {/* 面包屑导航与返回 */}
         <div className="flex items-center justify-between">
           <Link
@@ -62,7 +60,7 @@ export default async function QuestionPage({ params }: Props) {
             className="flex items-center gap-1.5 font-hei text-[11.5px] tracking-[0.2em] text-ink-faint transition-colors hover:text-seal"
           >
             <span>←</span>
-            <span>回到信箱</span>
+            <span>归 信 箱</span>
           </Link>
 
           <span className="font-mono text-[11px] tracking-widest text-ink-faint/70">
@@ -77,8 +75,8 @@ export default async function QuestionPage({ params }: Props) {
 
           {/* 右上角邮品装点 */}
           <div className="absolute right-6 top-6 flex items-center gap-2 sm:right-10 sm:top-8">
-            <CancellationMark date={postmarkDate} location="拾光" className="hidden sm:inline-flex scale-85" />
-            <PostageStamp theme={stampTheme} color={stampColor} price={stampPrice} title="拾光" className="scale-90" />
+            <CancellationMark date={postmarkDate} location="尺素" className="hidden sm:inline-flex scale-85" />
+            <PostageStamp theme={stampTheme} color={stampColor} price={stampPrice} title="尺素" className="scale-90" />
           </div>
 
           {/* 顶部信头元信息 */}
@@ -117,7 +115,7 @@ export default async function QuestionPage({ params }: Props) {
                 </p>
                 {q.answeredAt && (
                   <p className="font-hei text-[10px] tracking-wider text-ink-faint/80">
-                    回于 {formatFullDate(q.answeredAt)}
+                    复于 {formatFullDate(q.answeredAt)}
                   </p>
                 )}
               </div>
@@ -126,7 +124,7 @@ export default async function QuestionPage({ params }: Props) {
             <div className="mt-9 flex items-center gap-3">
               <span className="h-1.5 w-1.5 rounded-full bg-rule" />
               <p className="font-kai text-[13.5px] text-ink-faint">
-                这封信还在抽屉里，收信人展信后会细细写下答复。
+                此函尚在箧中，待收信人展读，细细作复。
               </p>
             </div>
           )}
@@ -142,12 +140,12 @@ export default async function QuestionPage({ params }: Props) {
               <WaxSeal character="信" size="md" />
               <div>
                 <p className="font-song text-[14px] tracking-[0.2em] text-ink">
-                  拾光信箱
+                  尺素
                 </p>
                 <p className="mt-0.5 font-hei text-[10px] tracking-[0.22em] text-ink-faint">
                   {q.answeredAt
-                    ? `回于 ${formatFullDate(q.answeredAt)}`
-                    : "静候回信"}
+                    ? `复于 ${formatFullDate(q.answeredAt)}`
+                    : "静候复音"}
                 </p>
               </div>
             </div>
@@ -157,18 +155,14 @@ export default async function QuestionPage({ params }: Props) {
                 href="/#write"
                 className="border-b border-seal/40 pb-0.5 font-hei text-[11.5px] tracking-[0.18em] text-seal transition-colors hover:border-seal hover:text-[#9d3125]"
               >
-                我也要写一封 →
+                我亦有言欲寄 →
               </Link>
             </div>
           </div>
         </article>
       </main>
 
-      <footer className="mx-auto max-w-[780px] px-5 pb-16 md:px-8">
-        <p className="font-kai text-[12.5px] text-ink-faint">
-          这一封信已被拾光信箱永久留存。你也可以留下自己的心事与提问。
-        </p>
-      </footer>
+      <SiteFooter maxWidth="max-w-[780px]" />
     </div>
   );
 }

@@ -14,9 +14,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export const dynamic = "force-dynamic";
 
 const LABEL: Record<QuestionStatus, string> = {
-  pending: "待处理",
-  published: "已公开",
-  hidden: "已收起",
+  pending: "待复",
+  published: "已示人",
+  hidden: "已藏",
 };
 
 const TONE: Record<QuestionStatus, string> = {
@@ -58,7 +58,7 @@ export default async function AdminPage({
             收信人工作台
           </span>
           <span className="hidden font-hei text-[10.5px] tracking-wider text-ink-faint sm:inline">
-            待回信 <span className="font-mono text-seal font-medium">{stats.pending}</span> 封
+            待复 <span className="font-mono text-seal font-medium">{stats.pending}</span> 通
           </span>
         </div>
 
@@ -70,11 +70,11 @@ export default async function AdminPage({
           )}
           <ThemeToggle />
           <Link href="/" className="transition-colors hover:text-ink">
-            看前台信箱
+            往 信 箱
           </Link>
           <span className="h-3 w-px bg-rule" />
           <form action={logoutAction}>
-            <button className="transition-colors hover:text-seal">退出</button>
+            <button className="transition-colors hover:text-seal">告 退</button>
           </form>
         </div>
       </header>
@@ -95,26 +95,26 @@ export default async function AdminPage({
               href="/admin?tab=pending"
               className={`px-1.5 py-0.5 transition-colors ${currentTab === "pending" ? "text-seal font-medium border-b-2 border-seal" : "text-ink-faint hover:text-ink"}`}
             >
-              待答 ({stats.pending})
+              待复 ({stats.pending})
             </Link>
             <Link
               href="/admin?tab=published"
               className={`px-1.5 py-0.5 transition-colors ${currentTab === "published" ? "text-seal font-medium border-b-2 border-seal" : "text-ink-faint hover:text-ink"}`}
             >
-              已公 ({stats.published})
+              已示 ({stats.published})
             </Link>
             <Link
               href="/admin?tab=hidden"
               className={`px-1.5 py-0.5 transition-colors ${currentTab === "hidden" ? "text-seal font-medium border-b-2 border-seal" : "text-ink-faint hover:text-ink"}`}
             >
-              收起
+              已藏
             </Link>
           </div>
 
           <div className="max-h-[45dvh] overflow-y-auto lg:max-h-[calc(100dvh_-_6.5rem)]">
             {letters.length === 0 ? (
               <p className="px-5 py-10 font-kai text-[13px] text-ink-faint">
-                此分类暂无信件。
+                此类尚无来函。
               </p>
             ) : (
               <ul>
@@ -163,7 +163,7 @@ export default async function AdminPage({
             <div className="mx-auto max-w-[640px] border border-dashed border-rule px-8 py-20 text-center">
               <CancellationMark date="2026.11" location="信箱空" />
               <p className="mt-4 font-kai text-[14.5px] text-ink-faint">
-                没有选中的信件。
+                未选一函。
               </p>
             </div>
           ) : (
@@ -187,7 +187,7 @@ export default async function AdminPage({
                   {active.body}
                 </p>
                 <p className="mt-3 text-right font-kai text-[12.5px] text-ink-faint">
-                  {active.nickname ? `—— ${active.nickname}` : "—— 未署名"}
+                  {active.nickname ? `—— ${active.nickname}` : "—— 未落款"}
                 </p>
               </div>
 
@@ -201,19 +201,19 @@ export default async function AdminPage({
                 <form action={publishAction}>
                   <input type="hidden" name="id" value={active.id} />
                   <button className="border border-rule px-4 py-2 font-hei text-[11px] tracking-[0.18em] text-ink-soft transition-colors hover:border-ink hover:text-ink">
-                    仅公开（不回信）
+                    仅示之，不作复
                   </button>
                 </form>
 
                 <form action={hideAction}>
                   <input type="hidden" name="id" value={active.id} />
                   <button className="border border-transparent px-4 py-2 font-hei text-[11px] tracking-[0.18em] text-ink-faint transition-colors hover:text-seal">
-                    收进抽屉（收起）
+                    收入箧中
                   </button>
                 </form>
 
                 <p className="ml-auto font-kai text-[11px] text-ink-faint/70">
-                  收起后仅在工作台可见，前台信箱不予展示
+                  藏之后，唯案头可见，不示于外
                 </p>
               </div>
             </article>

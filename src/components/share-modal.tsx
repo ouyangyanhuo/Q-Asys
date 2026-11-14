@@ -44,14 +44,14 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
   const handleCopyLink = () => {
     const url = `${window.location.origin}/q/${question.id}`;
     navigator.clipboard.writeText(url).then(() => {
-      showToast("信件专属链接已存入剪贴板");
+      showToast("专笺之址已录");
     });
   };
 
   const handleCopyText = () => {
-    const text = `【拾光信箱】\n问：${question.body}${question.nickname ? ` —— ${question.nickname}` : ""}\n${question.answer ? `\n答：${question.answer}\n` : ""}\n信箱地址：${window.location.origin}/q/${question.id}`;
+    const text = `【尺素】\n问：${question.body}${question.nickname ? ` —— ${question.nickname}` : ""}\n${question.answer ? `\n答：${question.answer}\n` : ""}\n原笺：${window.location.origin}/q/${question.id}`;
     navigator.clipboard.writeText(text).then(() => {
-      showToast("信件内容已复制");
+      showToast("笺中文字已录");
     });
   };
 
@@ -81,7 +81,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
               <span className="font-hei text-[10px] tracking-[0.32em] text-ink-faint">
-                拾光信箱 · 笺谱留真
+                尺素 · 笺谱留真
               </span>
               <span className="mt-1 font-mono text-[11px] font-medium text-ink-faint">
                 {number ? `NO. ${String(number).padStart(3, "0")}` : "LETTER ARCHIVE"}
@@ -92,7 +92,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
             </div>
 
             <div className="flex items-center gap-2">
-              <CancellationMark date="2026.11" location="拾光" className="scale-75" />
+              <CancellationMark date="2026.11" location="尺素" className="scale-75" />
               <PostageStamp theme="lantern" price="80" color="seal" size="sm" />
             </div>
           </div>
@@ -132,7 +132,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
             <span>有些话，不必署名。</span>
             <div className="flex items-center gap-2">
               <WaxSeal character="信" size="sm" />
-              <span>拾光信箱 · 永久存留</span>
+              <span>尺素 · 永久存留</span>
             </div>
           </div>
         </div>
@@ -149,7 +149,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
               </svg>
-              复制专属链接
+              录专属之址
             </button>
             <button
               type="button"
@@ -160,7 +160,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
                 <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                 <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
               </svg>
-              复制纯文本
+              录其文字
             </button>
           </div>
 
@@ -169,7 +169,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
             onClick={onClose}
             className="border border-transparent px-4 py-2 font-hei text-[11px] tracking-wider text-paper-soft/90 transition-colors hover:text-white"
           >
-            关闭 ESC
+            掩 卷 ESC
           </button>
         </div>
       </div>
