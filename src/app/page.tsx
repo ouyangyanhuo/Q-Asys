@@ -31,16 +31,6 @@ export default async function HomePage() {
                 </svg>
               </div>
 
-              <div className="reveal flex items-center gap-3">
-                <span className="font-song text-[15px] tracking-[0.3em] text-ink-soft">
-                  尺素
-                </span>
-                <span className="h-3 w-px bg-rule" />
-                <span className="font-hei text-[9.5px] tracking-[0.3em] text-ink-faint">
-                  LETTERS, UNSIGNED
-                </span>
-              </div>
-
               <h1
                 className="reveal mt-7 font-song text-[clamp(2.8rem,6.4vw,4.6rem)] leading-[1.14] tracking-[-0.012em] text-ink"
                 style={{ animationDelay: "80ms" }}

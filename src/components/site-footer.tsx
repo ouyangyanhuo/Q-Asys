@@ -35,16 +35,12 @@ export function SiteFooter({
 
         <div className="mt-9 flex flex-col gap-4 border-t border-rule/60 pt-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <span className="relative inline-flex h-6 w-6 shrink-0 -rotate-3 items-center justify-center border border-seal/70 font-kai text-[11px] leading-none text-seal/80">
-              <span className="absolute inset-[2px] border border-seal/25" />
-              信
-            </span>
             <p className="font-hei text-[10px] tracking-[0.24em] text-ink-faint">
-              匿名 · 不记录身份 · 尺素
+              - 尺素
             </p>
           </div>
           <p className="font-mono text-[9px] tracking-[0.22em] text-ink-faint/70">
-            LETTERS, UNSIGNED © 2026
+            MAGNETO © 2026
           </p>
         </div>
       </div>

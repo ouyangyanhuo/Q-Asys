@@ -106,6 +106,19 @@ html[data-theme="night"] {
   background-position: 0 10px;
 }
 
+/* 只画横格、不设行高：铺满整块书写区（含便签区），
+   便签隐去之后纸面仍是完整的一张信纸 */
+.ruled-field {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 33px,
+    var(--color-rule) 33px,
+    var(--color-rule) 34px
+  );
+  background-position: 0 10px;
+}
+
 /* 传统八行笺红丝栏竖线 */
 .ruled-vertical {
   background-image: repeating-linear-gradient(

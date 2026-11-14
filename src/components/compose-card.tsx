@@ -92,31 +92,48 @@ export function ComposeCard() {
           <div className="mt-3.5 h-px bg-rule" />
         </div>
 
-        {/* 输入区域 */}
-        <div className="relative px-6 pt-2 md:px-9">
-          <label className="sr-only" htmlFor="letter-body">
-            你的信件内容
-          </label>
-          <textarea
-            ref={textareaRef}
-            id="letter-body"
-            name="body"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.currentTarget.form?.requestSubmit();
-              }
-            }}
-            maxLength={MAX_BODY}
-            rows={6}
-            spellCheck={false}
-            placeholder="有何见问？不必斟酌字句，如实写下便好…"
-            className="ruled block w-full resize-none bg-transparent pb-3 pt-[10px] font-kai text-[17.5px] leading-[34px] text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/50"
-          />
+        {/* 输入区域：横格铺满整张纸，便签浮于其上。
+            写入后便签只淡出、不移除，纸面高度自始至终不变。 */}
+        <div className="px-6 md:px-9">
+          <div className="relative pt-2">
+            <div
+              className="ruled-field pointer-events-none absolute inset-0"
+              aria-hidden="true"
+            />
 
-          {/* 灵感便签条 */}
-          {count === 0 && <PromptChips onSelectPrompt={handleSelectPrompt} />}
+            <label className="sr-only" htmlFor="letter-body">
+              你的信件内容
+            </label>
+            <textarea
+              ref={textareaRef}
+              id="letter-body"
+              name="body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
+              maxLength={MAX_BODY}
+              rows={6}
+              spellCheck={false}
+              placeholder="有何见问？不必斟酌字句，如实写下便好…"
+              className="relative block w-full resize-none bg-transparent pb-1 pt-[10px] font-kai text-[17.5px] leading-[34px] text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/50"
+            />
+
+            {/* 灵感便签条：常驻占位，仅淡出 */}
+            <div
+              className={`relative pb-2 transition-opacity duration-500 ${
+                count === 0
+                  ? "opacity-100"
+                  : "pointer-events-none opacity-0"
+              }`}
+              inert={count > 0}
+            >
+              <PromptChips onSelectPrompt={handleSelectPrompt} />
+            </div>
+          </div>
         </div>
 
         {/* 印章主题微选 */}
