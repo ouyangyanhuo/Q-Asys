@@ -1,5 +1,6 @@
 "use client";
 
+import { Flame, Sun } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   applyTone,
@@ -144,40 +145,10 @@ export function ThemeToggle({
       >
         {isNight ? (
           // 烛光小油灯
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4 text-[#e09838] transition-transform duration-300 group-hover:scale-110"
-          >
-            <path
-              d="M12 2c.8 1.4 1.5 2.5 1.5 4 0 1.2-.7 2-1.5 2s-1.5-.8-1.5-2c0-1.5.7-2.6 1.5-4z"
-              fill="#f5c05c"
-              stroke="none"
-              className="animate-pulse"
-            />
-            <path d="M9 10h6v3H9z" />
-            <path d="M7 13h10v2a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3v-2z" />
-            <path d="M5 21h14" />
-            <path d="M12 8v2" />
-          </svg>
+          <Flame className="h-4 w-4 text-[#e09838] transition-transform duration-300 group-hover:scale-110" strokeWidth={1.6} />
         ) : (
           // 暖阳
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4 text-ink-soft transition-transform duration-300 group-hover:rotate-45 group-hover:text-seal"
-          >
-            <circle cx="12" cy="12" r="4.5" />
-            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-          </svg>
+          <Sun className="h-4 w-4 text-ink-soft transition-transform duration-300 group-hover:rotate-90 group-hover:text-seal" strokeWidth={1.6} />
         )}
 
         {/* 自动时留一点朱砂，说明此刻不由人手 */}

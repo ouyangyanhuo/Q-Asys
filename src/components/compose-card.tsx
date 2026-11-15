@@ -1,5 +1,6 @@
 "use client";
 
+import { LoaderCircle, Send } from "lucide-react";
 import { useState, useTransition, useRef } from "react";
 import { submitQuestion, type SubmitState } from "@/lib/actions";
 import { formatMonth } from "@/lib/format";
@@ -20,9 +21,33 @@ export function ComposeCard() {
   const [isSubmittingAnim, setIsSubmittingAnim] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const tiltRef = useRef<HTMLDivElement | null>(null);
+  const [tracking, setTracking] = useState(false);
 
   const count = [...body].length;
   const done = state.status === "ok" && state.at !== dismissedAt;
+
+  /** 指针位置换算成极小的仰俯角，像纸被手压出一点弧度 */
+  function handleTilt(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse") return;
+    const el = tiltRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (event.clientX - rect.left) / rect.width - 0.5;
+    const py = (event.clientY - rect.top) / rect.height - 0.5;
+    el.style.setProperty("--tilt-y", `${(px * 2.4).toFixed(2)}deg`);
+    el.style.setProperty("--tilt-x", `${(-py * 1.8).toFixed(2)}deg`);
+    if (!tracking) setTracking(true);
+  }
+
+  function resetTilt() {
+    const el = tiltRef.current;
+    if (el) {
+      el.style.setProperty("--tilt-x", "0deg");
+      el.style.setProperty("--tilt-y", "0deg");
+    }
+    setTracking(false);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,6 +94,13 @@ export function ComposeCard() {
         aria-hidden="true"
       />
 
+      {/* 指针掠过时，纸面随之轻轻仰俯 */}
+      <div
+        ref={tiltRef}
+        className={`tilt-card ${tracking ? "is-tracking" : ""}`}
+        onPointerMove={handleTilt}
+        onPointerLeave={resetTilt}
+      >
       <form
         onSubmit={handleSubmit}
         className={`sheet-shadow relative border border-rule bg-paper-soft transition-all duration-500 hover:border-rule/90 ${
@@ -196,18 +228,12 @@ export function ComposeCard() {
             >
               {isSubmittingAnim || pending ? (
                 <>
-                  <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-                    <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-                  </svg>
+                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
                   <span>缄封中…</span>
                 </>
               ) : (
                 <>
-                  <svg className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
+                  <Send className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                   <span>投 函</span>
                 </>
               )}
@@ -274,6 +300,7 @@ export function ComposeCard() {
           </div>
         )}
       </form>
+      </div>
     </div>
   );
 }

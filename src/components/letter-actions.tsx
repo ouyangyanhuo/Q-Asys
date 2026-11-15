@@ -1,5 +1,6 @@
 "use client";
 
+import { Link2, Share, Sparkle } from "lucide-react";
 import { useState } from "react";
 import type { Question } from "@/lib/types";
 import { ShareModal } from "./share-modal";
@@ -55,15 +56,10 @@ export function LetterActions({ question }: { question: Question }) {
                 : "border border-rule bg-paper text-ink-soft hover:border-seal/40 hover:text-seal active:scale-95"
             }`}
           >
-            <svg
-              className={`h-3.5 w-3.5 transition-transform duration-300 ${resonated ? "text-seal fill-current scale-110" : ""}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z" />
-            </svg>
+            <Sparkle
+              className={`h-3.5 w-3.5 transition-transform duration-300 ${resonated ? "text-seal scale-110" : ""}`}
+              fill={resonated ? "currentColor" : "none"}
+            />
             <span className="whitespace-nowrap">{count} 微光</span>
           </button>
 
@@ -84,11 +80,7 @@ export function LetterActions({ question }: { question: Question }) {
             onClick={() => setShareOpen(true)}
             className="flex shrink-0 items-center gap-1.5 border border-rule bg-paper px-2.5 py-1.5 font-hei text-[11px] tracking-wider text-ink-soft transition-colors hover:border-seal/40 hover:text-seal shadow-2xs active:translate-y-px sm:px-3.5 whitespace-nowrap"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-              <polyline points="16 6 12 2 8 6" />
-              <line x1="12" y1="2" x2="12" y2="15" />
-            </svg>
+            <Share className="h-3.5 w-3.5" />
             <span>制 笺 存 念</span>
           </button>
 
@@ -97,10 +89,7 @@ export function LetterActions({ question }: { question: Question }) {
             onClick={handleCopy}
             className="flex shrink-0 items-center gap-1.5 border border-rule bg-paper px-2.5 py-1.5 font-hei text-[11px] tracking-wider text-ink-soft transition-colors hover:border-seal/40 hover:text-seal shadow-2xs active:translate-y-px sm:px-3.5 whitespace-nowrap"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-            </svg>
+            <Link2 className="h-3.5 w-3.5" />
             <span>存 其 址</span>
           </button>
         </div>

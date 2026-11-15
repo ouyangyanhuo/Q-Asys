@@ -117,7 +117,7 @@ export default async function HomePage() {
         >
           <div className="grid gap-10 border-t border-rule pt-14 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-16">
             {/* 侧栏 */}
-            <aside className="self-start lg:sticky lg:top-24">
+            <aside data-reveal className="self-start lg:sticky lg:top-24">
               <div className="flex items-baseline gap-2">
                 <h2 className="font-song text-[28px] tracking-[0.08em] text-ink">
                   来信
@@ -135,14 +135,18 @@ export default async function HomePage() {
 
               <div className="mt-7 hidden flex-col gap-5 lg:flex">
                 <PostageStamp theme="lantern" color="seal" price="80" title="尺素" />
-                <div className="flex h-11 w-11 -rotate-6 items-center justify-center border border-seal/35 font-kai text-[16px] text-seal/80 shadow-2xs">
+                <div className="sway flex h-11 w-11 items-center justify-center border border-seal/35 font-kai text-[16px] text-seal/80 shadow-2xs">
                   笺
                 </div>
               </div>
             </aside>
 
             {/* 信件流交互展示 */}
-            <div className="max-w-[720px] pb-32">
+            <div
+              data-reveal
+              className="max-w-[720px] pb-32"
+              style={{ ["--reveal-delay" as string]: "90ms" }}
+            >
               <LettersStream initialLetters={letters} total={total} />
             </div>
           </div>

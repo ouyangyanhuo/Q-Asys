@@ -1,5 +1,6 @@
 "use client";
 
+import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Question } from "@/lib/types";
@@ -91,9 +92,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
               disabled={isFlipping}
               className="flex items-center gap-1.5 border border-seal/30 bg-seal/[0.04] px-3.5 py-1.5 font-hei text-[10.5px] tracking-wider text-seal shadow-2xs transition-all hover:bg-seal/[0.08] hover:scale-102 active:scale-95 disabled:opacity-50"
             >
-              <svg className={`h-3 w-3 ${isFlipping ? "animate-spin" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <RefreshCw className={`h-3 w-3 ${isFlipping ? "animate-spin" : ""}`} />
               <span>再拈一封</span>
             </button>
           </div>

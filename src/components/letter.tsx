@@ -1,5 +1,6 @@
 "use client";
 
+import { Share, Sparkle } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { formatDay, formatFullDate } from "@/lib/format";
@@ -189,17 +190,11 @@ export function Letter({
                     : "text-ink-faint hover:bg-paper-deep/40 hover:text-ink active:scale-95"
                 }`}
               >
-                <svg
-                  className={`h-3.5 w-3.5 transition-transform duration-300 ${
-                    resonated ? "scale-110 text-seal" : ""
-                  }`}
-                  viewBox="0 0 24 24"
+                <Sparkle
+                  className={`h-3.5 w-3.5 transition-transform duration-300 ${resonated ? "scale-110 text-seal" : ""}`}
                   fill={resonated ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                >
-                  <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z" />
-                </svg>
+                  strokeWidth={1.8}
+                />
                 <span>{resonanceCount}</span>
                 <span className="hidden sm:inline">共鸣</span>
               </button>
@@ -220,11 +215,7 @@ export function Letter({
               onClick={() => setShareOpen(true)}
               className="flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-hei text-[11px] text-ink-faint transition-colors hover:bg-paper-deep/40 hover:text-ink active:scale-95 whitespace-nowrap"
             >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                <polyline points="16 6 12 2 8 6" />
-                <line x1="12" y1="2" x2="12" y2="15" />
-              </svg>
+              <Share className="h-3.5 w-3.5" strokeWidth={1.8} />
               <span>传 阅</span>
             </button>
           </div>

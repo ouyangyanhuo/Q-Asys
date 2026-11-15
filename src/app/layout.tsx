@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { AmbientLight } from "@/components/ambient-light";
+import { PaperScene } from "@/components/paper-scene";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { ToastContainer } from "@/components/toast";
 
 export const metadata: Metadata = {
@@ -46,6 +47,10 @@ const THEME_SCRIPT = `
       root.removeAttribute('data-theme');
     }
     root.style.colorScheme = tone === 'night' ? 'dark' : 'light';
+    // 减弱动态的用户不启用滚动入场，避免首帧内容被藏起来
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('has-reveal');
+    }
   } catch (e) {}
 })();
 `;
@@ -59,7 +64,8 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="grain min-h-dvh antialiased">
-        <AmbientLight />
+        <PaperScene />
+        <ScrollReveal />
         {children}
         <ToastContainer />
       </body>
