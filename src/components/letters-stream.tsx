@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCw, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Question } from "@/lib/types";
 import { Letter } from "./letter";
 import { RandomLetterModal } from "./random-letter-modal";
@@ -17,6 +17,31 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   const [randomModalOpen, setRandomModalOpen] = useState(false);
   const [displayCount, setDisplayCount] = useState(12);
 
+  // 自己投出、尚未过审的那几封。服务端读 cookie 会把整页变成动态渲染，
+  // 所以改为挂载后单独取一次，只为本人把这几封钉在最上方。
+  const [mine, setMine] = useState<Question[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+
+    const load = () => {
+      fetch("/api/mine", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : { pending: [] }))
+        .then((data: { pending?: Question[] }) => {
+          if (alive) setMine(data.pending ?? []);
+        })
+        .catch(() => undefined);
+    };
+
+    load();
+    // 刚投完一封信时立刻取回来，不必刷新页面
+    window.addEventListener("qasys-mine-refresh", load);
+    return () => {
+      alive = false;
+      window.removeEventListener("qasys-mine-refresh", load);
+    };
+  }, []);
+
   // 保证无论经过何种筛选与搜索，每封信的序号（如 NO.042）始终真实恒定
   const letterNumberMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -27,7 +52,9 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   }, [initialLetters, total]);
 
   const filteredLetters = useMemo(() => {
-    let result = initialLetters;
+    // 候复中的私函永远排在最前，且只出现在「全部」与「候复」两栏
+    const pinned = filter === "answered" ? [] : mine;
+    let result = [...pinned, ...initialLetters];
 
     if (filter === "answered") {
       result = result.filter((l) => Boolean(l.answer));
@@ -46,7 +73,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     }
 
     return result;
-  }, [initialLetters, filter, keyword]);
+  }, [initialLetters, mine, filter, keyword]);
 
   const visibleLetters = filteredLetters.slice(0, displayCount);
   const hasMore = displayCount < filteredLetters.length;
@@ -56,9 +83,10 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     [initialLetters]
   );
   const waitingCount = useMemo(
-    () => initialLetters.filter((l) => !l.answer).length,
-    [initialLetters]
+    () => initialLetters.filter((l) => !l.answer).length + mine.length,
+    [initialLetters, mine]
   );
+  const totalCount = initialLetters.length + mine.length;
 
   return (
     <div className="space-y-8">
@@ -75,7 +103,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 : "text-ink-faint hover:text-ink hover:bg-paper-deep/30"
             }`}
           >
-            全部来鸿 ({initialLetters.length})
+            全部来鸿 ({totalCount})
           </button>
           <button
             type="button"
@@ -159,7 +187,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
             <Letter
               key={q.id}
               q={q}
-              number={letterNumberMap.get(q.id) ?? (total - i)}
+              number={letterNumberMap.get(q.id) ?? 0}
               index={i}
             />
           ))}

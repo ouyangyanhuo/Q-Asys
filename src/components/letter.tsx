@@ -90,15 +90,26 @@ export function Letter({
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1.5 font-hei text-[10px] tracking-[0.2em] text-ink-faint">
             <div className="flex items-center gap-2.5">
-              <span className="font-mono text-[11.5px] font-medium text-ink-faint/90">
-                NO.{String(number).padStart(3, "0")}
-              </span>
+              {q.status === "pending" ? (
+                <span className="font-kai text-[11px] tracking-[0.18em] text-seal">
+                  私 函
+                </span>
+              ) : (
+                <span className="font-mono text-[11.5px] font-medium text-ink-faint/90">
+                  NO.{String(number).padStart(3, "0")}
+                </span>
+              )}
               <span className="h-2 w-px bg-rule" />
               <time dateTime={q.createdAt}>{formatDay(q.createdAt)}</time>
             </div>
 
             <div className="flex items-center gap-2">
-              {q.answer ? (
+              {q.status === "pending" ? (
+                <span className="inline-flex items-center gap-1 font-kai text-[11px] text-seal">
+                  <span className="h-1.5 w-1.5 rounded-full bg-seal/70" />
+                  候复 · 仅你可见
+                </span>
+              ) : q.answer ? (
                 <span className="inline-flex items-center gap-1 font-kai text-[11px] text-[#3f5f4b]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#3f5f4b]/80" />
                   已 复
@@ -175,7 +186,14 @@ export function Letter({
           </div>
         )}
 
-        {/* 底部操作与微互动 */}
+        {/* 底部操作与微互动：候复中的私函不参与共鸣与传阅 */}
+        {q.status === "pending" ? (
+          <div className="mt-7 border-t border-rule/60 pt-4">
+            <p className="font-kai text-[11.5px] text-ink-faint/70">
+              此函仅你可见。收信人作复之后，自会公开。
+            </p>
+          </div>
+        ) : (
         <div className="mt-7 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4">
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {/* 共鸣微光按钮 */}
@@ -228,15 +246,18 @@ export function Letter({
             <span className="transition-transform duration-300 group-hover/arrow:translate-x-1">→</span>
           </Link>
         </div>
+        )}
       </article>
 
       {/* 分享弹窗 */}
+      {q.status === "published" && (
       <ShareModal
         question={q}
         number={number}
         isOpen={shareOpen}
         onClose={() => setShareOpen(false)}
       />
+      )}
     </>
   );
 }

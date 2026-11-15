@@ -67,6 +67,8 @@ export function ComposeCard() {
         setBody("");
         setNickname("");
         showToast("已入信箱，静候回音", "seal");
+        // 让下方的信箱立刻把这一封钉到最上方
+        window.dispatchEvent(new Event("qasys-mine-refresh"));
       }
     });
   }
@@ -290,16 +292,10 @@ export function ComposeCard() {
                   再 修 一 笺
                 </button>
                 <a
-                  href="/me"
+                  href="#letters"
                   className="font-hei text-[10.5px] tracking-[0.18em] text-seal/80 transition-colors hover:text-seal"
                 >
-                  往 我 的 去 信 看 这 一 封 →
-                </a>
-                <a
-                  href="#letters"
-                  className="font-hei text-[10.5px] tracking-[0.18em] text-ink-faint hover:text-seal transition-colors"
-                >
-                  往 信 箱 观 他 人 回 音 ↓
+                  往 信 箱 看 我 的 那 封 ↓
                 </a>
               </div>
             </div>
