@@ -130,12 +130,30 @@ export async function listAll(): Promise<Question[]> {
   return data.questions.sort(byNewest).map(strip);
 }
 
-export async function countRecentByIp(ipHash: string): Promise<number> {
-  const data = await read();
-  const since = Date.now() - 3_600_000;
-  return data.questions.filter(
-    (q) => q.ipHash === ipHash && Date.parse(q.createdAt) >= since,
-  ).length;
+/**
+ * 本地开发的限流计数：进程内 Map。
+ * 仅供 `bun dev` 使用，多进程不共享；线上走 neon-store 的数据库计数。
+ */
+const counters = new Map<string, { windowStart: number; hits: number }>();
+
+export async function hitRateCounter(
+  key: string,
+  windowSeconds: number,
+): Promise<{ hits: number; windowStart: number }> {
+  const size = windowSeconds * 1000;
+  const windowStart = Math.floor(Date.now() / size) * size;
+  const current = counters.get(key);
+  const hits = current && current.windowStart === windowStart ? current.hits + 1 : 1;
+  counters.set(key, { windowStart, hits });
+
+  // 顺手回收旧窗口
+  if (counters.size > 500) {
+    for (const [k, v] of counters) {
+      if (v.windowStart < windowStart - 3_600_000) counters.delete(k);
+    }
+  }
+
+  return { hits, windowStart: windowStart / 1000 };
 }
 
 export async function createQuestion(input: NewQuestion): Promise<Question> {

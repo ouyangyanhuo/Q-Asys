@@ -52,7 +52,12 @@ export async function listPublished(limit = 50): Promise<Question[]> {
   return rows.map(map);
 }
 
+/** 只放行合法 UUID；畸形 id 直接当作「查无此笺」，不打到 Postgres 的 uuid 解析上 */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getQuestion(id: string): Promise<Question | null> {
+  if (!UUID.test(id)) return null;
+
   const rows = (await db()`
     select id, body, nickname, status, answer, answered_at, created_at
     from questions
@@ -72,14 +77,45 @@ export async function listAll(): Promise<Question[]> {
   return rows.map(map);
 }
 
-export async function countRecentByIp(ipHash: string): Promise<number> {
+/**
+ * 固定窗口计数器：单条 upsert 完成「读—加一—写」，
+ * 由 Postgres 的行锁保证并发原子，多实例共享同一个窗口。
+ * 返回本窗口已计次数与窗口起点（epoch 秒）。
+ */
+export async function hitRateCounter(
+  key: string,
+  windowSeconds: number,
+): Promise<{ hits: number; windowStart: number }> {
   const rows = (await db()`
-    select count(*)::int as count
-    from questions
-    where ip_hash = ${ipHash}
-      and created_at > now() - interval '1 hour'
-  `) as unknown as Array<{ count: number }>;
-  return rows[0]?.count ?? 0;
+    insert into rate_counters (key, window_start, hits)
+    values (
+      ${key},
+      to_timestamp(
+        (floor(extract(epoch from now()) / ${windowSeconds}) * ${windowSeconds})::double precision
+      ),
+      1
+    )
+    on conflict (key, window_start)
+      do update set hits = rate_counters.hits + 1
+    returning hits,
+      extract(epoch from window_start)::int as window_start
+  `) as unknown as Array<{ hits: number; window_start: number }>;
+
+  // 顺手清掉过期窗口，约每五十次一次，避免表无限增长
+  if (Math.random() < 0.02) {
+    void (async () => {
+      try {
+        await db()`delete from rate_counters where window_start < now() - interval '2 days'`;
+      } catch {
+        // 清理失败不影响本次计数
+      }
+    })();
+  }
+
+  return {
+    hits: rows[0]?.hits ?? 1,
+    windowStart: rows[0]?.window_start ?? Math.floor(Date.now() / 1000),
+  };
 }
 
 export async function createQuestion(input: NewQuestion): Promise<Question> {

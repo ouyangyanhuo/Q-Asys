@@ -18,8 +18,11 @@ export function listAll(): Promise<Question[]> {
   return impl().listAll();
 }
 
-export function countRecentByIp(ipHash: string): Promise<number> {
-  return impl().countRecentByIp(ipHash);
+export function hitRateCounter(
+  key: string,
+  windowSeconds: number,
+): Promise<{ hits: number; windowStart: number }> {
+  return impl().hitRateCounter(key, windowSeconds);
 }
 
 export function createQuestion(input: NewQuestion): Promise<Question> {

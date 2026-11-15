@@ -20,3 +20,15 @@ create index if not exists questions_public_idx
 -- 限流：按 ip_hash 统计最近一小时
 create index if not exists questions_rate_idx
   on questions (ip_hash, created_at desc);
+
+-- 固定窗口限流计数：每个 (key, window_start) 一行，upsert 原子自增
+-- key 形如 "ip:ab12…:1m" / "global:1h"，window_start 是窗口起点
+create table if not exists rate_counters (
+  key          text not null,
+  window_start timestamptz not null,
+  hits         integer not null default 0,
+  primary key (key, window_start)
+);
+
+create index if not exists rate_counters_gc_idx
+  on rate_counters (window_start);
