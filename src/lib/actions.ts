@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { rejectMessage, sanitizeText, type RejectCode } from "@/lib/sanitize";
 import { checkRate, waitPhrase } from "@/lib/rate-limit";
+import { ensureVisitorHash } from "@/lib/visitor";
 import { createQuestion, MAX_BODY, MAX_NICKNAME } from "@/lib/store";
 
 export type SubmitErrorCode =
@@ -102,8 +103,11 @@ export async function submitQuestion(
   }
 
   // 4. 落库（参数化写入，不拼 SQL）
+  // 认领凭据：一枚匿名 cookie，让投信人之后还能找到自己这封候复中的信
+  const visitorHash = await ensureVisitorHash();
+
   try {
-    await createQuestion({ body: body.value, nickname, ipHash });
+    await createQuestion({ body: body.value, nickname, ipHash, visitorHash });
   } catch (error) {
     console.error("[submit:storage]", error);
     return {

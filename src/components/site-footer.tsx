@@ -22,6 +22,12 @@ export function SiteFooter({
           <div className="flex flex-wrap items-center gap-3">
             <ThemeToggle />
             <Link
+              href="/me"
+              className="group flex items-center gap-1.5 font-hei text-[11px] tracking-[0.18em] text-ink-faint transition-colors hover:text-seal"
+            >
+              我的去信
+            </Link>
+            <Link
               href="/admin"
               className="group flex items-center gap-2 border border-rule bg-paper px-4 py-2 font-hei text-[11px] tracking-[0.2em] text-ink-soft transition-colors hover:border-seal/50 hover:text-seal"
             >

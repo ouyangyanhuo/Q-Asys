@@ -18,6 +18,17 @@ export function listAll(): Promise<Question[]> {
   return impl().listAll();
 }
 
+export function listByVisitor(visitorHash: string): Promise<Question[]> {
+  return impl().listByVisitor(visitorHash);
+}
+
+export function isQuestionOwner(
+  id: string,
+  visitorHash: string,
+): Promise<boolean> {
+  return impl().isQuestionOwner(id, visitorHash);
+}
+
 export function hitRateCounter(
   key: string,
   windowSeconds: number,

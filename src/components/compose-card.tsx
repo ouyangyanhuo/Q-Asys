@@ -290,6 +290,12 @@ export function ComposeCard() {
                   再 修 一 笺
                 </button>
                 <a
+                  href="/me"
+                  className="font-hei text-[10.5px] tracking-[0.18em] text-seal/80 transition-colors hover:text-seal"
+                >
+                  往 我 的 去 信 看 这 一 封 →
+                </a>
+                <a
                   href="#letters"
                   className="font-hei text-[10.5px] tracking-[0.18em] text-ink-faint hover:text-seal transition-colors"
                 >

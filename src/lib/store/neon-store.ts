@@ -119,12 +119,63 @@ export async function hitRateCounter(
 }
 
 export async function createQuestion(input: NewQuestion): Promise<Question> {
-  const rows = (await db()`
-    insert into questions (body, nickname, status, ip_hash)
-    values (${input.body}, ${input.nickname}, 'pending', ${input.ipHash})
-    returning id, body, nickname, status, answer, answered_at, created_at
-  `) as unknown as Row[];
-  return map(rows[0]);
+  try {
+    const rows = (await db()`
+      insert into questions (body, nickname, status, ip_hash, visitor_hash)
+      values (
+        ${input.body}, ${input.nickname}, 'pending', ${input.ipHash}, ${input.visitorHash}
+      )
+      returning id, body, nickname, status, answer, answered_at, created_at
+    `) as unknown as Row[];
+    return map(rows[0]);
+  } catch (error) {
+    // 迁移没跑（缺 visitor_hash 列）时先保证信能存下，只是「我的去信」里看不到
+    if (!String(error).includes("visitor_hash")) throw error;
+    console.warn("[store] visitor_hash column missing, fallback insert");
+    const rows = (await db()`
+      insert into questions (body, nickname, status, ip_hash)
+      values (${input.body}, ${input.nickname}, 'pending', ${input.ipHash})
+      returning id, body, nickname, status, answer, answered_at, created_at
+    `) as unknown as Row[];
+    return map(rows[0]);
+  }
+}
+
+/** 某人投过的全部来信（含未审的候复稿），供「我的去信」 */
+export async function listByVisitor(visitorHash: string): Promise<Question[]> {
+  try {
+    const rows = (await db()`
+      select id, body, nickname, status, answer, answered_at, created_at
+      from questions
+      where visitor_hash = ${visitorHash}
+        and status <> 'hidden'
+      order by created_at desc
+      limit 50
+    `) as unknown as Row[];
+    return rows.map(map);
+  } catch (error) {
+    if (String(error).includes("visitor_hash")) return [];
+    throw error;
+  }
+}
+
+/** 这封候复中的信是否由本人投出 */
+export async function isQuestionOwner(
+  id: string,
+  visitorHash: string,
+): Promise<boolean> {
+  if (!UUID.test(id)) return false;
+  try {
+    const rows = (await db()`
+      select 1 from questions
+      where id = ${id} and visitor_hash = ${visitorHash} and status = 'pending'
+      limit 1
+    `) as unknown as unknown[];
+    return rows.length > 0;
+  } catch (error) {
+    if (String(error).includes("visitor_hash")) return false;
+    throw error;
+  }
 }
 
 export async function setStatus(

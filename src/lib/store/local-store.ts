@@ -6,6 +6,7 @@ const FILE = path.join(process.cwd(), ".data", "db.json");
 
 interface StoredQuestion extends Question {
   ipHash?: string | null;
+  visitorHash?: string | null;
 }
 
 interface Shape {
@@ -168,6 +169,7 @@ export async function createQuestion(input: NewQuestion): Promise<Question> {
       answeredAt: null,
       createdAt: new Date().toISOString(),
       ipHash: input.ipHash,
+      visitorHash: input.visitorHash,
     };
     data.questions.unshift(row);
     await write(data);
@@ -220,4 +222,25 @@ function strip(row: StoredQuestion): Question {
     answeredAt: row.answeredAt,
     createdAt: row.createdAt,
   };
+}
+
+/** 某人投过的全部来信（含未审的候复稿） */
+export async function listByVisitor(visitorHash: string): Promise<Question[]> {
+  const data = await read();
+  return data.questions
+    .filter((q) => q.visitorHash === visitorHash && q.status !== "hidden")
+    .sort(byNewest)
+    .map(strip);
+}
+
+/** 这封候复中的信是否由本人投出 */
+export async function isQuestionOwner(
+  id: string,
+  visitorHash: string,
+): Promise<boolean> {
+  const data = await read();
+  const found = data.questions.find((q) => q.id === id);
+  return Boolean(
+    found && found.visitorHash === visitorHash && found.status === "pending",
+  );
 }

@@ -5,7 +5,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { PostageStamp, CancellationMark, WaxSeal, type StampTheme, type StampColor } from "@/components/stamp-badge";
 import { LetterActions } from "@/components/letter-actions";
 import { formatFullDate } from "@/lib/format";
-import { getQuestion } from "@/lib/store";
+import { getQuestion, isQuestionOwner } from "@/lib/store";
+import { readVisitorHash } from "@/lib/visitor";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function QuestionPage({ params }: Props) {
   const { id } = await params;
   const q = await getQuestion(id);
-  if (!q || q.status !== "published") notFound();
+  if (!q) notFound();
+
+  // 候复中的信只有投信人自己能看（凭匿名 cookie 认领，不涉身份）
+  let owned = false;
+  if (q.status !== "published") {
+    const visitorHash = await readVisitorHash();
+    owned =
+      q.status === "pending" && visitorHash
+        ? await isQuestionOwner(id, visitorHash)
+        : false;
+    if (!owned) notFound();
+  }
 
   const hash = Math.abs(q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0));
   const stampTheme = STAMP_THEMES[hash % STAMP_THEMES.length];
@@ -103,6 +115,13 @@ export default async function QuestionPage({ params }: Props) {
 
           <div className="mt-10 h-px bg-rule" />
 
+          {owned && (
+            <div className="mt-8 border border-dashed border-seal/35 bg-seal/[0.035] px-4 py-3 font-kai text-[12.5px] leading-relaxed text-ink-soft">
+              此函尚在候复，只有你自己看得见。
+              收信人展读之后，回音会补在此处，旁人便可读到。
+            </div>
+          )}
+
           {/* 回信正文 */}
           {q.answer ? (
             <div className="mt-9 flex gap-4">
@@ -129,10 +148,12 @@ export default async function QuestionPage({ params }: Props) {
             </div>
           )}
 
-          {/* 交互操作栏 */}
-          <div className="mt-12 border-t border-dashed border-rule/80 pt-6">
-            <LetterActions question={q} />
-          </div>
+          {/* 交互操作栏：候复中的私函不做分享与共鸣 */}
+          {q.status === "published" && (
+            <div className="mt-12 border-t border-dashed border-rule/80 pt-6">
+              <LetterActions question={q} />
+            </div>
+          )}
 
           {/* 底部印章与署印 */}
           <div className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-rule/70 pt-6">

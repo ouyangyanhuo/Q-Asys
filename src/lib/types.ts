@@ -20,6 +20,8 @@ export interface NewQuestion {
   body: string;
   nickname: string | null;
   ipHash: string;
+  /** 访客标识的哈希，用于「只有投信人自己看得见未审的这封」 */
+  visitorHash: string;
 }
 
 export const MAX_BODY = 500;

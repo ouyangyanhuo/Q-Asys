@@ -17,6 +17,12 @@ create table if not exists questions (
 create index if not exists questions_public_idx
   on questions (status, created_at desc);
 
+-- 老库补列（新库上面已包含，可重复执行）
+alter table questions add column if not exists visitor_hash text;
+
+create index if not exists questions_visitor_idx
+  on questions (visitor_hash, created_at desc);
+
 -- 限流：按 ip_hash 统计最近一小时
 create index if not exists questions_rate_idx
   on questions (ip_hash, created_at desc);

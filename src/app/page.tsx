@@ -120,7 +120,7 @@ export default async function HomePage() {
             <aside data-reveal className="self-start lg:sticky lg:top-24">
               <div className="flex items-baseline gap-2">
                 <h2 className="font-song text-[28px] tracking-[0.08em] text-ink">
-                  来信
+                  来鸿
                 </h2>
                 <span className="font-mono text-[11px] text-ink-faint">
                   / LETTERS
