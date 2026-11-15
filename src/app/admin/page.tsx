@@ -68,7 +68,11 @@ export default async function AdminPage({
               开发模式
             </span>
           )}
-          <ThemeToggle />
+          <div className="hidden sm:block">
+            <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
+          </div>
           <Link href="/" className="transition-colors hover:text-ink">
             往 信 箱
           </Link>

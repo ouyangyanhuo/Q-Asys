@@ -128,9 +128,9 @@ export default async function HomePage() {
               </div>
 
               <p className="mt-3 font-kai text-[12.5px] leading-relaxed text-ink-faint">
-                有些声音随风散了，
+                随风而散者，不可胜数；
                 <br />
-                有些被留在了这里。
+                落于纸上者，皆可细读。
               </p>
 
               <div className="mt-7 hidden flex-col gap-5 lg:flex">

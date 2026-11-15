@@ -1,9 +1,9 @@
 /**
- * 明暗的四种取法：白昼 / 夜读 / 依时 / 随系统。
- * 前两者是手动档，后两者交由时间或系统裁决。
+ * 明暗的三档：日间 / 依时 / 夜间。
+ * 「依时」把裁决权交给时辰，其余两档由人手动定。
  */
 
-export type ThemeMode = "day" | "night" | "clock" | "system";
+export type ThemeMode = "day" | "night" | "clock";
 export type ThemeTone = "day" | "night";
 
 export const THEME_MODE_KEY = "qasys-theme-mode";
@@ -14,15 +14,10 @@ export const LEGACY_THEME_KEY = "qasys-theme";
 export const NIGHT_START_HOUR = 18;
 export const NIGHT_END_HOUR = 7;
 
-export const THEME_MODES: ThemeMode[] = ["day", "night", "clock", "system"];
+export const THEME_MODES: ThemeMode[] = ["day", "clock", "night"];
 
 export function isThemeMode(value: unknown): value is ThemeMode {
-  return (
-    value === "day" ||
-    value === "night" ||
-    value === "clock" ||
-    value === "system"
-  );
+  return value === "day" || value === "night" || value === "clock";
 }
 
 /** 按时辰定明暗：18:00 起为夜，07:00 起为昼 */
@@ -31,22 +26,12 @@ export function toneByClock(date: Date = new Date()): ThemeTone {
   return hour >= NIGHT_START_HOUR || hour < NIGHT_END_HOUR ? "night" : "day";
 }
 
-/** 按系统偏好定明暗 */
-export function toneBySystem(): ThemeTone {
-  if (typeof window === "undefined") return "day";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "night"
-    : "day";
-}
-
 export function resolveTone(mode: ThemeMode): ThemeTone {
   switch (mode) {
     case "day":
       return "day";
     case "night":
       return "night";
-    case "system":
-      return toneBySystem();
     case "clock":
     default:
       return toneByClock();
@@ -59,6 +44,8 @@ export function readThemeMode(): ThemeMode {
   try {
     const saved = window.localStorage.getItem(THEME_MODE_KEY);
     if (isThemeMode(saved)) return saved;
+    // 旧版「随系统」已下线，归入依时
+    if (saved === "system") return "clock";
 
     const legacy = window.localStorage.getItem(LEGACY_THEME_KEY);
     if (legacy === "day" || legacy === "night") return legacy;

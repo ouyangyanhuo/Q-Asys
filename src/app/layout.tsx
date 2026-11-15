@@ -28,15 +28,14 @@ const THEME_SCRIPT = `
   try {
     var root = document.documentElement;
     var mode = localStorage.getItem('qasys-theme-mode');
-    if (mode !== 'day' && mode !== 'night' && mode !== 'clock' && mode !== 'system') {
+    if (mode === 'system') mode = 'clock';
+    if (mode !== 'day' && mode !== 'night' && mode !== 'clock') {
       var legacy = localStorage.getItem('qasys-theme');
       mode = (legacy === 'day' || legacy === 'night') ? legacy : 'clock';
     }
     var tone;
     if (mode === 'day' || mode === 'night') {
       tone = mode;
-    } else if (mode === 'system') {
-      tone = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
     } else {
       var hour = new Date().getHours();
       tone = (hour >= 18 || hour < 7) ? 'night' : 'day';
