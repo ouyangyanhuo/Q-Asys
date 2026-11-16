@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { showToast } from "./toast";
 import { saveAnswerAction } from "@/lib/admin-actions";
 
 const TEMPLATES = [
@@ -19,13 +20,32 @@ export function AdminReplyBox({
   defaultAnswer: string;
 }) {
   const [text, setText] = useState(defaultAnswer);
+  const [pending, startTransition] = useTransition();
+  const [sentAt, setSentAt] = useState<number | null>(null);
 
   const insertTemplate = (t: string) => {
     setText((prev) => (prev ? `${prev}\n\n${t}` : t));
+    setSentAt(null);
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+
+    startTransition(async () => {
+      const result = await saveAnswerAction({ status: "idle" }, formData);
+
+      if (result.status === "ok") {
+        setSentAt(result.at ?? Date.now());
+        showToast(result.message ?? "回函已送出", "seal");
+      } else {
+        showToast(result.message ?? "未能送出，请再试一次", "info");
+      }
+    });
   };
 
   return (
-    <form action={saveAnswerAction} className="mt-7">
+    <form onSubmit={handleSubmit} className="mt-7">
       <input type="hidden" name="id" value={id} />
 
       <div className="flex items-center justify-between">
@@ -67,7 +87,10 @@ export function AdminReplyBox({
         id="answer"
         name="answer"
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          setSentAt(null);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
             e.currentTarget.form?.requestSubmit();
@@ -81,12 +104,26 @@ export function AdminReplyBox({
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
           type="submit"
-          className="bg-seal px-6 py-2.5 font-hei text-[11.5px] tracking-[0.28em] text-paper-soft shadow-[inset_0_0_0_1px_rgba(251,247,238,0.2)] transition-all hover:bg-[#9d3125] shadow-xs active:translate-y-px"
+          disabled={pending}
+          className="bg-seal px-6 py-2.5 font-hei text-[11.5px] tracking-[0.28em] text-paper-soft shadow-[inset_0_0_0_1px_rgba(251,247,238,0.2)] transition-all hover:bg-[#9d3125] shadow-xs active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {defaultAnswer ? "改 而 存 之" : "复 而 公 之"}
+          {pending
+            ? "送 出 中…"
+            : defaultAnswer
+              ? "改 而 存 之"
+              : "复 而 公 之"}
         </button>
         <span className="font-kai text-[11.5px] text-ink-faint">
-          {defaultAnswer ? "此函已有回音，落笔即覆原稿" : "公之，则即刻见于前台"}
+          {pending
+            ? "正在缄封…"
+            : sentAt
+              ? `已于 ${new Date(sentAt).toLocaleTimeString("zh-CN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })} 送出 · 前台即刻可见`
+              : defaultAnswer
+                ? "此函已有回音，落笔即覆原稿"
+                : "公之，则即刻见于前台"}
         </span>
       </div>
     </form>

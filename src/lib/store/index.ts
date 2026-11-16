@@ -5,6 +5,19 @@ import type { NewQuestion, Question, QuestionStatus, Stats } from "@/lib/types";
 
 export const isRemote = () => Boolean(process.env.DATABASE_URL);
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * 这个 id 能不能拿去查库／改库，由存储实现决定：
+ * 线上是 uuid（不合法会直接把 Postgres 打报错），
+ * 本地 JSON 库的种子 id 是 "seed-01" 这种短串。
+ */
+export function isAcceptableId(id: string): boolean {
+  if (!id || id.length > 64) return false;
+  return isRemote() ? UUID_RE.test(id) : /^[a-z0-9-]+$/i.test(id);
+}
+
 const impl = () => (isRemote() ? remote : local);
 
 export function listPublished(limit?: number): Promise<Question[]> {
