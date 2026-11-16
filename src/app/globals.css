@@ -6,7 +6,7 @@
   --color-paper-deep: #ece2ce;
   --color-ink: #1c1917;
   --color-ink-soft: #4f483a;
-  --color-ink-faint: #8c8272;
+  --color-ink-faint: #6f6455;
   --color-seal: #b23a2c;
   --color-rule: #d9ceb8;
   --color-kraft: #e7ddc6;
@@ -36,7 +36,7 @@ html[data-theme="night"] {
   --color-paper-deep: #25201b;
   --color-ink: #ede5d8;
   --color-ink-soft: #b9ad9f;
-  --color-ink-faint: #7d7265;
+  --color-ink-faint: #9c8f7d;
   --color-seal: #d24e3e;
   --color-rule: #362e26;
   --color-kraft: #27211b;
@@ -50,8 +50,6 @@ html[data-theme="night"] {
 
 @layer base {
   html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
   }
 
@@ -583,6 +581,12 @@ html[data-theme="night"] .sheet-shadow {
 
 .seal-breathe {
   animation: seal-breathe 7s ease-in-out infinite;
+}
+
+/* 楷体在小字号上笔画偏虚，补半像素描边让它站得住；
+   Firefox 忽略该属性，退化为原样，不会更差。 */
+.kai-boost {
+  -webkit-text-stroke: 0.16px currentColor;
 }
 
 /* 滚动入画：初始态由 head 脚本加的 .has-reveal 触发，

@@ -80,7 +80,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
                 <h3 className="font-song text-[15px] tracking-widest text-ink">
                   偶遇信签
                 </h3>
-                <p className="font-hei text-[9.5px] tracking-wider text-ink-faint">
+                <p className="font-hei text-[11px] tracking-wider text-ink-faint">
                   从时光深处抽出的某一封
                 </p>
               </div>
@@ -90,7 +90,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
               type="button"
               onClick={drawRandom}
               disabled={isFlipping}
-              className="flex items-center gap-1.5 border border-seal/30 bg-seal/[0.04] px-3.5 py-1.5 font-hei text-[10.5px] tracking-wider text-seal shadow-2xs transition-all hover:bg-seal/[0.08] hover:scale-102 active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-1.5 border border-seal/30 bg-seal/[0.04] px-3.5 py-1.5 font-hei text-[11.5px] tracking-wider text-seal shadow-2xs transition-all hover:bg-seal/[0.08] hover:scale-102 active:scale-95 disabled:opacity-50"
             >
               <RefreshCw className={`h-3 w-3 ${isFlipping ? "animate-spin" : ""}`} />
               <span>再拈一封</span>
@@ -101,7 +101,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
           <div className={`py-6 transition-all duration-300 ${isFlipping ? "scale-95 opacity-0" : "scale-100 opacity-100"}`}>
             {selected ? (
               <div>
-                <div className="flex items-center justify-between font-hei text-[10px] tracking-widest text-ink-faint">
+                <div className="flex items-center justify-between font-hei text-[11px] tracking-widest text-ink-faint">
                   <div className="flex items-center gap-2">
                     <span className="font-mono">LETTER ARCHIVE</span>
                     <span className="h-2 w-px bg-rule" />
@@ -127,7 +127,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
                 {selected.answer ? (
                   <div className="mt-6 border-t border-dashed border-rule pt-5">
                     <div className="flex items-start gap-3">
-                      <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center border border-seal/50 font-kai text-[10px] text-seal shadow-2xs">
+                      <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11px] text-seal shadow-2xs">
                         答
                       </span>
                       <p className="whitespace-pre-wrap font-song text-[14.5px] leading-[1.95] text-ink-soft">

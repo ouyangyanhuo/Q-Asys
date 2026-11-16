@@ -89,7 +89,7 @@ export function LetterView({
           </div>
 
           {/* 顶部信头元信息 */}
-          <div className="flex items-center gap-3 font-hei text-[10.5px] tracking-[0.24em] text-ink-faint">
+          <div className="flex items-center gap-3 font-hei text-[11.5px] tracking-[0.24em] text-ink-faint">
             <span className="font-mono tracking-normal text-ink-faint/90">
               LETTER
             </span>
@@ -132,7 +132,7 @@ export function LetterView({
                   {q.answer}
                 </p>
                 {q.answeredAt && (
-                  <p className="font-hei text-[10px] tracking-wider text-ink-faint/80">
+                  <p className="font-hei text-[11px] tracking-wider text-ink-faint/80">
                     复于 {formatFullDate(q.answeredAt)}
                   </p>
                 )}
@@ -162,7 +162,7 @@ export function LetterView({
                 <p className="font-song text-[14px] tracking-[0.2em] text-ink">
                   尺素
                 </p>
-                <p className="mt-0.5 font-hei text-[10px] tracking-[0.22em] text-ink-faint">
+                <p className="mt-0.5 font-hei text-[11px] tracking-[0.22em] text-ink-faint">
                   {q.answeredAt ? `复于 ${formatFullDate(q.answeredAt)}` : "静候复音"}
                 </p>
               </div>

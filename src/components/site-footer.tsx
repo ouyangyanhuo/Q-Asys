@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaGithub } from "react-icons/fa6";
 import { ThemeToggle } from "./theme-toggle";
 
 export function SiteFooter({
@@ -14,7 +15,7 @@ export function SiteFooter({
             <p className="font-kai text-[14px] leading-relaxed text-ink-soft">
               凡落笔于此者，必细读之。
             </p>
-            <p className="mt-1.5 font-hei text-[10.5px] leading-relaxed tracking-wider text-ink-faint">
+            <p className="mt-1.5 font-hei text-[11.5px] leading-relaxed tracking-wider text-ink-faint">
               不必追问谁写下，只需知道曾有人这样思念与生活。
             </p>
           </div>
@@ -35,11 +36,21 @@ export function SiteFooter({
 
         <div className="mt-9 flex flex-col gap-4 border-t border-rule/60 pt-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <p className="font-hei text-[10px] tracking-[0.24em] text-ink-faint">
+            <p className="font-hei text-[11px] tracking-[0.24em] text-ink-faint">
               - 尺素
             </p>
+            <a
+              href="https://github.com/ouyangyanhuo/Q-Asys"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="在 GitHub 查看源码"
+              title="在 GitHub 查看源码"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-rule bg-paper text-ink-faint transition-all duration-300 hover:border-seal/50 hover:text-seal"
+            >
+              <FaGithub className="h-4 w-4" aria-hidden="true" />
+            </a>
           </div>
-          <p className="font-mono text-[9px] tracking-[0.22em] text-ink-faint/70">
+          <p className="font-mono text-[10.5px] tracking-[0.22em] text-ink-faint/70">
             MAGNETO © 2026
           </p>
         </div>

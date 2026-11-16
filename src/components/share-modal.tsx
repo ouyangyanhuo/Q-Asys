@@ -81,13 +81,13 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
           {/* 顶部信头 */}
           <div className="flex items-start justify-between">
             <div className="flex flex-col">
-              <span className="font-hei text-[10px] tracking-[0.32em] text-ink-faint">
+              <span className="font-hei text-[11px] tracking-[0.32em] text-ink-faint">
                 尺素 · 笺谱留真
               </span>
               <span className="mt-1 font-mono text-[11px] font-medium text-ink-faint">
                 {number ? `NO. ${String(number).padStart(3, "0")}` : "LETTER ARCHIVE"}
               </span>
-              <span className="mt-0.5 font-hei text-[9.5px] text-ink-faint/80">
+              <span className="mt-0.5 font-hei text-[11px] text-ink-faint/80">
                 {formatFullDate(question.createdAt)}
               </span>
             </div>
@@ -118,7 +118,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
           {question.answer && (
             <div className="border-t border-dashed border-rule pt-6">
               <div className="flex items-start gap-3">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center border border-seal/50 font-kai text-[10.5px] text-seal shadow-2xs">
+                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11.5px] text-seal shadow-2xs">
                   答
                 </span>
                 <p className="whitespace-pre-wrap font-song text-[14.5px] leading-[2.05] text-ink-soft">
@@ -129,7 +129,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
           )}
 
           {/* 底部邮印水印 */}
-          <div className="mt-8 flex items-center justify-between border-t border-rule/60 pt-4 font-hei text-[9.5px] text-ink-faint">
+          <div className="mt-8 flex items-center justify-between border-t border-rule/60 pt-4 font-hei text-[11px] text-ink-faint">
             <span>有些话，不必署名。</span>
             <div className="flex items-center gap-2">
               <WaxSeal character="信" size="sm" />

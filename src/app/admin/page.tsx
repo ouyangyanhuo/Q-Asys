@@ -57,14 +57,14 @@ export default async function AdminPage({
           <span className="font-song text-[14px] tracking-[0.2em] text-ink">
             收信人工作台
           </span>
-          <span className="hidden font-hei text-[10.5px] tracking-wider text-ink-faint sm:inline">
+          <span className="hidden font-hei text-[11.5px] tracking-wider text-ink-faint sm:inline">
             待复 <span className="font-mono text-seal font-medium">{stats.pending}</span> 通
           </span>
         </div>
 
         <div className="flex items-center gap-4 font-hei text-[11px] text-ink-faint">
           {isDevOpen() && (
-            <span className="border border-seal/35 px-2 py-0.5 text-[9.5px] tracking-[0.1em] text-seal">
+            <span className="border border-seal/35 px-2 py-0.5 text-[11px] tracking-[0.1em] text-seal">
               开发模式
             </span>
           )}
@@ -134,12 +134,12 @@ export default async function AdminPage({
                             : "border-l-transparent hover:bg-paper/40"
                         }`}
                       >
-                        <div className="flex items-center justify-between font-hei text-[10px] tracking-[0.14em]">
+                        <div className="flex items-center justify-between font-hei text-[11px] tracking-[0.14em]">
                           <span className="font-mono text-ink-faint">
                             {formatDay(l.createdAt)}
                           </span>
                           <span
-                            className={`rounded-xs border px-1.5 py-0.2 text-[9px] ${TONE[l.status]}`}
+                            className={`rounded-xs border px-1.5 py-0.2 text-[10.5px] ${TONE[l.status]}`}
                           >
                             {LABEL[l.status]}
                           </span>
@@ -148,7 +148,7 @@ export default async function AdminPage({
                           {l.body}
                         </p>
                         {l.nickname && (
-                          <p className="mt-1 text-right font-kai text-[10.5px] text-ink-faint">
+                          <p className="mt-1 text-right font-kai text-[11.5px] text-ink-faint">
                             —— {l.nickname}
                           </p>
                         )}
@@ -172,14 +172,14 @@ export default async function AdminPage({
             </div>
           ) : (
             <article className="sheet-shadow mx-auto max-w-[720px] border border-rule bg-paper-soft px-6 py-9 md:px-11 md:py-12">
-              <div className="flex items-center justify-between font-hei text-[10px] tracking-[0.18em] text-ink-faint">
+              <div className="flex items-center justify-between font-hei text-[11px] tracking-[0.18em] text-ink-faint">
                 <div className="flex items-center gap-2">
                   <span className="font-mono">{formatStamp(active.createdAt)}</span>
                   <span className="h-2 w-px bg-rule" />
                   <span className="font-mono">ID: {active.id}</span>
                 </div>
                 <span
-                  className={`rounded-xs border px-2 py-0.5 text-[9.5px] ${TONE[active.status]}`}
+                  className={`rounded-xs border px-2 py-0.5 text-[11px] ${TONE[active.status]}`}
                 >
                   {LABEL[active.status]}
                 </span>

@@ -173,7 +173,7 @@ export function ComposeCard() {
 
         {/* 印章主题微选 */}
         <div className="mt-3 flex items-center justify-between border-t border-dashed border-rule/70 px-6 py-2.5 md:px-9">
-          <div className="flex items-center gap-1.5 font-hei text-[10.5px] tracking-wider text-ink-faint">
+          <div className="flex items-center gap-1.5 font-hei text-[11.5px] tracking-wider text-ink-faint">
             <span>钤一枚闲印：</span>
             <div className="flex items-center gap-1">
               {SEAL_OPTIONS.map((char) => (
@@ -194,7 +194,7 @@ export function ComposeCard() {
           </div>
 
           <span
-            className={`font-mono text-[10.5px] transition-colors ${
+            className={`font-mono text-[11.5px] transition-colors ${
               count > MAX_BODY * 0.9 ? "text-seal font-medium" : "text-ink-faint/80"
             }`}
           >
@@ -220,7 +220,7 @@ export function ComposeCard() {
           </label>
 
           <div className="flex items-center gap-3">
-            <span className="hidden font-hei text-[10px] tracking-wider text-ink-faint/70 lg:inline">
+            <span className="hidden font-hei text-[11px] tracking-wider text-ink-faint/70 lg:inline">
               ⌘ + Enter 投函
             </span>
             <button
@@ -293,7 +293,7 @@ export function ComposeCard() {
                 </button>
                 <a
                   href="#letters"
-                  className="font-hei text-[10.5px] tracking-[0.18em] text-seal/80 transition-colors hover:text-seal"
+                  className="font-hei text-[11.5px] tracking-[0.18em] text-seal/80 transition-colors hover:text-seal"
                 >
                   往 信 箱 看 我 的 那 封 ↓
                 </a>

@@ -88,7 +88,7 @@ export function Letter({
 
         {/* 顶部元信息栏与邮票徽章 */}
         <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1.5 font-hei text-[10px] tracking-[0.2em] text-ink-faint">
+          <div className="flex flex-col gap-1.5 font-hei text-[11px] tracking-[0.2em] text-ink-faint">
             <div className="flex items-center gap-2.5">
               {q.status === "pending" ? (
                 <span className="font-kai text-[11px] tracking-[0.18em] text-seal">
@@ -174,7 +174,7 @@ export function Letter({
                   {q.answer}
                 </p>
                 {q.answeredAt && (
-                  <p className="font-hei text-[9.5px] tracking-wider text-ink-faint/70">
+                  <p className="font-hei text-[11px] tracking-wider text-ink-faint/70">
                     复于 {formatFullDate(q.answeredAt)}
                   </p>
                 )}

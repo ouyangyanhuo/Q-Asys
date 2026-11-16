@@ -126,7 +126,7 @@ export function CancellationMark({
       <div className="relative flex h-13 w-13 items-center justify-center rounded-full border border-current">
         <div className="absolute inset-[3px] rounded-full border border-dashed border-current opacity-60" />
         <div className="flex flex-col items-center justify-center text-center font-hei text-[7.5px] leading-tight">
-          <span className="font-kai text-[9.5px] font-medium tracking-widest">{location}</span>
+          <span className="font-kai text-[11px] font-medium tracking-widest">{location}</span>
           <span className="font-mono text-[7px] tracking-tight">{date}</span>
           <span className="text-[6px] tracking-tighter opacity-80">AIR MAIL</span>
         </div>

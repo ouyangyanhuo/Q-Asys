@@ -118,7 +118,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
             role="radio"
             aria-checked={active}
             onClick={() => choose(item)}
-            className={`relative z-10 flex-1 rounded-full font-hei text-[10.5px] tracking-[0.14em] transition-colors duration-300 ${
+            className={`relative z-10 flex-1 rounded-full font-hei text-[11.5px] tracking-[0.14em] transition-colors duration-300 ${
               active ? "text-ink" : "text-ink-faint hover:text-ink-soft"
             }`}
           >

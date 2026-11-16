@@ -36,19 +36,19 @@ export function AdminReplyBox({
           <span className="h-1.5 w-1.5 rounded-full bg-seal" />
           <span>手 书 回 函</span>
           {defaultAnswer && (
-            <span className="border border-seal/35 px-1.5 py-px text-[9px] tracking-[0.12em] text-seal/80">
+            <span className="border border-seal/35 px-1.5 py-px text-[10.5px] tracking-[0.12em] text-seal/80">
               已 有 回 音
             </span>
           )}
         </label>
-        <span className="font-mono text-[10.5px] text-ink-faint">
+        <span className="font-mono text-[11.5px] text-ink-faint">
           {[...text].length} 字 · ⌘+Enter 落笔
         </span>
       </div>
 
       {/* 常用寄语快捷插入 */}
       <div className="mt-2.5 flex flex-wrap gap-1.5">
-        <span className="self-center font-hei text-[10px] text-ink-faint">
+        <span className="self-center font-hei text-[11px] text-ink-faint">
           常用寄语：
         </span>
         {TEMPLATES.map((t, idx) => (

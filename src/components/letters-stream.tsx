@@ -201,7 +201,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 className="group relative inline-flex items-center gap-2 border border-rule bg-paper-soft px-8 py-3 font-hei text-[12px] tracking-[0.25em] text-ink-soft shadow-xs transition-all duration-300 hover:border-seal/50 hover:text-seal active:scale-98"
               >
                 <span>展读旧笺</span>
-                <span className="font-mono text-[10px] text-ink-faint">
+                <span className="font-mono text-[11px] text-ink-faint">
                   ({visibleLetters.length}/{filteredLetters.length})
                 </span>
               </button>
