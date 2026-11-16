@@ -175,7 +175,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
             <button
               type="button"
               onClick={() => setKeyword("")}
-              className="mt-3 font-hei text-[11px] tracking-wider text-seal underline underline-offset-4 hover:text-[#9d3125]"
+              className="mt-3 font-hei text-[11px] tracking-wider text-seal underline underline-offset-4 hover:text-seal-deep"
             >
               重新寻过
             </button>

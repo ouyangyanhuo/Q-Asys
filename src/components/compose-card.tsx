@@ -6,7 +6,7 @@ import { submitQuestion, type SubmitState } from "@/lib/actions";
 import { formatMonth } from "@/lib/format";
 import { MAX_BODY } from "@/lib/types";
 import { PromptChips } from "./prompt-chips";
-import { WaxSeal, CancellationMark } from "./stamp-badge";
+import { Postmark, Seal } from "./stamp-badge";
 import { showToast } from "./toast";
 
 const SEAL_OPTIONS = ["信", "心", "光", "忆", "问", "安"];
@@ -87,8 +87,8 @@ export function ComposeCard() {
   return (
     <div
       id="write"
-      className="reveal relative scroll-mt-24"
-      style={{ animationDelay: "260ms" }}
+      className="rise relative scroll-mt-24"
+      style={{ "--d": "260ms" } as React.CSSProperties}
     >
       {/* 顶部信封折边装饰 */}
       <div
@@ -105,7 +105,7 @@ export function ComposeCard() {
       >
       <form
         onSubmit={handleSubmit}
-        className={`sheet-shadow relative border border-rule bg-paper-soft transition-all duration-500 hover:border-rule/90 ${
+        className={`sheet relative transition-all duration-500 ${
           isSubmittingAnim ? "scale-[0.985] opacity-80" : ""
         }`}
       >
@@ -120,7 +120,11 @@ export function ComposeCard() {
               <span className="font-song tracking-[0.14em] text-ink-faint/80">
                 {formatMonth()}
               </span>
-              <WaxSeal character={selectedSeal} size="sm" className="hidden sm:inline-flex" />
+              <Seal
+                text={selectedSeal}
+                size="2rem"
+                className="hidden sm:inline-grid"
+              />
             </div>
           </div>
           <div className="mt-3.5 h-px bg-rule" />
@@ -130,12 +134,6 @@ export function ComposeCard() {
             自带底色盖住格线；落笔后只淡出、不移除，纸面高度自始至终不变。 */}
         <div className="px-6 md:px-9">
           <div className="relative pt-2">
-            {/* 横格层从输入框顶端起算（top-2 对应外层 pt-2），保证文字正好落在格线上 */}
-            <div
-              className="ruled-field pointer-events-none absolute inset-x-0 bottom-0 top-2"
-              aria-hidden="true"
-            />
-
             <label className="sr-only" htmlFor="letter-body">
               你的信件内容
             </label>
@@ -152,9 +150,10 @@ export function ComposeCard() {
               }}
               maxLength={MAX_BODY}
               rows={6}
+              style={{ "--rows": 6 } as React.CSSProperties}
               spellCheck={false}
               placeholder="有何见问？不必斟酌字句，如实写下便好…"
-              className="relative block w-full resize-none bg-transparent pb-2 pt-[10px] font-kai text-[17.5px] leading-[34px] text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/50"
+              className="ruled block w-full bg-transparent font-kai text-body text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/70"
             />
 
             {/* 灵感便签条：常驻占位，仅淡出 */}
@@ -226,7 +225,7 @@ export function ComposeCard() {
             <button
               type="submit"
               disabled={pending || isSubmittingAnim || count === 0}
-              className="group relative flex items-center gap-2 overflow-hidden bg-seal px-7 py-2.5 font-hei text-[12px] tracking-[0.3em] text-paper-soft shadow-[inset_0_0_0_1px_rgba(251,247,238,0.22)] transition-all duration-300 hover:bg-[#9d3125] hover:shadow-[0_4px_16px_-4px_rgba(178,58,44,0.4)] active:translate-y-px disabled:cursor-not-allowed disabled:bg-rule disabled:text-ink-faint disabled:shadow-none"
+              className="group relative flex items-center gap-2 overflow-hidden bg-seal px-7 py-2.5 font-hei text-[12px] tracking-[0.3em] text-paper-soft shadow-[inset_0_0_0_1px_rgba(251,247,238,0.22)] transition-all duration-300 hover:bg-seal-deep hover:shadow-[0_4px_16px_-4px_rgba(178,58,44,0.4)] active:translate-y-px disabled:cursor-not-allowed disabled:bg-rule disabled:text-ink-faint disabled:shadow-none"
             >
               {isSubmittingAnim || pending ? (
                 <>
@@ -255,7 +254,7 @@ export function ComposeCard() {
         {state.status === "error" && (
           <p
             role="status"
-            className="fade-up border-t border-seal/20 bg-seal/[0.04] px-6 py-3 font-kai text-[12.5px] text-seal md:px-9"
+            className="fade-in border-t border-seal/20 bg-seal/[0.04] px-6 py-3 font-kai text-[12.5px] text-seal md:px-9"
           >
             {state.message}
           </p>
@@ -263,14 +262,14 @@ export function ComposeCard() {
 
         {/* 投递成功状态：高质感收执凭证 */}
         {done && (
-          <div className="modal-backdrop absolute inset-0 z-20 flex flex-col items-center justify-center bg-paper-soft/95 px-8 py-10 text-center backdrop-blur-xs">
+          <div className="fade-in absolute inset-0 z-20 flex flex-col items-center justify-center bg-paper-soft/95 px-8 py-10 text-center backdrop-blur-xs">
             {/* 投递凭据卡片 */}
-            <div className="modal-card sheet-shadow relative w-full max-w-[340px] border border-rule/80 bg-paper-soft p-6">
+            <div className="sheet slip-in relative w-full max-w-[340px] border border-rule/80 bg-paper-soft p-6">
               <div className="pointer-events-none absolute inset-2 border border-seal/20" />
 
               <div className="flex items-center justify-between">
-                <CancellationMark date="2026.11" location="已入箱" className="scale-75" />
-                <WaxSeal character={selectedSeal} size="md" className="seal-drop" />
+                <Postmark place="已入箱" date="2026.11" className="scale-75" />
+                <Seal text={selectedSeal} size="2.75rem" className="stamp-press" />
               </div>
 
               <div className="my-5 border-y border-dashed border-seal/40 py-2.5 font-song text-[22px] tracking-[0.35em] text-seal">
@@ -287,7 +286,7 @@ export function ComposeCard() {
                 <button
                   type="button"
                   onClick={writeAnother}
-                  className="bg-seal py-2 font-hei text-[11px] tracking-[0.25em] text-paper-soft transition-colors hover:bg-[#9d3125] shadow-xs active:translate-y-px"
+                  className="bg-seal py-2 font-hei text-[11px] tracking-[0.25em] text-paper-soft transition-colors hover:bg-seal-deep shadow-xs active:translate-y-px"
                 >
                   再 修 一 笺
                 </button>

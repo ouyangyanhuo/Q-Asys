@@ -67,7 +67,7 @@ export function LetterActions({ question }: { question: Question }) {
           {sparks.map((spark) => (
             <span
               key={spark.id}
-              className="spark-rise pointer-events-none absolute left-1/2 top-0 h-2 w-2 rounded-full bg-[#f5b84c] shadow-[0_0_8px_#f5b84c]"
+              className="spark-rise pointer-events-none absolute left-1/2 top-0 h-2 w-2 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]"
               style={{ "--spark-x": `${spark.x}px` } as React.CSSProperties}
             />
           ))}

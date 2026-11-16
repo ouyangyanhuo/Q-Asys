@@ -1,12 +1,11 @@
 "use client";
 
 import { Copy, Link2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 import type { Question } from "@/lib/types";
-import { formatFullDate } from "@/lib/format";
-import { PostageStamp, CancellationMark, WaxSeal } from "./stamp-badge";
-import { showToast } from "./toast";
+import { formatFullDate, letterNo } from "@/lib/format";
+import { Modal } from "./modal";
+import { PostageStamp, Postmark, Seal, stampOf } from "./stamp-badge";
 
 interface ShareModalProps {
   question: Question;
@@ -15,161 +14,124 @@ interface ShareModalProps {
   onClose: () => void;
 }
 
+/** 抄录结果的短提示：弹层内不用 toast，改在按钮旁给一行字 */
+function useCopyHint() {
+  const [hint, setHint] = useState("");
+  useEffect(() => {
+    if (!hint) return;
+    const timer = window.setTimeout(() => setHint(""), 2000);
+    return () => window.clearTimeout(timer);
+  }, [hint]);
+  return [hint, setHint] as const;
+}
+
 export function ShareModal({ question, number, isOpen, onClose }: ShareModalProps) {
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !mounted) return null;
+  const stamp = stampOf(question.id);
+  const [hint, setHint] = useCopyHint();
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/q/${question.id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      showToast("专笺之址已录");
-    });
+    navigator.clipboard.writeText(url).then(() => setHint("专笺之址已录"));
   };
 
   const handleCopyText = () => {
     const text = `【尺素】\n问：${question.body}${question.nickname ? ` —— ${question.nickname}` : ""}\n${question.answer ? `\n答：${question.answer}\n` : ""}\n原笺：${window.location.origin}/q/${question.id}`;
-    navigator.clipboard.writeText(text).then(() => {
-      showToast("笺中文字已录");
-    });
+    navigator.clipboard.writeText(text).then(() => setHint("笺中文字已录"));
   };
 
-  return createPortal(
-    <div
-      className="modal-backdrop fixed inset-0 z-50 overflow-y-auto overscroll-contain backdrop-blur-md"
-      style={{ backgroundColor: "rgba(20, 18, 16, 0.65)" }}
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
+  return (
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      labelledBy="share-modal-heading"
+      width="35rem"
     >
-      <div className="flex min-h-full min-h-dvh w-full justify-center p-4 py-8 sm:p-6 sm:py-12">
-        <div
-          className="modal-card relative my-auto w-full max-w-[560px]"
-          onClick={(e) => e.stopPropagation()}
-        >
-        {/* 卡片主体：传统八行笺雅致风格 */}
-        <div
-          ref={cardRef}
-          className="ruled-vertical sheet-shadow relative overflow-hidden border border-rule bg-paper-soft p-6 md:p-10"
-        >
-          {/* 八行笺红丝栏内外边框 */}
-          <div className="pointer-events-none absolute inset-3 border border-seal/20" />
-          <div className="pointer-events-none absolute inset-[15px] border border-seal/10" />
-
-          {/* 顶部信头 */}
-          <div className="flex items-start justify-between">
-            <div className="flex flex-col">
-              <span className="font-hei text-[11px] tracking-[0.32em] text-ink-faint">
-                尺素 · 笺谱留真
-              </span>
-              <span className="mt-1 font-mono text-[11px] font-medium text-ink-faint">
-                {number ? `NO. ${String(number).padStart(3, "0")}` : "LETTER ARCHIVE"}
-              </span>
-              <span className="mt-0.5 font-hei text-[11px] text-ink-faint/80">
-                {formatFullDate(question.createdAt)}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <CancellationMark date="2026.11" location="尺素" className="scale-75" />
-              <PostageStamp theme="lantern" price="80" color="seal" size="sm" />
-            </div>
+      <div className="sheet frame relative overflow-hidden px-6 py-8 md:px-10 md:py-10">
+        {/* 顶部信头 */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2
+              id="share-modal-heading"
+              className="font-song text-small tracking-[0.24em] text-ink"
+            >
+              尺素 · 笺谱留真
+            </h2>
+            <span className="font-kai text-[11px] text-ink-faint">
+              {number ? letterNo(number) : "存 档 之 笺"}
+              <span className="mx-2 text-rule">·</span>
+              {formatFullDate(question.createdAt)}
+            </span>
           </div>
 
-          {/* 信件问题内容 */}
-          <div className="my-8">
-            <p className="font-kai text-[19px] leading-[1.88] text-ink md:text-[21px]">
-              {question.body}
-            </p>
-            {question.nickname ? (
-              <p className="mt-3.5 text-right font-kai text-[12.5px] text-ink-faint">
-                —— {question.nickname}
-              </p>
-            ) : (
-              <p className="mt-3.5 text-right font-kai text-[11.5px] text-ink-faint/70">
-                —— 匿名旅人
-              </p>
-            )}
-          </div>
-
-          {/* 回信部分 */}
-          {question.answer && (
-            <div className="border-t border-dashed border-rule pt-6">
-              <div className="flex items-start gap-3">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11.5px] text-seal shadow-2xs">
-                  答
-                </span>
-                <p className="whitespace-pre-wrap font-song text-[14.5px] leading-[2.05] text-ink-soft">
-                  {question.answer}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* 底部邮印水印 */}
-          <div className="mt-8 flex items-center justify-between border-t border-rule/60 pt-4 font-hei text-[11px] text-ink-faint">
-            <span>有些话，不必署名。</span>
-            <div className="flex items-center gap-2">
-              <WaxSeal character="信" size="sm" />
-              <span>尺素 · 永久存留</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <Postmark
+              place="尺素"
+              date={question.createdAt.slice(0, 7).replace("-", ".")}
+              className="hidden scale-75 sm:block"
+            />
+            <PostageStamp
+              theme={stamp.theme}
+              color={stamp.color}
+              price={stamp.price}
+              size="sm"
+            />
           </div>
         </div>
 
-        {/* 底部操作按钮栏 */}
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="flex items-center gap-1.5 border border-rule/80 bg-paper-soft px-4 py-2 font-hei text-[11px] tracking-wider text-ink transition-colors hover:border-seal/60 hover:text-seal shadow-xs active:translate-y-px"
-            >
-              <Link2 className="h-3.5 w-3.5" />
-              录专属之址
-            </button>
-            <button
-              type="button"
-              onClick={handleCopyText}
-              className="flex items-center gap-1.5 border border-rule/80 bg-paper-soft px-4 py-2 font-hei text-[11px] tracking-wider text-ink transition-colors hover:border-seal/60 hover:text-seal shadow-xs active:translate-y-px"
-            >
-              <Copy className="h-3.5 w-3.5" />
-              录其文字
-            </button>
-          </div>
+        {/* 信件问题内容 */}
+        <div className="my-8">
+          <p className="font-kai text-letter leading-[1.88] text-ink">
+            {question.body}
+          </p>
+          <p className="mt-3.5 text-right font-kai text-label text-ink-faint">
+            —— {question.nickname || "匿名旅人"}
+          </p>
+        </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="border border-transparent px-4 py-2 font-hei text-[11px] tracking-wider text-paper-soft/90 transition-colors hover:text-white"
-          >
-            掩 卷 ESC
-          </button>
+        {/* 回信部分 */}
+        {question.answer && (
+          <div className="border-t border-dashed border-rule pt-6">
+            <div className="flex items-start gap-3">
+              <span className="mt-1 flex size-6 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11px] text-seal">
+                答
+              </span>
+              <p className="reply whitespace-pre-wrap font-song text-small text-ink-soft">
+                {question.answer}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 底部邮印水印 */}
+        <div className="mt-8 flex items-center justify-between border-t border-rule pt-4 font-hei text-[11px] text-ink-faint">
+          <span>有些话，不必署名。</span>
+          <div className="flex items-center gap-2">
+            <Seal text="信" size="1.75rem" />
+            <span>尺素 · 永久存留</span>
+          </div>
         </div>
       </div>
-    </div>
-  </div>,
-  document.body
-);
+
+      {/* 操作栏：抄录结果就地以文字回应，读屏也能听见 */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={handleCopyLink} className="btn btn-line btn-sm">
+            <Link2 className="size-3.5" />
+            录专属之址
+          </button>
+          <button type="button" onClick={handleCopyText} className="btn btn-line btn-sm">
+            <Copy className="size-3.5" />
+            录其文字
+          </button>
+          <span role="status" className="font-kai text-[11px] text-seal">
+            {hint}
+          </span>
+        </div>
+
+        <button type="button" onClick={onClose} className="btn btn-sm text-ink-faint">
+          掩 卷
+        </button>
+      </div>
+    </Modal>
+  );
 }

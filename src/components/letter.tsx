@@ -6,25 +6,8 @@ import Link from "next/link";
 import { formatDay, formatFullDate } from "@/lib/format";
 import type { Question } from "@/lib/types";
 import { ShareModal } from "./share-modal";
-import { PostageStamp, CancellationMark, type StampTheme, type StampColor } from "./stamp-badge";
+import { PostageStamp, Postmark, stampOf } from "./stamp-badge";
 import { showToast } from "./toast";
-
-const STAMP_THEMES: StampTheme[] = [
-  "lantern",
-  "moon",
-  "quill",
-  "boat",
-  "letter",
-  "sprout",
-];
-
-const STAMP_COLORS: StampColor[] = [
-  "seal",
-  "amber",
-  "forest",
-  "indigo",
-  "ink",
-];
 
 interface Spark {
   id: number;
@@ -48,10 +31,7 @@ export function Letter({
   const [sparks, setSparks] = useState<Spark[]>([]);
 
   // 依据信件唯一 id 确定性推算专属邮票与印色
-  const hash = Math.abs(q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0));
-  const stampTheme = STAMP_THEMES[hash % STAMP_THEMES.length];
-  const stampColor = STAMP_COLORS[(hash >> 2) % STAMP_COLORS.length];
-  const stampPrice = String(50 + (hash % 50));
+  const stamp = stampOf(q.id);
 
   const handleResonate = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -77,8 +57,8 @@ export function Letter({
   return (
     <>
       <article
-        className="reveal group relative overflow-hidden border border-rule/80 bg-paper-soft/80 p-6 transition-all duration-400 hover:-translate-y-1 hover:border-seal/40 hover:bg-paper-soft hover:shadow-[0_18px_40px_-20px_rgba(28,25,23,0.18)] md:p-8"
-        style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
+        className="rise group relative overflow-hidden border border-rule/80 bg-paper-soft/80 p-6 transition-all duration-400 hover:-translate-y-1 hover:border-seal/40 hover:bg-paper-soft hover:shadow-[0_18px_40px_-20px_rgba(28,25,23,0.18)] md:p-8"
+        style={{ "--d": `${Math.min(index, 6) * 60}ms` } as React.CSSProperties}
       >
         {/* 信笺折角阴影暗纹 */}
         <div
@@ -95,7 +75,7 @@ export function Letter({
                   私 函
                 </span>
               ) : (
-                <span className="font-mono text-[11.5px] font-medium text-ink-faint/90">
+                <span className="font-mono text-[11.5px] font-medium text-ink-faint">
                   NO.{String(number).padStart(3, "0")}
                 </span>
               )}
@@ -110,12 +90,12 @@ export function Letter({
                   候复 · 仅你可见
                 </span>
               ) : q.answer ? (
-                <span className="inline-flex items-center gap-1 font-kai text-[11px] text-[#3f5f4b]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#3f5f4b]/80" />
+                <span className="inline-flex items-center gap-1 font-kai text-[11px] text-pine">
+                  <span className="h-1.5 w-1.5 rounded-full bg-pine/80" />
                   已 复
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 font-kai text-[11px] text-ink-faint/70">
+                <span className="inline-flex items-center gap-1 font-kai text-[11px] text-ink-faint">
                   <span className="h-1.5 w-1.5 rounded-full bg-rule" />
                   候 复
                 </span>
@@ -125,15 +105,15 @@ export function Letter({
 
           {/* 右上角邮戳与迷你邮票：充满书信仪式感 */}
           <div className="flex items-center gap-2 transition-transform duration-300 group-hover:scale-102">
-            <CancellationMark
+            <Postmark
+              place="尺素"
               date={q.createdAt ? q.createdAt.slice(0, 7).replace("-", ".") : "2026.11"}
-              location="尺素"
-              className="hidden scale-75 sm:inline-flex"
+              className="hidden scale-75 sm:block"
             />
             <PostageStamp
-              theme={stampTheme}
-              color={stampColor}
-              price={stampPrice}
+              theme={stamp.theme}
+              color={stamp.color}
+              price={stamp.price}
               size="sm"
               className="shadow-xs transition-transform duration-300 group-hover:-rotate-2"
             />
@@ -156,7 +136,7 @@ export function Letter({
               —— {q.nickname}
             </p>
           ) : (
-            <p className="mt-3 text-right font-kai text-[11.5px] text-ink-faint/60">
+            <p className="mt-3 text-right font-kai text-[11.5px] text-ink-faint">
               —— 匿名旅人
             </p>
           )}
@@ -174,7 +154,7 @@ export function Letter({
                   {q.answer}
                 </p>
                 {q.answeredAt && (
-                  <p className="font-hei text-[11px] tracking-wider text-ink-faint/70">
+                  <p className="font-hei text-[11px] tracking-wider text-ink-faint">
                     复于 {formatFullDate(q.answeredAt)}
                   </p>
                 )}
@@ -183,7 +163,7 @@ export function Letter({
           </div>
         ) : (
           <div className="mt-5 border-t border-dashed border-rule/50 pt-3.5">
-            <p className="font-kai text-[12px] text-ink-faint/65">
+            <p className="font-kai text-[12px] text-ink-faint">
               此函尚在箧中，俟收信人展读，徐徐作复。
             </p>
           </div>
@@ -192,7 +172,7 @@ export function Letter({
         {/* 底部操作与微互动：候复中的私函不参与共鸣与传阅 */}
         {q.status === "pending" ? (
           <div className="mt-7 border-t border-rule/60 pt-4">
-            <p className="font-kai text-[11.5px] text-ink-faint/70">
+            <p className="font-kai text-[11.5px] text-ink-faint">
               此函仅你可见。收信人作复之后，自会公开。
             </p>
           </div>
@@ -224,7 +204,7 @@ export function Letter({
               {sparks.map((spark) => (
                 <span
                   key={spark.id}
-                  className="spark-rise pointer-events-none absolute left-1/2 top-0 h-2 w-2 rounded-full bg-[#f5b84c] shadow-[0_0_8px_#f5b84c]"
+                  className="spark-rise pointer-events-none absolute left-1/2 top-0 h-2 w-2 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]"
                   style={{ "--spark-x": `${spark.x}px` } as React.CSSProperties}
                 />
               ))}

@@ -1,7 +1,8 @@
+import type { CSSProperties } from "react";
 import { ComposeCard } from "@/components/compose-card";
 import { LettersStream } from "@/components/letters-stream";
 import { SiteFooter } from "@/components/site-footer";
-import { PostageStamp, CancellationMark } from "@/components/stamp-badge";
+import { PostageStamp, Postmark } from "@/components/stamp-badge";
 import { getStats, listPublished } from "@/lib/store";
 
 export const revalidate = 60;
@@ -20,7 +21,7 @@ export default async function HomePage() {
             <div className="relative lg:pt-2">
               {/* 背景装饰：微风中轻浮的折纸信笺暗纹 */}
               <div
-                className="float-gentle pointer-events-none absolute -right-6 -top-6 hidden opacity-40 select-none md:block"
+                className="sway pointer-events-none absolute -right-6 -top-6 hidden opacity-40 select-none md:block"
                 aria-hidden="true"
               >
                 <svg width="90" height="90" viewBox="0 0 100 100" fill="none" stroke="currentColor" className="text-seal/25">
@@ -32,8 +33,8 @@ export default async function HomePage() {
               </div>
 
               <h1
-                className="reveal mt-7 font-song text-[clamp(2.8rem,6.4vw,4.6rem)] leading-[1.14] tracking-[-0.012em] text-ink"
-                style={{ animationDelay: "80ms" }}
+                className="rise mt-7 font-song text-[clamp(2.8rem,6.4vw,4.6rem)] leading-[1.14] tracking-[-0.012em] text-ink"
+                style={{ "--d": "80ms" } as CSSProperties}
               >
                 有些话，
                 <br />
@@ -43,7 +44,7 @@ export default async function HomePage() {
                     viewBox="0 0 240 14"
                     preserveAspectRatio="none"
                     aria-hidden="true"
-                    className="underline-draw absolute -bottom-3 left-0 h-3 w-full overflow-visible"
+                    className="absolute -bottom-3 left-0 h-3 w-full overflow-visible"
                   >
                     <path
                       d="M2 9 C 52 3, 96 12, 140 6 S 208 3, 238 8"
@@ -59,8 +60,8 @@ export default async function HomePage() {
               </h1>
 
               <p
-                className="reveal mt-9 max-w-[24em] font-kai text-[17px] leading-[2.15] text-ink-soft md:text-[18px]"
-                style={{ animationDelay: "160ms" }}
+                className="rise mt-9 max-w-[24em] font-kai text-[17px] leading-[2.15] text-ink-soft md:text-[18px]"
+                style={{ "--d": "160ms" } as CSSProperties}
               >
                 有言欲问，不必具名。
                 <br />
@@ -69,8 +70,8 @@ export default async function HomePage() {
 
               {/* 实时统计与状态标牌 */}
               <div
-                className="reveal mt-11 flex flex-wrap items-center gap-x-5 gap-y-3 font-hei text-[11px] tracking-[0.15em] text-ink-faint"
-                style={{ animationDelay: "220ms" }}
+                className="rise mt-11 flex flex-wrap items-center gap-x-5 gap-y-3 font-hei text-[11px] tracking-[0.15em] text-ink-faint"
+                style={{ "--d": "220ms" } as CSSProperties}
               >
                 <div className="flex items-center gap-1.5">
                   <span>收函</span>
@@ -93,11 +94,11 @@ export default async function HomePage() {
 
               {/* 邮戳印鉴氛围装点 */}
               <div
-                className="reveal mt-12 hidden items-center gap-5 sm:flex"
-                style={{ animationDelay: "280ms" }}
+                className="rise mt-12 hidden items-center gap-5 sm:flex"
+                style={{ "--d": "280ms" } as CSSProperties}
               >
-                <CancellationMark date="2026.11" location="尺素" />
-                <div className="font-kai text-[12px] leading-relaxed text-ink-faint/80">
+                <Postmark place="尺素" date="2026.11" />
+                <div className="font-kai text-[12px] leading-relaxed text-ink-faint">
                   见字如面 · 纸短情长
                   <br />
                   凡有所书，皆郑重受之。
@@ -134,7 +135,7 @@ export default async function HomePage() {
               </p>
 
               <div className="mt-7 hidden flex-col gap-5 lg:flex">
-                <PostageStamp theme="lantern" color="seal" price="80" title="尺素" />
+                <PostageStamp theme="lantern" color="seal" price="80" />
                 <div className="sway flex h-11 w-11 items-center justify-center border border-seal/35 font-kai text-[16px] text-seal/80 shadow-2xs">
                   笺
                 </div>
@@ -142,11 +143,7 @@ export default async function HomePage() {
             </aside>
 
             {/* 信件流交互展示 */}
-            <div
-              data-reveal
-              className="max-w-[720px] pb-32"
-              style={{ ["--reveal-delay" as string]: "90ms" }}
-            >
+            <div data-reveal className="max-w-[720px] pb-32">
               <LettersStream initialLetters={letters} total={total} />
             </div>
           </div>

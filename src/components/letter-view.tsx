@@ -2,31 +2,13 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/site-footer";
 import {
   PostageStamp,
-  CancellationMark,
-  WaxSeal,
-  type StampTheme,
-  type StampColor,
+  Postmark,
+  Seal,
+  stampOf,
 } from "@/components/stamp-badge";
 import { LetterActions } from "@/components/letter-actions";
 import { formatFullDate } from "@/lib/format";
 import type { Question } from "@/lib/types";
-
-const STAMP_THEMES: StampTheme[] = [
-  "lantern",
-  "moon",
-  "quill",
-  "boat",
-  "letter",
-  "sprout",
-];
-
-const STAMP_COLORS: StampColor[] = [
-  "seal",
-  "amber",
-  "forest",
-  "indigo",
-  "ink",
-];
 
 /**
  * 单封信的版面。
@@ -39,12 +21,7 @@ export function LetterView({
   q: Question;
   owned?: boolean;
 }) {
-  const hash = Math.abs(
-    q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0),
-  );
-  const stampTheme = STAMP_THEMES[hash % STAMP_THEMES.length];
-  const stampColor = STAMP_COLORS[(hash >> 2) % STAMP_COLORS.length];
-  const stampPrice = String(50 + (hash % 50));
+  const stamp = stampOf(q.id);
   const postmarkDate = q.createdAt
     ? q.createdAt.slice(0, 7).replace("-", ".")
     : "2026.11";
@@ -62,36 +39,35 @@ export function LetterView({
             <span>归 信 箱</span>
           </Link>
 
-          <span className="font-mono text-[11px] tracking-widest text-ink-faint/70">
-            TIMELESS ARCHIVE
+          <span className="font-kai text-[11px] tracking-[0.2em] text-ink-faint">
+            来 鸿 存 档
           </span>
         </div>
 
         {/* 信笺主体卡片 */}
-        <article className="sheet-shadow reveal relative mt-8 overflow-hidden border border-rule bg-paper-soft px-7 py-12 md:px-14 md:py-16">
+        <article className="sheet frame rise relative mt-8 overflow-hidden px-7 py-12 md:px-14 md:py-16">
           {/* 八行笺内框装饰 */}
           <div className="pointer-events-none absolute inset-3 border border-seal/15" />
 
           {/* 右上角邮品装点 */}
           <div className="absolute right-6 top-6 flex items-center gap-2 sm:right-10 sm:top-8">
-            <CancellationMark
+            <Postmark
+              place="尺素"
               date={postmarkDate}
-              location="尺素"
-              className="hidden sm:inline-flex scale-85"
+              className="hidden scale-85 sm:block"
             />
             <PostageStamp
-              theme={stampTheme}
-              color={stampColor}
-              price={stampPrice}
-              title="尺素"
+              theme={stamp.theme}
+              color={stamp.color}
+              price={stamp.price}
               className="scale-90"
             />
           </div>
 
           {/* 顶部信头元信息 */}
           <div className="flex items-center gap-3 font-hei text-[11.5px] tracking-[0.24em] text-ink-faint">
-            <span className="font-mono tracking-normal text-ink-faint/90">
-              LETTER
+            <span className="font-kai tracking-[0.2em] text-ink-faint">
+              来 鸿
             </span>
             <span className="h-px w-10 bg-rule" />
             <time dateTime={q.createdAt}>{formatFullDate(q.createdAt)}</time>
@@ -107,7 +83,7 @@ export function LetterView({
               —— {q.nickname}
             </p>
           ) : (
-            <p className="mt-4 text-right font-kai text-[12px] text-ink-faint/70">
+            <p className="mt-4 text-right font-kai text-[12px] text-ink-faint">
               —— 匿名旅人
             </p>
           )}
@@ -132,7 +108,7 @@ export function LetterView({
                   {q.answer}
                 </p>
                 {q.answeredAt && (
-                  <p className="font-hei text-[11px] tracking-wider text-ink-faint/80">
+                  <p className="font-hei text-[11px] tracking-wider text-ink-faint">
                     复于 {formatFullDate(q.answeredAt)}
                   </p>
                 )}
@@ -157,7 +133,7 @@ export function LetterView({
           {/* 底部印章与署印 */}
           <div className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-rule/70 pt-6">
             <div className="flex items-center gap-3">
-              <WaxSeal character="信" size="md" />
+              <Seal text="信" variant="yin" size="2.75rem" />
               <div>
                 <p className="font-song text-[14px] tracking-[0.2em] text-ink">
                   尺素
@@ -171,7 +147,7 @@ export function LetterView({
             <div className="flex items-center gap-4">
               <Link
                 href="/#write"
-                className="border-b border-seal/40 pb-0.5 font-hei text-[11.5px] tracking-[0.18em] text-seal transition-colors hover:border-seal hover:text-[#9d3125]"
+                className="border-b border-seal/40 pb-0.5 font-hei text-[11.5px] tracking-[0.18em] text-seal transition-colors hover:border-seal hover:text-seal-deep"
               >
                 我亦有言欲寄 →
               </Link>
