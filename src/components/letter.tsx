@@ -142,7 +142,10 @@ export function Letter({
 
         {/* 问询信件正文 */}
         <div className="mt-5">
-          <Link href={`/q/${q.id}`} className="block group/link">
+          <Link
+            href={q.status === "pending" ? `/p/${q.id}` : `/q/${q.id}`}
+            className="block group/link"
+          >
             <p className="font-kai text-[19px] leading-[1.88] text-ink transition-colors duration-300 group-hover/link:text-seal md:text-[21px]">
               {q.body}
             </p>

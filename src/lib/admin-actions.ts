@@ -22,6 +22,7 @@ export async function saveAnswerAction(formData: FormData): Promise<void> {
   await publishAnswer(id, answer.value);
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath(`/q/${id}`);
 }
 
 export async function publishAction(formData: FormData): Promise<void> {
@@ -32,6 +33,7 @@ export async function publishAction(formData: FormData): Promise<void> {
   await setStatus(id, "published");
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath(`/q/${id}`);
 }
 
 export async function hideAction(formData: FormData): Promise<void> {
@@ -42,6 +44,7 @@ export async function hideAction(formData: FormData): Promise<void> {
   await setStatus(id, "hidden");
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath(`/q/${id}`);
 }
 
 export async function logoutAction(): Promise<void> {

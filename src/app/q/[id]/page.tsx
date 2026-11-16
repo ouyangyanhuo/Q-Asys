@@ -1,38 +1,28 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SiteFooter } from "@/components/site-footer";
-import { PostageStamp, CancellationMark, WaxSeal, type StampTheme, type StampColor } from "@/components/stamp-badge";
-import { LetterActions } from "@/components/letter-actions";
-import { formatFullDate } from "@/lib/format";
-import { getQuestion, isQuestionOwner } from "@/lib/store";
-import { readVisitorHash } from "@/lib/visitor";
+import { LetterView } from "@/components/letter-view";
+import { getQuestion } from "@/lib/store";
 
-export const dynamic = "force-dynamic";
+/**
+ * 公开信笺：人人看到的都一样，交给 ISR。
+ * 首次访问生成一份静态页，之后直接由边缘返回，不进函数、不查库。
+ */
+export const revalidate = 60;
 
 type Props = { params: Promise<{ id: string }> };
 
-const STAMP_THEMES: StampTheme[] = [
-  "lantern",
-  "moon",
-  "quill",
-  "boat",
-  "letter",
-  "sprout",
-];
-
-const STAMP_COLORS: StampColor[] = [
-  "seal",
-  "amber",
-  "forest",
-  "indigo",
-  "ink",
-];
+/**
+ * 空列表 + dynamicParams，让这条路由成为「按需生成的静态页」：
+ * 没有它，App Router 会把动态段当作纯动态路由，revalidate 不起作用。
+ */
+export async function generateStaticParams() {
+  return [] as Array<{ id: string }>;
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const q = await getQuestion(id);
-  if (!q) return { title: "未得此笺 · 尺素" };
+  if (!q || q.status !== "published") return { title: "未得此笺 · 尺素" };
   const excerpt = [...q.body].slice(0, 40).join("");
   return {
     title: `${excerpt} · 尺素`,
@@ -43,147 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function QuestionPage({ params }: Props) {
   const { id } = await params;
   const q = await getQuestion(id);
-  if (!q) notFound();
+  if (!q || q.status !== "published") notFound();
 
-  // 候复中的信只有投信人自己能看（凭匿名 cookie 认领，不涉身份）
-  let owned = false;
-  if (q.status !== "published") {
-    const visitorHash = await readVisitorHash();
-    owned =
-      q.status === "pending" && visitorHash
-        ? await isQuestionOwner(id, visitorHash)
-        : false;
-    if (!owned) notFound();
-  }
-
-  const hash = Math.abs(q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0));
-  const stampTheme = STAMP_THEMES[hash % STAMP_THEMES.length];
-  const stampColor = STAMP_COLORS[(hash >> 2) % STAMP_COLORS.length];
-  const stampPrice = String(50 + (hash % 50));
-  const postmarkDate = q.createdAt ? q.createdAt.slice(0, 7).replace("-", ".") : "2026.11";
-
-  return (
-    <div className="flex min-h-dvh flex-col">
-      <main className="mx-auto w-full max-w-[780px] flex-1 px-5 py-12 md:px-8 md:py-20">
-        {/* 面包屑导航与返回 */}
-        <div className="flex items-center justify-between">
-          <Link
-            href="/#letters"
-            className="flex items-center gap-1.5 font-hei text-[11.5px] tracking-[0.2em] text-ink-faint transition-colors hover:text-seal"
-          >
-            <span>←</span>
-            <span>归 信 箱</span>
-          </Link>
-
-          <span className="font-mono text-[11px] tracking-widest text-ink-faint/70">
-            TIMELESS ARCHIVE
-          </span>
-        </div>
-
-        {/* 信笺主体卡片 */}
-        <article className="sheet-shadow reveal relative mt-8 overflow-hidden border border-rule bg-paper-soft px-7 py-12 md:px-14 md:py-16">
-          {/* 八行笺内框装饰 */}
-          <div className="pointer-events-none absolute inset-3 border border-seal/15" />
-
-          {/* 右上角邮品装点 */}
-          <div className="absolute right-6 top-6 flex items-center gap-2 sm:right-10 sm:top-8">
-            <CancellationMark date={postmarkDate} location="尺素" className="hidden sm:inline-flex scale-85" />
-            <PostageStamp theme={stampTheme} color={stampColor} price={stampPrice} title="尺素" className="scale-90" />
-          </div>
-
-          {/* 顶部信头元信息 */}
-          <div className="flex items-center gap-3 font-hei text-[10.5px] tracking-[0.24em] text-ink-faint">
-            <span className="font-mono tracking-normal text-ink-faint/90">LETTER</span>
-            <span className="h-px w-10 bg-rule" />
-            <time dateTime={q.createdAt}>{formatFullDate(q.createdAt)}</time>
-          </div>
-
-          {/* 提问正文 */}
-          <p className="mt-10 max-w-[90%] font-kai text-[23px] leading-[1.88] text-ink md:text-[27px]">
-            {q.body}
-          </p>
-
-          {q.nickname ? (
-            <p className="mt-4 text-right font-kai text-[13px] text-ink-faint">
-              —— {q.nickname}
-            </p>
-          ) : (
-            <p className="mt-4 text-right font-kai text-[12px] text-ink-faint/70">
-              —— 匿名旅人
-            </p>
-          )}
-
-          <div className="mt-10 h-px bg-rule" />
-
-          {owned && (
-            <div className="mt-8 border border-dashed border-seal/35 bg-seal/[0.035] px-4 py-3 font-kai text-[12.5px] leading-relaxed text-ink-soft">
-              此函尚在候复，只有你自己看得见。
-              收信人展读之后，回音会补在此处，旁人便可读到。
-            </div>
-          )}
-
-          {/* 回信正文 */}
-          {q.answer ? (
-            <div className="mt-9 flex gap-4">
-              <span className="mt-[6px] flex h-7 w-7 shrink-0 items-center justify-center border border-seal/45 font-kai text-[12px] leading-none text-seal shadow-xs">
-                答
-              </span>
-              <div className="space-y-4">
-                <p className="whitespace-pre-wrap font-song text-[16.5px] leading-[2.15] text-ink-soft">
-                  {q.answer}
-                </p>
-                {q.answeredAt && (
-                  <p className="font-hei text-[10px] tracking-wider text-ink-faint/80">
-                    复于 {formatFullDate(q.answeredAt)}
-                  </p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="mt-9 flex items-center gap-3">
-              <span className="h-1.5 w-1.5 rounded-full bg-rule" />
-              <p className="font-kai text-[13.5px] text-ink-faint">
-                此函尚在箧中，待收信人展读，细细作复。
-              </p>
-            </div>
-          )}
-
-          {/* 交互操作栏：候复中的私函不做分享与共鸣 */}
-          {q.status === "published" && (
-            <div className="mt-12 border-t border-dashed border-rule/80 pt-6">
-              <LetterActions question={q} />
-            </div>
-          )}
-
-          {/* 底部印章与署印 */}
-          <div className="mt-10 flex flex-wrap items-end justify-between gap-6 border-t border-rule/70 pt-6">
-            <div className="flex items-center gap-3">
-              <WaxSeal character="信" size="md" />
-              <div>
-                <p className="font-song text-[14px] tracking-[0.2em] text-ink">
-                  尺素
-                </p>
-                <p className="mt-0.5 font-hei text-[10px] tracking-[0.22em] text-ink-faint">
-                  {q.answeredAt
-                    ? `复于 ${formatFullDate(q.answeredAt)}`
-                    : "静候复音"}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <Link
-                href="/#write"
-                className="border-b border-seal/40 pb-0.5 font-hei text-[11.5px] tracking-[0.18em] text-seal transition-colors hover:border-seal hover:text-[#9d3125]"
-              >
-                我亦有言欲寄 →
-              </Link>
-            </div>
-          </div>
-        </article>
-      </main>
-
-      <SiteFooter maxWidth="max-w-[780px]" />
-    </div>
-  );
+  return <LetterView q={q} />;
 }
