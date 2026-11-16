@@ -1,11 +1,10 @@
 "use server";
 
-import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { rejectMessage, sanitizeText, type RejectCode } from "@/lib/sanitize";
 import { checkRate, waitPhrase } from "@/lib/rate-limit";
 import { ensureVisitorHash } from "@/lib/visitor";
+import { clientIpHash } from "@/lib/request";
 import { createQuestion, MAX_BODY, MAX_NICKNAME } from "@/lib/store";
 
 export type SubmitErrorCode =
@@ -41,21 +40,6 @@ function rejected(code: RejectCode, maxLength: number): SubmitState {
     code: CODE_MAP[code],
     message: rejectMessage(code, maxLength),
   };
-}
-
-/**
- * 只哈希、不留明文。Vercel 会覆写 x-forwarded-for，取最左一段即真实来源；
- * 取不到时用常量兜底，让同一台机器仍然受同一份额度约束。
- */
-async function clientIpHash(): Promise<string> {
-  const store = await headers();
-  const forwarded = store.get("x-forwarded-for") ?? "";
-  const ip =
-    forwarded.split(",")[0]?.trim().slice(0, 64) ||
-    store.get("x-real-ip")?.slice(0, 64) ||
-    "unknown";
-  const salt = process.env.IP_SALT ?? "local-salt";
-  return createHash("sha256").update(`${salt}:${ip}`).digest("hex").slice(0, 32);
 }
 
 export async function submitQuestion(

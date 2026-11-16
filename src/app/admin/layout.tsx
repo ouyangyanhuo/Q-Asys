@@ -1,5 +1,10 @@
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "收信人工作台 · 尺素",
+  robots: { index: false, follow: false },
+};
+
 export default function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

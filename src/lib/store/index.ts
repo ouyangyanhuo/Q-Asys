@@ -55,6 +55,15 @@ export function hitRateCounter(
   return impl().hitRateCounter(key, windowSeconds);
 }
 
+export function hitRateCounters(
+  entries: [
+    { key: string; windowSeconds: number },
+    { key: string; windowSeconds: number },
+  ],
+): Promise<Array<{ key: string; hits: number; windowStart: number }>> {
+  return impl().hitRateCounters(entries);
+}
+
 export function createQuestion(input: NewQuestion): Promise<Question> {
   return impl().createQuestion(input);
 }

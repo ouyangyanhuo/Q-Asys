@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { NewQuestion, Question, QuestionStatus, Stats } from "@/lib/types";
+import type { RateCounterEntry, RateCounterReading } from "./neon-store";
 
 const FILE = path.join(process.cwd(), ".data", "db.json");
 
@@ -155,6 +156,21 @@ export async function hitRateCounter(
   }
 
   return { hits, windowStart: windowStart / 1000 };
+}
+
+/**
+ * 本地没有网络往返，两条计数直接顺序加即可；
+ * 接口与线上保持一致，好让 rate-limit 只有一条代码路径。
+ */
+export async function hitRateCounters(
+  entries: [RateCounterEntry, RateCounterEntry],
+): Promise<RateCounterReading[]> {
+  const out: RateCounterReading[] = [];
+  for (const entry of entries) {
+    const reading = await hitRateCounter(entry.key, entry.windowSeconds);
+    out.push({ key: entry.key, ...reading });
+  }
+  return out;
 }
 
 export async function createQuestion(input: NewQuestion): Promise<Question> {

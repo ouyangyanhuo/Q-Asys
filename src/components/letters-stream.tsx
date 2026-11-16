@@ -75,6 +75,11 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     return result;
   }, [initialLetters, mine, filter, keyword]);
 
+  // 换一栏就回到一屏的量，免得上一栏点开的「展读旧笺」带到下一栏
+  useEffect(() => {
+    setDisplayCount(12);
+  }, [filter, keyword]);
+
   const visibleLetters = filteredLetters.slice(0, displayCount);
   const hasMore = displayCount < filteredLetters.length;
 

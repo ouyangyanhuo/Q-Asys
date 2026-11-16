@@ -67,9 +67,9 @@ export default async function AdminPage({
       ? allLetters
       : allLetters.filter((l) => l.status === currentTab);
 
+  // 只在当前筛选里找：否则切到「已示」时，右栏还可能停着一封已经不在左栏的信
   const active =
     letters.find((l) => l.id === id) ??
-    allLetters.find((l) => l.id === id) ??
     letters.find((l) => l.status === "pending") ??
     letters[0] ??
     null;

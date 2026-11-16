@@ -74,11 +74,27 @@ export async function GET(req: Request) {
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
 
-  if (allow.length > 0 && !allow.includes(login.toLowerCase())) {
+  // 名单为空时不能「放行所有 GitHub 账号」——那就等于后台对全网开放。
+  // 宁可登录失败，也要让配置缺失立刻暴露出来。
+  if (allow.length === 0) {
+    console.error(
+      "[auth] ALLOWED_GITHUB_LOGIN is empty; refusing every login attempt",
+    );
+    return fail("unconfigured");
+  }
+  if (!allow.includes(login.toLowerCase())) {
     return fail("forbidden");
   }
 
-  const token = await signSession(login);
+  let token: string;
+  try {
+    token = await signSession(login);
+  } catch (error) {
+    // 典型原因：生产环境漏配 AUTH_SECRET。宁可登录失败，也不发一枚弱签名的令牌
+    console.error("[auth] cannot sign session:", error);
+    return fail("unconfigured");
+  }
+
   const res = NextResponse.redirect(`${origin}/admin`);
   res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);
   res.cookies.delete("qa_oauth_state");

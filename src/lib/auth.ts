@@ -19,12 +19,19 @@ export function isDevOpen(): boolean {
   return process.env.NODE_ENV !== "production" && !process.env.AUTH_GITHUB_ID;
 }
 
+const DEV_SECRET = "local-development-secret-change-me-please";
+
 async function key(): Promise<Uint8Array> {
-  const raw =
-    process.env.AUTH_SECRET ?? "local-development-secret-change-me-please";
+  const raw = process.env.AUTH_SECRET;
+  if (!raw && process.env.NODE_ENV === "production") {
+    // 绝不回落到仓库里的公开串：那等于把管理员令牌的签名钥匙交出去
+    throw new Error(
+      "AUTH_SECRET 未配置：生产环境拒绝签发或校验会话（本地开发仍可用默认值）",
+    );
+  }
   const digest = await crypto.subtle.digest(
     "SHA-256",
-    new TextEncoder().encode(raw),
+    new TextEncoder().encode(raw ?? DEV_SECRET),
   );
   return new Uint8Array(digest);
 }

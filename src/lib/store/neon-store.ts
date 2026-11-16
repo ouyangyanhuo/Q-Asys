@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { MAX_ANSWER } from "@/lib/types";
 import type { NewQuestion, Question, QuestionStatus, Stats } from "@/lib/types";
 
 type Row = {
@@ -77,6 +78,74 @@ export async function listAll(): Promise<Question[]> {
   return rows.map(map);
 }
 
+export interface RateCounterEntry {
+  key: string;
+  windowSeconds: number;
+}
+
+export interface RateCounterReading {
+  key: string;
+  hits: number;
+  windowStart: number;
+}
+
+let lastSweep = 0;
+
+/**
+ * 清过期窗口。用「每小时最多一次」的进程内节流，而不是按概率触发——
+ * 低流量站点上 2% 概率可能一整天都轮不到一次，表会悄悄长胖。
+ */
+async function sweepRateCounters(): Promise<void> {
+  const now = Date.now();
+  if (now - lastSweep < 60 * 60 * 1000) return;
+  lastSweep = now;
+  try {
+    await db()`delete from rate_counters where window_start < now() - interval '2 days'`;
+  } catch {
+    lastSweep = 0; // 失败就下次再试
+  }
+}
+
+/**
+ * 一次往返记两条（分钟窗 + 小时窗）。
+ * 固定窗口的起点交给数据库算，避免多实例之间时钟漂移。
+ */
+export async function hitRateCounters(
+  entries: [RateCounterEntry, RateCounterEntry],
+): Promise<RateCounterReading[]> {
+  const [a, b] = entries;
+  const rows = (await db()`
+    insert into rate_counters (key, window_start, hits)
+    values
+      (
+        ${a.key},
+        to_timestamp(
+          (floor(extract(epoch from now()) / ${a.windowSeconds}) * ${a.windowSeconds})::double precision
+        ),
+        1
+      ),
+      (
+        ${b.key},
+        to_timestamp(
+          (floor(extract(epoch from now()) / ${b.windowSeconds}) * ${b.windowSeconds})::double precision
+        ),
+        1
+      )
+    on conflict (key, window_start)
+      do update set hits = rate_counters.hits + 1
+    returning key, hits,
+      extract(epoch from window_start)::int as window_start
+  `) as unknown as Array<{ key: string; hits: number; window_start: number }>;
+
+  void sweepRateCounters();
+
+  return rows.map((row) => ({
+    key: row.key,
+    hits: row.hits,
+    windowStart: row.window_start,
+  }));
+}
+
 /**
  * 固定窗口计数器：单条 upsert 完成「读—加一—写」，
  * 由 Postgres 的行锁保证并发原子，多实例共享同一个窗口。
@@ -101,16 +170,7 @@ export async function hitRateCounter(
       extract(epoch from window_start)::int as window_start
   `) as unknown as Array<{ hits: number; window_start: number }>;
 
-  // 顺手清掉过期窗口，约每五十次一次，避免表无限增长
-  if (Math.random() < 0.02) {
-    void (async () => {
-      try {
-        await db()`delete from rate_counters where window_start < now() - interval '2 days'`;
-      } catch {
-        // 清理失败不影响本次计数
-      }
-    })();
-  }
+  void sweepRateCounters();
 
   return {
     hits: rows[0]?.hits ?? 1,
@@ -186,9 +246,11 @@ export async function setStatus(
 }
 
 export async function publishAnswer(id: string, answer: string): Promise<void> {
+  // 数据库层有 check 约束，这里再截断一次，避免约束未加上时写入超长正文
+  const clipped = answer.slice(0, MAX_ANSWER);
   await db()`
     update questions
-    set answer = ${answer}, status = 'published', answered_at = now()
+    set answer = ${clipped}, status = 'published', answered_at = now()
     where id = ${id}
   `;
 }
