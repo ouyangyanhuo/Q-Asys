@@ -2,13 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  applyMotion,
   applyTone,
   currentTone,
+  MOTION_KEY,
+  readMotion,
   readThemeMode,
   resolveTone,
+  saveMotion,
   saveThemeMode,
   THEME_MODE_KEY,
   THEME_MODES,
+  type Motion,
   type ThemeMode,
   type ThemeTone,
 } from "@/lib/theme";
@@ -19,15 +24,10 @@ const LABEL: Record<ThemeMode, string> = {
   night: "夜间",
 };
 
-const HINT: Record<ThemeMode, string> = {
-  day: "恒以暖阳",
-  clock: "入夜自暗，天明自明",
-  night: "恒以烛火",
-};
-
 /**
- * 明暗三档的横向切换：日间 · 依时 · 夜间。
- * 中间那块把裁决权交给时辰，滑块跟着手走。
+ * 明暗三档：日间 · 依时 · 夜间。
+ * 用原生单选钮，方向键切换、读屏播报都是现成的；
+ * 「依时」把裁决权交给时辰，并把此刻是昼是夜写在旁边。
  */
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const [mode, setMode] = useState<ThemeMode | null>(null);
@@ -83,49 +83,75 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     applyTone(nextTone);
   }, []);
 
-  if (!mode) {
-    return <div className={`h-8 w-[174px] ${className}`} aria-hidden="true" />;
-  }
+  return (
+    <fieldset
+      className={`seg font-song ${mode ? "" : "invisible"} ${className}`}
+    >
+      <legend className="sr-only">明暗</legend>
+      {THEME_MODES.map((item) => (
+        <label key={item}>
+          <input
+            type="radio"
+            name="theme-mode"
+            value={item}
+            checked={mode === item}
+            onChange={() => choose(item)}
+          />
+          {LABEL[item]}
+          {item === "clock" && mode === "clock" && (
+            <span className="ml-1 font-kai tracking-normal text-ink-faint">
+              · {tone === "night" ? "夜" : "昼"}
+            </span>
+          )}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
 
-  const index = THEME_MODES.indexOf(mode);
-  const isClock = mode === "clock";
-  const hint = isClock
-    ? tone === "night"
-      ? "此刻依时：夜"
-      : "此刻依时：昼"
-    : HINT[mode];
+/**
+ * 止风：把常驻的背景动效（飘着的纸、游走的光）停住。
+ * 自己会动、又一直不停的东西，得给人一个叫停的地方。
+ */
+export function MotionToggle({ className = "" }: { className?: string }) {
+  const [motion, setMotion] = useState<Motion | null>(null);
+
+  useEffect(() => {
+    setMotion(readMotion());
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== MOTION_KEY) return;
+      const next = readMotion();
+      setMotion(next);
+      applyMotion(next);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const toggle = () => {
+    const next: Motion = motion === "still" ? "flow" : "still";
+    setMotion(next);
+    saveMotion(next);
+    applyMotion(next);
+  };
+
+  const still = motion === "still";
 
   return (
-    <div
-      role="radiogroup"
-      aria-label="明暗"
-      title={hint}
-      className={`relative inline-flex h-8 w-[174px] items-stretch rounded-full border border-rule bg-paper p-[3px] ${className}`}
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={still}
+      title={still ? "纸页已静，点此起风" : "让飘动的纸页停下"}
+      className={`btn btn-line btn-sm ${motion ? "" : "invisible"} ${
+        still ? "border-seal/50 text-seal" : ""
+      } ${className}`}
     >
-      {/* 滑块：三档等分，位置即状态 */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-[3px] left-[3px] top-[3px] w-[calc((100%-6px)/3)] rounded-full bg-paper-deep shadow-[0_1px_2px_rgba(28,25,23,0.1),inset_0_1px_0_rgba(255,255,255,0.55)] transition-transform duration-300 ease-[cubic-bezier(0.22,0.68,0.25,1)]"
-        style={{ transform: `translateX(${index * 100}%)` }}
-      />
-
-      {THEME_MODES.map((item) => {
-        const active = item === mode;
-        return (
-          <button
-            key={item}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => choose(item)}
-            className={`relative z-10 flex-1 rounded-full font-hei text-[11.5px] tracking-[0.14em] transition-colors duration-300 ${
-              active ? "text-ink" : "text-ink-faint hover:text-ink-soft"
-            }`}
-          >
-            {LABEL[item]}
-          </button>
-        );
-      })}
-    </div>
+      <span aria-hidden="true" className="font-kai tracking-normal">
+        {still ? "静" : "风"}
+      </span>
+      止风
+    </button>
   );
 }

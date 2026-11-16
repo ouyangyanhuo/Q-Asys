@@ -137,16 +137,22 @@ function buildScene(THREE: Three, canvas: HTMLCanvasElement) {
   moteGeo.setAttribute("aAlpha", new THREE.BufferAttribute(moteAlphas, 1));
 
   const moteMat = new THREE.ShaderMaterial({
-    uniforms: { uColor: { value: new THREE.Color() } },
+    uniforms: {
+      uColor: { value: new THREE.Color() },
+      uGain: { value: 1 },
+      uScale: { value: 1 },
+    },
     vertexShader: /* glsl */ `
       attribute float aSize;
       attribute float aAlpha;
+      uniform float uGain;
+      uniform float uScale;
       varying float vAlpha;
       void main() {
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         float d = -mv.z;
-        vAlpha = aAlpha * (1.0 - smoothstep(30.0, 180.0, d));
-        gl_PointSize = aSize * (170.0 / max(d, 1.0));
+        vAlpha = aAlpha * uGain * (1.0 - smoothstep(30.0, 180.0, d));
+        gl_PointSize = aSize * uScale * (170.0 / max(d, 1.0));
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -200,8 +206,11 @@ function buildScene(THREE: Three, canvas: HTMLCanvasElement) {
       moteMat.uniforms.uColor.value.setHex(0xf7c76a);
     } else {
       lineMat.uniforms.uColor.value.setHex(0x3a332a);
-      moteMat.uniforms.uColor.value.setHex(0x8b7a5e);
+      moteMat.uniforms.uColor.value.setHex(0xa8946f);
     }
+    // 浅纸上深色的大光斑像污渍，白昼把浮尘收淡收小；夜里它们是烛火边的金尘
+    moteMat.uniforms.uGain.value = night ? 1 : 0.42;
+    moteMat.uniforms.uScale.value = night ? 1 : 0.62;
   };
   applyPalette();
 
@@ -286,12 +295,32 @@ function buildScene(THREE: Three, canvas: HTMLCanvasElement) {
 
   let raf = 0;
   let visible = true;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  // 页脚「止风」：停在当前这一帧，滚动与换色时仍补画一帧
+  const isStill = () =>
+    reduce.matches ||
+    document.documentElement.getAttribute("data-motion") === "still";
 
   const loop = () => {
-    if (!visible) return;
+    if (!visible || isStill()) return;
     time += 0.016;
     draw();
     raf = requestAnimationFrame(loop);
+  };
+
+  const settle = () => {
+    camZ = targetZ;
+    draw();
+  };
+
+  const onMotion = () => {
+    cancelAnimationFrame(raf);
+    if (isStill()) settle();
+    else raf = requestAnimationFrame(loop);
+  };
+
+  const onStillScroll = () => {
+    if (isStill()) settle();
   };
 
   const onResize = () => {
@@ -310,28 +339,32 @@ function buildScene(THREE: Three, canvas: HTMLCanvasElement) {
     if (visible) raf = requestAnimationFrame(loop);
   };
 
+  const onPalette = () => {
+    applyPalette();
+    if (isStill()) settle();
+  };
+
   readScroll();
   window.addEventListener("scroll", readScroll, { passive: true });
+  window.addEventListener("scroll", onStillScroll, { passive: true });
   window.addEventListener("pointermove", onPointer, { passive: true });
   window.addEventListener("resize", onResize, { passive: true });
-  window.addEventListener("qasys-theme-change", applyPalette);
+  window.addEventListener("qasys-theme-change", onPalette);
+  window.addEventListener("qasys-motion-change", onMotion);
+  reduce.addEventListener("change", onMotion);
   document.addEventListener("visibilitychange", onVisibility);
 
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-  if (reduce.matches) {
-    camZ = targetZ;
-    writeCards();
-    renderer.render(scene, camera);
-  } else {
-    raf = requestAnimationFrame(loop);
-  }
+  onMotion();
 
   return () => {
     cancelAnimationFrame(raf);
     window.removeEventListener("scroll", readScroll);
+    window.removeEventListener("scroll", onStillScroll);
     window.removeEventListener("pointermove", onPointer);
     window.removeEventListener("resize", onResize);
-    window.removeEventListener("qasys-theme-change", applyPalette);
+    window.removeEventListener("qasys-theme-change", onPalette);
+    window.removeEventListener("qasys-motion-change", onMotion);
+    reduce.removeEventListener("change", onMotion);
     document.removeEventListener("visibilitychange", onVisibility);
     lineGeo.dispose();
     moteGeo.dispose();

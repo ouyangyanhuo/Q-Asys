@@ -64,15 +64,15 @@ export function saveThemeMode(mode: ThemeMode): void {
   }
 }
 
-/** 把明暗落到 DOM 上：夜间靠 data-theme="night"，白昼则移除 */
+/**
+ * 把明暗落到 DOM 上：夜间靠 data-theme="night"，白昼则移除。
+ * 原生控件（滚动条、输入框光标）的配色由样式表里的 color-scheme 跟着这个属性走。
+ */
 export function applyTone(tone: ThemeTone): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   if (tone === "night") root.setAttribute("data-theme", "night");
   else root.removeAttribute("data-theme");
-
-  // 让原生控件（滚动条、输入框光标）跟着换色
-  root.style.colorScheme = tone === "night" ? "dark" : "light";
 
   window.dispatchEvent(
     new CustomEvent<ThemeTone>("qasys-theme-change", { detail: tone }),
@@ -85,4 +85,43 @@ export function currentTone(): ThemeTone {
   return document.documentElement.getAttribute("data-theme") === "night"
     ? "night"
     : "day";
+}
+
+/**
+ * 背景动效的起与止。「still」时纸场停在一帧，光晕不再游走；
+ * 入场、钤印这类一次性的动作不受影响。
+ */
+export type Motion = "flow" | "still";
+
+export const MOTION_KEY = "qasys-motion";
+
+export function readMotion(): Motion {
+  if (typeof window === "undefined") return "flow";
+  try {
+    return window.localStorage.getItem(MOTION_KEY) === "still"
+      ? "still"
+      : "flow";
+  } catch {
+    return "flow";
+  }
+}
+
+export function saveMotion(motion: Motion): void {
+  try {
+    if (motion === "still") window.localStorage.setItem(MOTION_KEY, "still");
+    else window.localStorage.removeItem(MOTION_KEY);
+  } catch {
+    // 存不住就只作用于本次访问
+  }
+}
+
+export function applyMotion(motion: Motion): void {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  if (motion === "still") root.setAttribute("data-motion", "still");
+  else root.removeAttribute("data-motion");
+
+  window.dispatchEvent(
+    new CustomEvent<Motion>("qasys-motion-change", { detail: motion }),
+  );
 }

@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
+// 随站分发的宋与楷：按 unicode-range 切成小片，用到哪些字才取哪几片；
+// 本机已有苹果宋楷的设备（见 globals.css 的字体栈）一片都不会下载
+import "@fontsource-variable/noto-serif-sc/wght.css";
+import "lxgw-wenkai-screen-webfont/lxgwwenkaiscreen.css";
 import "./globals.css";
 import { PaperScene } from "@/components/paper-scene";
-import { ScrollReveal } from "@/components/scroll-reveal";
 import { ToastContainer } from "@/components/toast";
 
 export const metadata: Metadata = {
@@ -45,10 +48,8 @@ const THEME_SCRIPT = `
     } else {
       root.removeAttribute('data-theme');
     }
-    root.style.colorScheme = tone === 'night' ? 'dark' : 'light';
-    // 减弱动态的用户不启用滚动入场，避免首帧内容被藏起来
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      root.classList.add('has-reveal');
+    if (localStorage.getItem('qasys-motion') === 'still') {
+      root.setAttribute('data-motion', 'still');
     }
   } catch (e) {}
 })();
@@ -64,7 +65,6 @@ export default function RootLayout({
       </head>
       <body className="grain min-h-dvh antialiased">
         <PaperScene />
-        <ScrollReveal />
         {children}
         <ToastContainer />
       </body>

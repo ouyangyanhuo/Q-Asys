@@ -1,198 +1,367 @@
-import React from "react";
+import type { CSSProperties, ReactNode } from "react";
 
-export type StampTheme = "lantern" | "moon" | "quill" | "boat" | "letter" | "sprout";
-export type StampColor = "seal" | "amber" | "forest" | "indigo" | "ink";
+export type StampTheme =
+  | "carp"
+  | "goose"
+  | "lantern"
+  | "moon"
+  | "boat"
+  | "brush"
+  | "plum"
+  | "peak";
+export type StampColor = "seal" | "ochre" | "pine" | "navy" | "ink";
 
-interface PostageStampProps {
-  theme?: StampTheme;
-  title?: string;
-  year?: string;
-  price?: string;
-  className?: string;
-  color?: StampColor;
-  size?: "sm" | "md" | "lg";
+const STAMP_THEMES: StampTheme[] = [
+  "carp",
+  "goose",
+  "lantern",
+  "moon",
+  "boat",
+  "brush",
+  "plum",
+  "peak",
+];
+
+const STAMP_COLORS: StampColor[] = ["seal", "ochre", "pine", "navy", "ink"];
+
+const INK: Record<StampColor, string> = {
+  seal: "text-seal",
+  ochre: "text-ochre",
+  pine: "text-pine",
+  navy: "text-navy",
+  ink: "text-ink-soft",
+};
+
+/**
+ * 依据信件 id 确定性地推出它专属的那枚邮票：图案、印色、面值与贴歪的角度。
+ * 同一封信在列表、详情、分享笺上永远是同一枚。
+ */
+export function stampOf(id: string) {
+  const hash = Math.abs(
+    id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0),
+  );
+  return {
+    hash,
+    theme: STAMP_THEMES[hash % STAMP_THEMES.length],
+    color: STAMP_COLORS[(hash >> 2) % STAMP_COLORS.length],
+    price: String(50 + (hash % 50)),
+    tilt: (hash % 7) - 3,
+  };
 }
 
+/* 邮票上的小画：32 格见方的线描，取鱼雁传书、灯月舟山这些书信里的旧意象 */
+const ART: Record<StampTheme, ReactNode> = {
+  // 鲤：「呼儿烹鲤鱼，中有尺素书」
+  carp: (
+    <>
+      <path d="M5 16c4-6 12-7 17-2.5l5-3.5c-.8 3-.8 6 0 9l-5-3.5C17 22 9 22 5 16z" />
+      <path d="M13 12.6c1.2 2.2 1.2 4.8 0 7M17 14.5c1 .9 1 2.2 0 3.2M20 15c.7.7.7 1.6 0 2.4" />
+      <circle cx="10" cy="15.2" r="0.9" fill="currentColor" stroke="none" />
+      <circle cx="6.5" cy="8" r="1.1" />
+      <circle cx="9.5" cy="5" r="0.7" />
+      <path d="M4 27q2.5-1.6 5 0t5 0 5 0 5 0 4 0" />
+    </>
+  ),
+  // 雁：鸿雁传书
+  goose: (
+    <>
+      <circle cx="22.5" cy="9.5" r="4.2" />
+      <path d="M4.5 11.5q2-2.6 3.6-.6 1.4-2.2 3.6.2M10 17.5q1.8-2.3 3.2-.5 1.3-2 3.2.2M4 21q1.5-2 2.7-.4 1.1-1.7 2.7.2" />
+      <path d="M3 27.5c4-3.5 7-3.5 10-1s6 2 9-1.5 5-2.5 7 0" />
+    </>
+  ),
+  lantern: (
+    <>
+      <path d="M16 2.5v3M12 5.5h8M12.5 21h7" />
+      <path d="M12 5.5c-4.5 2.5-4.5 13 0 15.5h8c4.5-2.5 4.5-13 0-15.5" />
+      <path d="M16 5.5V21M13.6 5.8c-1.6 4-1.6 11 0 15M18.4 5.8c1.6 4 1.6 11 0 15" />
+      <path d="M16 21v3.5M14.5 24.5h3M14.8 24.5v4M17.2 24.5v4M16 24.5v5" />
+    </>
+  ),
+  moon: (
+    <>
+      <path d="M21 5.5a9 9 0 1 0 5 12.4A7.4 7.4 0 0 1 21 5.5z" />
+      <circle cx="7.5" cy="7.5" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="11.5" cy="4" r="0.55" fill="currentColor" stroke="none" />
+      <path d="M4 25.5q2.5-1.6 5 0t5 0 5 0 5 0 4 0M8 29q2.5-1.6 5 0t5 0 5 0" />
+    </>
+  ),
+  boat: (
+    <>
+      <path d="M16 4.5V21M16 6c5 3 7 8 7.5 13H16M14.4 9c-3 3-4.5 6.5-5 10h5" />
+      <path d="M6 21.5h20c-1 3-3.5 4.5-6 4.5h-8c-2.5 0-5-1.5-6-4.5z" />
+      <path d="M3 29.5q2.5-1.6 5 0t5 0 5 0 5 0 5 0" />
+    </>
+  ),
+  brush: (
+    <>
+      <path d="M25.5 4.5l2 2L14 20l-2-2zM12 18l2 2-1.6 1.6-2-2z" />
+      <path
+        d="M10.4 19.6c-2.6 1.4-4.2 4-4.9 7.9 3.9-.7 6.5-2.3 7.9-4.9z"
+        fill="currentColor"
+        fillOpacity="0.28"
+      />
+      <path d="M17.5 28.5h10" />
+      <circle cx="22.5" cy="25" r="2.2" fill="currentColor" fillOpacity="0.28" />
+    </>
+  ),
+  plum: (
+    <>
+      <path d="M4 28.5c5-3 8-7 10-12s5-8 11-10M14 16.5c-3-1-5-3-6-6" />
+      <circle cx="22" cy="10" r="3" />
+      <circle cx="8.5" cy="8.5" r="2.4" />
+      <circle cx="16" cy="22" r="2.2" />
+      <circle cx="22" cy="10" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="8.5" cy="8.5" r="0.7" fill="currentColor" stroke="none" />
+      <circle cx="26" cy="4.5" r="1" fill="currentColor" stroke="none" />
+      <circle cx="6" cy="24.5" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  peak: (
+    <>
+      <circle cx="23" cy="8.5" r="3.4" />
+      <path d="M3 25.5l8-13 4.5 6.5 3-4L29 25.5z" />
+      <path d="M11 12.5l2.5 6.5M18.5 15l2 5M6 29h20" />
+    </>
+  ),
+};
+
+/**
+ * 邮票。齿孔由 CSS 蒙版打出（见 globals.css 的 .stamp-paper），
+ * 票面用单色线描，颜色跟着 currentColor 走。纯装饰，对读屏隐藏。
+ */
 export function PostageStamp({
-  theme = "letter",
-  title = "尺素",
-  year = "2026",
-  price = "80",
-  className = "",
+  theme = "carp",
   color = "seal",
+  price = "80",
   size = "md",
-}: PostageStampProps) {
-  const colorMap: Record<StampColor, string> = {
-    seal: "text-seal border-seal/35 bg-seal/[0.04]",
-    amber: "text-[#b46d1b] border-[#b46d1b]/35 bg-[#b46d1b]/[0.04]",
-    forest: "text-[#3f5f4b] border-[#3f5f4b]/35 bg-[#3f5f4b]/[0.04]",
-    indigo: "text-[#3c5279] border-[#3c5279]/35 bg-[#3c5279]/[0.04]",
-    ink: "text-ink border-ink/35 bg-ink/[0.03]",
-  };
-
-  const currentTheme = colorMap[color] || colorMap.seal;
-
-  const sizeDimensions = {
-    sm: "w-[56px] h-[70px] p-1.5",
-    md: "w-[72px] h-[90px] p-2",
-    lg: "w-[88px] h-[110px] p-2.5",
-  };
-
-  return (
-    <div
-      className={`group/stamp relative inline-flex flex-col items-center justify-between select-none transition-transform duration-300 hover:scale-105 hover:-rotate-1 ${sizeDimensions[size]} ${currentTheme} ${className}`}
-      style={{
-        boxShadow: "0 2px 8px -2px rgba(28, 25, 23, 0.12)",
-      }}
-    >
-      {/* 齿孔效果 (Perforated edges) */}
-      <div
-        className="pointer-events-none absolute -inset-[3px] border-[3px] border-dashed border-current opacity-35"
-        style={{ borderRadius: "2px" }}
-      />
-
-      {/* 内边框 */}
-      <div className="absolute inset-1 border border-current opacity-40" />
-
-      {/* 邮票顶部信息 */}
-      <div className="relative z-10 flex w-full items-center justify-between px-0.5 font-mono text-[7.5px] tracking-wider opacity-85">
-        <span>{title}</span>
-        <span>{price}分</span>
-      </div>
-
-      {/* 邮票中心微型插画 */}
-      <div className="relative z-10 flex flex-1 items-center justify-center py-0.5">
-        {theme === "lantern" && (
-          <svg className={size === "sm" ? "h-5 w-5 opacity-85" : "h-7 w-7 opacity-85"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-            <path d="M12 2v2M8 4h8l2 5-2 9H8L6 9l2-5zM9 18v2h6v-2" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="12" cy="11.5" r="2.5" fill="currentColor" opacity="0.3" />
-            <path d="M12 20v2" strokeLinecap="round" />
-          </svg>
-        )}
-        {theme === "moon" && (
-          <svg className={size === "sm" ? "h-5 w-5 opacity-85" : "h-7 w-7 opacity-85"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-            <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8A9 9 0 0 0 12 3z" />
-            <circle cx="17.5" cy="5.5" r="0.75" fill="currentColor" />
-            <circle cx="19" cy="8.5" r="0.5" fill="currentColor" />
-          </svg>
-        )}
-        {theme === "quill" && (
-          <svg className={size === "sm" ? "h-5 w-5 opacity-85" : "h-7 w-7 opacity-85"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-            <path d="m18 2-6 7.5L5 18l-3 4 4-3 8.5-7L22 6l-4-4z" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="m8 15 3 3M14 9l3 3" strokeLinecap="round" />
-          </svg>
-        )}
-        {theme === "boat" && (
-          <svg className={size === "sm" ? "h-5 w-5 opacity-85" : "h-7 w-7 opacity-85"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-            <path d="M2 18h20l-3 4H5l-3-4zM12 3v13M12 5l7 8h-7M12 7l-5 6h5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-        {theme === "sprout" && (
-          <svg className={size === "sm" ? "h-5 w-5 opacity-85" : "h-7 w-7 opacity-85"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-            <path d="M12 21V10M12 10a5 5 0 0 1 7-4 5 5 0 0 1-3 7h-4zM12 14a4 4 0 0 0-6-3 4 4 0 0 0 2 6h4z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-        {theme === "letter" && (
-          <svg className={size === "sm" ? "h-5 w-5 opacity-85" : "h-7 w-7 opacity-85"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
-            <rect width="18" height="13" x="3" y="5" rx="1.5" />
-            <path d="m3 7 9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-      </div>
-
-      {/* 邮票底部年份 */}
-      <div className="relative z-10 flex w-full items-center justify-center font-mono text-[7px] tracking-widest opacity-80">
-        <span>{year} · POST</span>
-      </div>
-    </div>
-  );
-}
-
-export function CancellationMark({
-  date = "2026.11",
-  location = "尺素",
+  tilt = 0,
   className = "",
 }: {
-  date?: string;
-  location?: string;
+  theme?: StampTheme;
+  color?: StampColor;
+  price?: string;
+  size?: "sm" | "md" | "lg";
+  tilt?: number;
   className?: string;
 }) {
   return (
-    <div
-      className={`pointer-events-none relative inline-flex items-center gap-1 text-seal/45 select-none ${className}`}
+    <span
       aria-hidden="true"
+      data-size={size}
+      className={`stamp ${INK[color]} ${className}`}
+      style={{ rotate: `${tilt}deg` }}
     >
-      {/* 邮戳圆环 */}
-      <div className="relative flex h-13 w-13 items-center justify-center rounded-full border border-current">
-        <div className="absolute inset-[3px] rounded-full border border-dashed border-current opacity-60" />
-        <div className="flex flex-col items-center justify-center text-center font-hei text-[7.5px] leading-tight">
-          <span className="font-kai text-[11px] font-medium tracking-widest">{location}</span>
-          <span className="font-mono text-[7px] tracking-tight">{date}</span>
-          <span className="text-[6px] tracking-tighter opacity-80">AIR MAIL</span>
-        </div>
-      </div>
-
-      {/* 邮戳波浪线 */}
-      <svg className="h-7 w-12 stroke-current opacity-70" viewBox="0 0 60 20" fill="none">
-        <path d="M0 4 Q 8 0, 15 4 T 30 4 T 45 4 T 60 4" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M0 10 Q 8 6, 15 10 T 30 10 T 45 10 T 60 10" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M0 16 Q 8 12, 15 16 T 30 16 T 45 16 T 60 16" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
-    </div>
+      <span className="stamp-paper">
+        <span className="stamp-face">
+          <span className="text-[calc(var(--stamp-w)*0.105)] tracking-[0.12em]">
+            尺素邮政
+          </span>
+          <svg
+            viewBox="0 0 32 32"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mx-auto w-[58%]"
+          >
+            {ART[theme]}
+          </svg>
+          <span className="flex items-baseline justify-end gap-px">
+            <span className="text-[calc(var(--stamp-w)*0.2)] font-bold">
+              {price}
+            </span>
+            <span className="text-[calc(var(--stamp-w)*0.105)]">分</span>
+          </span>
+        </span>
+      </span>
+    </span>
   );
 }
 
-export function WaxSeal({
-  character = "信",
+/**
+ * 邮戳：日戳一枚，旁带机盖的波浪销票线。
+ * place 写在上弧，date 落在腰带，sub 压在下方。
+ */
+export function Postmark({
+  place = "尺素",
+  date = "",
+  sub = "信箱",
+  waves = true,
+  className = "",
+  style,
+}: {
+  place?: string;
+  date?: string;
+  sub?: string;
+  waves?: boolean;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox={waves ? "0 0 126 64" : "0 0 64 64"}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      className={`ink-stamp worn h-14 w-auto shrink-0 ${className}`}
+      style={style}
+    >
+      <g transform="rotate(-9 32 32)">
+        <circle cx="32" cy="32" r="29" />
+        <path d="M5.6 26h52.8M5.6 38.5h52.8" strokeWidth="1" />
+        <g fill="currentColor" stroke="none" textAnchor="middle">
+          <text
+            x="32"
+            y="21"
+            fontSize="10.5"
+            letterSpacing="2"
+            className="font-kai"
+          >
+            {place}
+          </text>
+          <text
+            x="32"
+            y="35.4"
+            fontSize="7.4"
+            letterSpacing="0.3"
+            className="font-song"
+          >
+            {date}
+          </text>
+          <text
+            x="32"
+            y="50"
+            fontSize="7.6"
+            letterSpacing="1.6"
+            className="font-song"
+          >
+            {sub}
+          </text>
+        </g>
+      </g>
+      {waves && (
+        <path
+          d="M66 17q5-4 10 0t10 0 10 0 10 0 10 0 8 0M66 27q5-4 10 0t10 0 10 0 10 0 10 0 8 0M66 37q5-4 10 0t10 0 10 0 10 0 10 0 8 0M66 47q5-4 10 0t10 0 10 0 10 0 10 0 8 0"
+          strokeWidth="1.1"
+        />
+      )}
+    </svg>
+  );
+}
+
+/**
+ * 一枚邮票连同销票的邮戳：戳压在票的左下角，像真寄过。
+ */
+export function Postage({
+  id,
+  date,
   size = "md",
   className = "",
-  onClick,
 }: {
-  character?: string;
+  id: string;
+  /** 形如 2026.11.15 */
+  date: string;
   size?: "sm" | "md" | "lg";
   className?: string;
-  onClick?: () => void;
 }) {
-  const sizeClasses = {
-    sm: "w-8 h-8 text-[12px]",
-    md: "w-11 h-11 text-[16px]",
-    lg: "w-16 h-16 text-[22px]",
-  };
+  const stamp = stampOf(id);
+  return (
+    <span
+      aria-hidden="true"
+      className={`relative inline-flex items-start ${className}`}
+    >
+      <Postmark
+        date={date}
+        className={`relative z-10 -mr-5 mt-[38%] hidden sm:block ${
+          size === "sm" ? "h-11" : "h-14"
+        }`}
+      />
+      <PostageStamp
+        theme={stamp.theme}
+        color={stamp.color}
+        price={stamp.price}
+        tilt={stamp.tilt}
+        size={size}
+      />
+    </span>
+  );
+}
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (onClick && (e.key === "Enter" || e.key === " ")) {
-      e.preventDefault();
-      onClick();
-    }
-  };
+/**
+ * 印章。白文（yin）朱底留白，朱文（yang）只留朱线；
+ * 一字居中，二字竖排，四字右起两列。
+ */
+export function Seal({
+  text = "尺素",
+  variant = "yin",
+  shape = "square",
+  size,
+  tilt = 0,
+  worn = true,
+  className = "",
+  label,
+}: {
+  text?: string;
+  variant?: "yin" | "yang";
+  shape?: "square" | "round";
+  /** 边长，任意 CSS 长度；缺省 2.75rem */
+  size?: string;
+  tilt?: number;
+  worn?: boolean;
+  className?: string;
+  /** 给了就当图读出来，不给则视为装饰 */
+  label?: string;
+}) {
+  const glyphs = [...text].slice(0, 4);
+  const style = {
+    ...(size ? { "--seal-size": size } : null),
+    rotate: `${tilt}deg`,
+  } as CSSProperties;
 
   return (
-    <div
-      onClick={onClick}
-      onKeyDown={onClick ? handleKeyDown : undefined}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      className={`relative inline-flex items-center justify-center rounded-full transition-transform duration-300 ${
-        onClick ? "cursor-pointer hover:scale-108 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-seal/50" : ""
-      } ${sizeClasses[size]} ${className}`}
-      style={{
-        background: "radial-gradient(circle at 35% 35%, #d64d3c, #9d2b1f 65%, #6e1c13 100%)",
-        boxShadow: "inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 3px 10px -2px rgba(110, 28, 19, 0.55), 0 1px 3px rgba(0,0,0,0.2)",
-      }}
+    <span
+      role={label ? "img" : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+      data-variant={variant}
+      data-shape={shape}
+      className={`seal-mark ${worn ? "worn" : ""} ${className}`}
+      style={style}
     >
-      {/* 蜡封外圈的不规则印痕 */}
-      <div
-        className="pointer-events-none absolute -inset-[2px] rounded-full border border-[#fbf7ee]/25 opacity-70"
-        style={{
-          boxShadow: "inset 0 0 4px rgba(0, 0, 0, 0.3)",
-        }}
-      />
-      {/* 内圈凹陷印章 */}
-      <div className="relative flex h-[74%] w-[74%] items-center justify-center rounded-full border border-[#fbf7ee]/45 shadow-[inset_0_2px_4px_rgba(0,0,0,0.35)]">
-        <span className="font-kai font-semibold leading-none text-[#fbf7ee] drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">
-          {character}
-        </span>
-      </div>
-    </div>
+      <span className="seal-glyphs" data-count={glyphs.length}>
+        {glyphs.map((glyph, i) => (
+          <span key={i}>{glyph}</span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * 退件章之类的长方戳记：双线框，字横排。
+ */
+export function BoxMark({
+  children,
+  tilt = -6,
+  className = "",
+}: {
+  children: ReactNode;
+  tilt?: number;
+  className?: string;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`ink-stamp worn inline-block border-2 border-current p-[3px] ${className}`}
+      style={{ rotate: `${tilt}deg` }}
+    >
+      <span className="block border border-current px-3 py-1.5 font-song text-small font-bold tracking-[0.3em]">
+        {children}
+      </span>
+    </span>
   );
 }

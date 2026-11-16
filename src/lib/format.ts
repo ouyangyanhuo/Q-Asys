@@ -60,3 +60,80 @@ export function formatMonth(): string {
   const { y, m } = parts(now);
   return `${yearCn(y)}年${cn(m)}月`;
 }
+
+/** 整数写成汉字：42 → 四十二，105 → 一百〇五，1234 → 一千二百三十四 */
+export function toCn(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return String(n);
+  n = Math.floor(n);
+  if (n < 100) return cn(n);
+  if (n >= 100_000) return String(n);
+
+  const units = ["", "十", "百", "千", "万"];
+  const digits = String(n).split("").map(Number);
+  let out = "";
+  let pendingZero = false;
+  digits.forEach((d, i) => {
+    const unit = units[digits.length - 1 - i];
+    if (d === 0) {
+      pendingZero = out !== "";
+      return;
+    }
+    if (pendingZero) out += "〇";
+    pendingZero = false;
+    out += DIGITS[d] + unit;
+  });
+  return out;
+}
+
+/** 函号：第四十二函 */
+export function letterNo(n: number): string {
+  return `第${toCn(n)}函`;
+}
+
+/** 邮戳上的日期：2026.11.15 */
+export function formatDot(iso: string): string {
+  const { y, m, d } = parts(iso);
+  return `${y}.${String(m).padStart(2, "0")}.${String(d).padStart(2, "0")}`;
+}
+
+function lunarDay(d: number): string {
+  if (d <= 10) return `初${cn(d)}`;
+  if (d < 20) return cn(d);
+  if (d === 20) return "二十";
+  if (d < 30) return `廿${DIGITS[d % 10]}`;
+  return "三十";
+}
+
+/**
+ * 今日的干支与农历：丙午年十月初八。旧时书信皆如此落日期。
+ * 运行环境不认农历时退回公历年月。
+ */
+export function formatLunar(date: Date = new Date()): string {
+  try {
+    const map = Object.fromEntries(
+      new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+        timeZone: TZ,
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+        .formatToParts(date)
+        .map((p) => [p.type, p.value]),
+    ) as Record<string, string>;
+    const day = Number(map.day);
+    if (map.yearName && map.month && day >= 1 && day <= 30) {
+      return `${map.yearName}年${map.month}${lunarDay(day)}`;
+    }
+  } catch {
+    // 落到下面的公历
+  }
+  return formatMonth();
+}
+
+/** 一年里的第几天，用来挑「今日一签」 */
+export function dayOfYear(date: Date = new Date()): number {
+  const { y, m, d } = parts(date);
+  return Math.floor(
+    (Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 0)) / 86_400_000,
+  );
+}

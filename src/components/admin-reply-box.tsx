@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type CSSProperties } from "react";
 import { showToast } from "./toast";
 import { saveAnswerAction } from "@/lib/admin-actions";
 
@@ -48,41 +48,46 @@ export function AdminReplyBox({
     <form onSubmit={handleSubmit} className="mt-7">
       <input type="hidden" name="id" value={id} />
 
-      <div className="flex items-center justify-between">
-        <label
-          htmlFor="answer"
-          className="flex items-center gap-2 font-hei text-[11px] tracking-[0.2em] text-ink-faint"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-seal" />
-          <span>手 书 回 函</span>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <label htmlFor="answer" className="label flex items-center gap-2">
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-seal" />
+          <span>手书回函</span>
           {defaultAnswer && (
-            <span className="border border-seal/35 px-1.5 py-px text-[10.5px] tracking-[0.12em] text-seal/80">
-              已 有 回 音
+            <span className="border border-seal/50 px-1.5 py-px tracking-[0.12em] text-seal">
+              已有回音
             </span>
           )}
         </label>
-        <span className="font-mono text-[11.5px] text-ink-faint">
-          {[...text].length} 字 · ⌘+Enter 落笔
+        <span className="font-mono text-label text-ink-faint">
+          {[...text].length} 字
+          <span className="hidden sm:inline"> · ⌘+Enter 落笔</span>
         </span>
       </div>
 
-      {/* 常用寄语快捷插入 */}
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
-        <span className="self-center font-hei text-[11px] text-ink-faint">
-          常用寄语：
+      {/* 常用寄语：点一下接在稿末 */}
+      <div
+        role="group"
+        aria-labelledby="answer-templates"
+        className="mt-3 flex flex-wrap items-center gap-1.5"
+      >
+        <span id="answer-templates" className="label mr-1">
+          常用寄语
         </span>
         {TEMPLATES.map((t, idx) => (
           <button
             key={idx}
             type="button"
             onClick={() => insertTemplate(t)}
-            className="rounded border border-rule/80 bg-paper/70 px-2 py-0.5 font-kai text-[11px] text-ink-soft shadow-2xs transition-colors hover:border-seal/40 hover:text-seal active:scale-98"
+            title={t}
+            aria-label={t}
+            className="btn btn-line btn-sm kai-boost px-2 font-kai tracking-normal normal-case"
           >
             {t.slice(0, 10)}…
           </button>
         ))}
       </div>
 
+      {/* 格线从元素顶起算、每 2.125rem 一道；顶上留 0.375rem，字脚正好落在线上 */}
       <textarea
         id="answer"
         name="answer"
@@ -97,23 +102,18 @@ export function AdminReplyBox({
           }
         }}
         rows={6}
+        style={{ "--rows": 6 } as CSSProperties}
+        aria-keyshortcuts="Meta+Enter Control+Enter"
         placeholder="援笔作复…（公之，则示于前台）"
-        className="ruled mt-3 w-full resize-none bg-transparent px-2 pb-2 pt-[10px] font-song text-[15.5px] leading-[34px] text-ink outline-none placeholder:font-kai placeholder:text-ink-faint/50"
+        className="ruled mt-4 block w-full bg-transparent px-2 pt-1.5 pb-2 font-song text-body text-ink placeholder:font-kai placeholder:text-ink-faint/70"
       />
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="bg-seal px-6 py-2.5 font-hei text-[11.5px] tracking-[0.28em] text-paper-soft shadow-[inset_0_0_0_1px_rgba(251,247,238,0.2)] transition-all hover:bg-[#9d3125] shadow-xs active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {pending
-            ? "送 出 中…"
-            : defaultAnswer
-              ? "改 而 存 之"
-              : "复 而 公 之"}
+      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <button type="submit" disabled={pending} className="btn btn-seal">
+          {pending ? "送出中…" : defaultAnswer ? "改而存之" : "复而公之"}
         </button>
-        <span className="font-kai text-[11.5px] text-ink-faint">
+        {/* 提示条转瞬即逝，这一行是留得住的回执 */}
+        <p role="status" className="font-kai text-small text-ink-faint">
           {pending
             ? "正在缄封…"
             : sentAt
@@ -124,7 +124,7 @@ export function AdminReplyBox({
               : defaultAnswer
                 ? "此函已有回音，落笔即覆原稿"
                 : "公之，则即刻见于前台"}
-        </span>
+        </p>
       </div>
     </form>
   );
