@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import type * as ThreeNS from "three";
 
 type Three = typeof ThreeNS;
@@ -344,7 +345,12 @@ export function PaperScene() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const depthRef = useRef<HTMLDivElement | null>(null);
 
+  // 纸场只在首页跑：详情页、后台不需要这层 WebGL，省下几百 KB 与每帧开销
+  const enableScene = usePathname() === "/";
+
   useEffect(() => {
+    if (!enableScene) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -366,7 +372,7 @@ export function PaperScene() {
       window.clearTimeout(timer);
       cleanup?.();
     };
-  }, []);
+  }, [enableScene]);
 
   return (
     <div className="scene" aria-hidden="true">

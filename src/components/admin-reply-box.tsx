@@ -35,6 +35,11 @@ export function AdminReplyBox({
         >
           <span className="h-1.5 w-1.5 rounded-full bg-seal" />
           <span>手 书 回 函</span>
+          {defaultAnswer && (
+            <span className="border border-seal/35 px-1.5 py-px text-[9px] tracking-[0.12em] text-seal/80">
+              已 有 回 音
+            </span>
+          )}
         </label>
         <span className="font-mono text-[10.5px] text-ink-faint">
           {[...text].length} 字 · ⌘+Enter 落笔
@@ -78,10 +83,10 @@ export function AdminReplyBox({
           type="submit"
           className="bg-seal px-6 py-2.5 font-hei text-[11.5px] tracking-[0.28em] text-paper-soft shadow-[inset_0_0_0_1px_rgba(251,247,238,0.2)] transition-all hover:bg-[#9d3125] shadow-xs active:translate-y-px"
         >
-          复 而 公 之
+          {defaultAnswer ? "改 而 存 之" : "复 而 公 之"}
         </button>
         <span className="font-kai text-[11.5px] text-ink-faint">
-          公之，则即刻见于前台
+          {defaultAnswer ? "此函已有回音，落笔即覆原稿" : "公之，则即刻见于前台"}
         </span>
       </div>
     </form>

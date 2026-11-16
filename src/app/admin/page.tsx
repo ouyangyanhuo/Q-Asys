@@ -198,7 +198,11 @@ export default async function AdminPage({
               <div className="mt-8 h-px bg-rule" />
 
               {/* 回信编辑器 */}
-              <AdminReplyBox id={active.id} defaultAnswer={active.answer ?? ""} />
+              <AdminReplyBox
+                key={active.id}
+                id={active.id}
+                defaultAnswer={active.answer ?? ""}
+              />
 
               {/* 信件状态管理操作 */}
               <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-rule/70 pt-6">
