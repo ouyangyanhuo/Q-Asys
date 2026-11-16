@@ -159,7 +159,7 @@ export function ComposeCard() {
 
             {/* 灵感便签条：常驻占位，仅淡出 */}
             <div
-              className={`relative mt-2 border-t border-dotted border-rule/70 pt-3 pb-3 transition-opacity duration-500 ${
+              className={`relative mt-2 border-t border-dotted border-rule/70 bg-paper-soft pt-3 pb-3 transition-opacity duration-500 ${
                 count === 0
                   ? "opacity-100"
                   : "pointer-events-none opacity-0"
