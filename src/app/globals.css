@@ -223,6 +223,18 @@ html[data-theme="night"] {
   }
 
   /* 写多少、纸就长多少；不支持的浏览器保持固定行数、内部滚动 */
+  /* 只画格线、不改行高的版本：给承载整块书写区的容器用，
+     这样灵感笺条那一段也能落在同一张格纸上 */
+  .ruled-bg {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(2.125rem - 1px),
+      var(--color-rule) calc(2.125rem - 1px),
+      var(--color-rule) 2.125rem
+    );
+  }
+
   textarea.ruled {
     resize: none;
     field-sizing: content;
@@ -578,14 +590,17 @@ html[data-theme="night"] {
   /* ── 弹层 ───────────────────────────────────────────── */
 
   dialog.modal {
-    margin: auto;
+    /* 固定贴顶：内容多长都在同一高度，不再随高度在屏幕中间漂 */
+    --modal-top: clamp(1.25rem, 6vh, 3.25rem);
+    inset: var(--modal-top) 0 auto;
+    margin: 0 auto;
     padding: 0;
     border: 0;
     background: transparent;
     color: inherit;
     inline-size: min(var(--modal-w, 35rem), calc(100vw - 2rem));
     max-inline-size: none;
-    max-block-size: calc(100dvh - 2rem);
+    max-block-size: calc(100dvh - var(--modal-top) - 1.25rem);
     overflow: auto;
     overscroll-behavior: contain;
     opacity: 0;

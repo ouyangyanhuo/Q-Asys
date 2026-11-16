@@ -133,7 +133,8 @@ export function ComposeCard() {
         {/* 输入区域：横格铺满整张纸。灵感笺条是一段压在上面的纸带，
             自带底色盖住格线；落笔后只淡出、不移除，纸面高度自始至终不变。 */}
         <div className="px-6 md:px-9">
-          <div className="relative pt-2">
+          <div className="pt-2">
+          <div className="ruled-bg relative">
             <label className="sr-only" htmlFor="letter-body">
               你的信件内容
             </label>
@@ -158,7 +159,7 @@ export function ComposeCard() {
 
             {/* 灵感便签条：常驻占位，仅淡出 */}
             <div
-              className={`relative mt-2 border-t border-dotted border-rule/70 bg-paper-soft pt-3 pb-3 transition-opacity duration-500 ${
+              className={`relative mt-2 border-t border-dotted border-rule/70 pt-3 pb-3 transition-opacity duration-500 ${
                 count === 0
                   ? "opacity-100"
                   : "pointer-events-none opacity-0"
@@ -167,6 +168,7 @@ export function ComposeCard() {
             >
               <PromptChips onSelectPrompt={handleSelectPrompt} />
             </div>
+          </div>
           </div>
         </div>
 
