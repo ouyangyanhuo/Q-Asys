@@ -145,7 +145,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 type="button"
                 onClick={() => setKeyword("")}
                 className="absolute right-0 top-1.5 font-mono text-[13px] text-ink-faint hover:text-seal"
-                title="清空"
+                title="拭去"
               >
                 ×
               </button>
@@ -156,7 +156,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
           <button
             type="button"
             onClick={() => setRandomModalOpen(true)}
-            title="随机翻看一封信"
+            title="信手拈来一封"
             className="flex items-center gap-1.5 whitespace-nowrap border border-seal/40 bg-seal/[0.04] px-3.5 py-1.5 font-hei text-[11px] tracking-wider text-seal shadow-2xs transition-all duration-300 hover:bg-seal/[0.1] hover:scale-102 active:scale-95"
           >
             <RefreshCw className="h-3 w-3" />

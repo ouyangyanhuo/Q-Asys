@@ -48,8 +48,8 @@ export function SiteFooter({
               href="https://github.com/ouyangyanhuo/Q-Asys"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="在 GitHub 查看源码"
-              title="在 GitHub 查看源码"
+              aria-label="在 GitHub 观其源"
+              title="在 GitHub 观其源"
               className="flex h-9 w-9 items-center justify-center text-ink-faint transition-colors hover:text-seal"
             >
               <FaGithub className="h-4 w-4" aria-hidden="true" />

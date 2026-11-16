@@ -45,7 +45,7 @@ export function LetterActions({ question }: { question: Question }) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* 左侧：微光共鸣交互 */}
+        {/* 左侧：微光交互 */}
         <div className="relative shrink-0">
           <button
             type="button"

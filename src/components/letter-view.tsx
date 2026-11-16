@@ -123,7 +123,7 @@ export function LetterView({
             </div>
           )}
 
-          {/* 交互操作栏：候复中的私函不做分享与共鸣 */}
+          {/* 交互操作栏：候复中的私函不做分享与微光 */}
           {q.status === "published" && (
             <div className="mt-12 border-t border-dashed border-rule/80 pt-6">
               <LetterActions question={q} />

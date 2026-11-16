@@ -57,12 +57,18 @@ export function Letter({
   return (
     <>
       <article
-        className="rise group relative overflow-hidden border border-rule/80 bg-paper-soft/80 p-6 transition-all duration-400 hover:-translate-y-1 hover:border-seal/40 hover:bg-paper-soft hover:shadow-[0_18px_40px_-20px_rgba(28,25,23,0.18)] md:p-8"
+        className="rise group relative overflow-hidden border border-rule/80 bg-paper-soft/80 p-6 transition-all duration-500 ease-[cubic-bezier(0.22,0.68,0.25,1)] hover:-translate-y-1.5 hover:rotate-[-0.25deg] hover:border-seal/45 hover:bg-paper-soft hover:shadow-[0_26px_52px_-26px_rgba(28,25,23,0.32)] md:p-8"
         style={{ "--d": `${Math.min(index, 6) * 60}ms` } as React.CSSProperties}
       >
-        {/* 信笺折角阴影暗纹 */}
+        {/* 桌面掠过时，纸角被掀起一分 */}
         <div
-          className="pointer-events-none absolute right-0 top-0 h-10 w-10 bg-linear-to-bl from-paper-deep/70 via-transparent to-transparent transition-opacity duration-300 group-hover:opacity-100"
+          className="pointer-events-none absolute right-0 top-0 h-10 w-10 origin-top-right scale-100 bg-linear-to-bl from-paper-deep/70 via-transparent to-transparent opacity-70 transition-all duration-500 ease-[cubic-bezier(0.22,0.68,0.25,1)] group-hover:scale-125 group-hover:opacity-100"
+          aria-hidden="true"
+        />
+
+        {/* 顶边朱线自左向右抽出 */}
+        <span
+          className="pointer-events-none absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-seal/45 transition-transform duration-700 ease-[cubic-bezier(0.22,0.68,0.25,1)] group-hover:scale-x-100"
           aria-hidden="true"
         />
 
@@ -169,22 +175,22 @@ export function Letter({
           </div>
         )}
 
-        {/* 底部操作与微互动：候复中的私函不参与共鸣与传阅 */}
+        {/* 底部操作与微互动：候复中的私函不参与微光与传阅 */}
         {q.status === "pending" ? (
           <div className="mt-7 border-t border-rule/60 pt-4">
             <p className="font-kai text-[11.5px] text-ink-faint">
-              此函仅你可见。收信人作复之后，自会公开。
+              此函仅君可见。待收信人作复，自当示人。
             </p>
           </div>
         ) : (
         <div className="mt-7 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4">
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            {/* 共鸣微光按钮 */}
+            {/* 微光按钮 */}
             <div className="relative">
               <button
                 type="button"
                 onClick={handleResonate}
-                title="送上一抹微光（共鸣）"
+                title="寄一抹微"
                 className={`relative flex items-center gap-1.5 rounded-full px-3 py-1 font-hei text-[11px] transition-all duration-300 ${
                   resonated
                     ? "bg-seal/10 text-seal font-medium shadow-xs"
@@ -197,7 +203,7 @@ export function Letter({
                   strokeWidth={1.8}
                 />
                 <span>{resonanceCount}</span>
-                <span className="hidden sm:inline">共鸣</span>
+                <span className="hidden sm:inline">微光</span>
               </button>
 
               {/* 微光漂浮升腾粒子 */}

@@ -104,10 +104,10 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
 
         {/* 底部邮印水印 */}
         <div className="mt-8 flex items-center justify-between border-t border-rule pt-4 font-hei text-[11px] text-ink-faint">
-          <span>有些话，不必署名。</span>
+          <span>有言欲问，不必具名</span>
           <div className="flex items-center gap-2">
             <Seal text="信" size="1.75rem" />
-            <span>尺素 · 永久存留</span>
+            <span>凡有所书，皆郑重受之</span>
           </div>
         </div>
       </div>
@@ -117,11 +117,11 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" onClick={handleCopyLink} className="btn btn-line btn-sm">
             <Link2 className="size-3.5" />
-            录专属之址
+            录其址
           </button>
           <button type="button" onClick={handleCopyText} className="btn btn-line btn-sm">
             <Copy className="size-3.5" />
-            录其文字
+            录其字
           </button>
           <span role="status" className="font-kai text-[11px] text-seal">
             {hint}

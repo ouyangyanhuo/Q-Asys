@@ -6,10 +6,10 @@ import { saveAnswerAction } from "@/lib/admin-actions";
 
 const TEMPLATES = [
   "见字如面。愿你万事顺遂，常有微光相伴。",
-  "世事虽匆忙，也请给自己多一点宽容，慢慢来。",
-  "有些路总要一个人走过，但请记得你并不孤单。",
-  "谢谢你愿意把心事托付于此，我都认真读完了。",
-  "天色渐晚，今晚好好睡一觉吧。",
+  "世事奔忙，望君宽以待己，徐徐图之。",
+  "有路须独行，然君终非孤身。",
+  "承君托付，字字已细读。",
+  "夜色渐深，早些安枕。",
 ];
 
 export function AdminReplyBox({
@@ -39,7 +39,7 @@ export function AdminReplyBox({
         setSentAt(result.at ?? Date.now());
         showToast(result.message ?? "回函已送出", "seal");
       } else {
-        showToast(result.message ?? "未能送出，请再试一次", "info");
+        showToast(result.message ?? "未能送出，容后再试。", "info");
       }
     });
   };
@@ -110,7 +110,7 @@ export function AdminReplyBox({
 
       <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
         <button type="submit" disabled={pending} className="btn btn-seal">
-          {pending ? "送出中…" : defaultAnswer ? "改而存之" : "复而公之"}
+          {pending ? "缄封中…" : defaultAnswer ? "改而存之" : "复而公之"}
         </button>
         {/* 提示条转瞬即逝，这一行是留得住的回执 */}
         <p role="status" className="font-kai text-small text-ink-faint">

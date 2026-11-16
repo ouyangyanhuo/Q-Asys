@@ -143,7 +143,7 @@ export function MotionToggle({ className = "" }: { className?: string }) {
       type="button"
       onClick={toggle}
       aria-pressed={still}
-      title={still ? "纸页已静，点此起风" : "让飘动的纸页停下"}
+      title={still ? "纸页已静，点此起风" : "令飞笺暂歇"}
       className={`btn btn-line btn-sm ${motion ? "" : "invisible"} ${
         still ? "border-seal/50 text-seal" : ""
       } ${className}`}

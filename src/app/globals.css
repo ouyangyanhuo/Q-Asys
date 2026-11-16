@@ -802,7 +802,9 @@ html[data-theme="night"] {
 @media (prefers-reduced-motion: no-preference) {
   /* 首屏入场：一行一行浮上来，延时用 --d 给 */
   .rise {
-    animation: rise 0.8s var(--ease-paper) both;
+    /* 用 backwards 而不是 both：入场结束后让位给 hover 的 translate，
+       否则动画的填充值会一直压着悬停位移 */
+    animation: rise 0.8s var(--ease-paper) backwards;
     animation-delay: var(--d, 0ms);
   }
   .fade-in {

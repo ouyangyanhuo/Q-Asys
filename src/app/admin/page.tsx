@@ -125,7 +125,7 @@ export default async function AdminPage({
         >
           {/* 筛选是带 query 的页面导航，所以是 nav + 链接，不是 tab */}
           <nav
-            aria-label="按状态筛选"
+            aria-label="依状态拣选"
             className="flex flex-none flex-wrap items-center justify-between gap-x-3 border-b border-rule px-4 font-hei text-label tracking-[0.08em]"
           >
             {FILTERS.map(({ tab: key, label }) => {

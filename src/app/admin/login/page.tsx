@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 
 const MESSAGES: Record<string, string> = {
   forbidden: "此 GitHub 名不在收信人之列。",
-  state: "登录已逾时，请再试。",
-  unconfigured: "尚未配置 GitHub 登录。",
-  exchange: "与 GitHub 相通失败，请再试。",
+  state: "此间已逾时，烦请重来。",
+  unconfigured: "尚未接通 GitHub，暂难验身。",
+  exchange: "与 GitHub 相通未果，烦请重试。",
 };
 
 export default async function LoginPage({
@@ -27,7 +27,7 @@ export default async function LoginPage({
   const configured = Boolean(
     process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET,
   );
-  const message = error ? (MESSAGES[error] ?? "登录没有成功。") : null;
+  const message = error ? (MESSAGES[error] ?? "验身未过。") : null;
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center px-5 py-16">
