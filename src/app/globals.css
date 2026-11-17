@@ -683,6 +683,35 @@ html[data-theme="night"] {
   }
 }
 
+/**
+ * 首屏专用：从雾里显影。
+ * 不再从全透明起步——浏览器会把「透明」算作还没画，整段淡入会把 LCP
+ * 拖到 1 秒开外。改成半明 + 失焦浮现，肉眼仍是「浮现」，首帧却有内容可画。
+ */
+@keyframes develop {
+  from {
+    opacity: 0.55;
+    translate: 0 1rem;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+}
+
+.develop {
+  animation: develop 0.9s var(--ease-paper) backwards;
+  animation-delay: var(--d, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .develop {
+    animation: none;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

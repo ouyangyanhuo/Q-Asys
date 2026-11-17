@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCw, Search } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Question } from "@/lib/types";
 import { Letter } from "./letter";
 import { RandomLetterModal } from "./random-letter-modal";
@@ -21,6 +21,8 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   // 所以改为挂载后单独取一次，只为本人把这几封钉在最上方。
   const [mine, setMine] = useState<Question[]>([]);
 
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     let alive = true;
 
@@ -33,11 +35,32 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
         .catch(() => undefined);
     };
 
-    load();
+    // 首页是静态的，这个请求是它唯一的服务端往返。
+    // 等信箱快滚到眼前再打，首屏就不必为一个可能要很久以后才看的东西等一次函数。
+    const anchor = anchorRef.current;
+    let io: IntersectionObserver | null = null;
+
+    if (anchor && "IntersectionObserver" in window) {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            load();
+            io?.disconnect();
+          }
+        },
+        { rootMargin: "600px 0px" },
+      );
+      io.observe(anchor);
+    } else {
+      load();
+    }
+
     // 刚投完一封信时立刻取回来，不必刷新页面
     window.addEventListener("qasys-mine-refresh", load);
+
     return () => {
       alive = false;
+      io?.disconnect();
       window.removeEventListener("qasys-mine-refresh", load);
     };
   }, []);
@@ -94,7 +117,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   const totalCount = initialLetters.length + mine.length;
 
   return (
-    <div className="space-y-8">
+    <div ref={anchorRef} className="space-y-8">
       {/* 顶部交互过滤器与搜索栏 */}
       <div className="flex flex-col gap-4 border-b border-rule/70 pb-5 md:flex-row md:items-center md:justify-between">
         {/* 标签切换栏 */}

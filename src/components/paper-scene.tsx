@@ -390,19 +390,25 @@ export function PaperScene() {
     let disposed = false;
     let cleanup: (() => void) | undefined;
 
-    // three 体积不小，等首屏稳定后再异步载入；失败就保留纯 CSS 背景
-    const timer = window.setTimeout(() => {
+    // three 体积不小，且建场景是一次 200ms 级的长任务。
+    // 等浏览器空闲再开工，别让它和首屏抢主线程；失败就保留纯 CSS 背景。
+    const start = () => {
       import("three")
         .then((THREE) => {
           if (disposed) return;
           cleanup = buildScene(THREE, canvas);
         })
         .catch(() => undefined);
-    }, 240);
+    };
+
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(start, { timeout: 2000 })
+      : window.setTimeout(start, 600);
 
     return () => {
       disposed = true;
-      window.clearTimeout(timer);
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      window.clearTimeout(idle);
       cleanup?.();
     };
   }, [enableScene]);
