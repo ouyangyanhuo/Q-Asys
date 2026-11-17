@@ -14,7 +14,7 @@ export default async function HomePage() {
   const total = stats.published;
 
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <div className="page-reveal relative flex min-h-dvh flex-col">
       <ScreenOpening />
       <main className="flex-1">
         {/* 首屏：写信台与题头 */}

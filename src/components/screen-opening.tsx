@@ -12,7 +12,7 @@ const MIN_SHOW_MS = 1200;
 /** 迟迟等不到 load 也得开，别让开屏成了门闩 */
 const MAX_WAIT_MS = 2400;
 /** 折屏（含错峰）与退场都走完再摘节点 */
-const OPEN_MS = 1500;
+const OPEN_MS = 1200;
 /** 减弱动态时只留一次淡出 */
 const STILL_MS = 420;
 
@@ -25,6 +25,8 @@ const TILT = [0, 1.8, -3.6, 3.6];
 let played = false;
 
 export function ScreenOpening() {
+  // 一秒多了还没就绪，才亮等待环；就绪即收，不闪
+  const [waiting, setWaiting] = useState(false);
   const [phase, setPhase] = useState<Phase>(() => {
     if (played) return "gone";
     // 客户端转场进来时页面上还没有这层屏风；只有首屏的 SSR 才带着它
@@ -51,6 +53,7 @@ export function ScreenOpening() {
     let openTimer = 0;
     let endTimer = 0;
     let maxTimer = 0;
+    let waitTimer = 0;
 
     // 只锁内容、不锁滚动条：滚动条一直在，视口宽度不变，背后那层纸才不会横移
     const lock = () => doc.setAttribute("data-screen", "on");
@@ -62,6 +65,8 @@ export function ScreenOpening() {
       played = true;
       window.clearTimeout(openTimer);
       window.clearTimeout(maxTimer);
+      // opening 这一档专门给页面内容做“由小变大”
+      doc.setAttribute("data-screen", "opening");
       setPhase("opening");
       endTimer = window.setTimeout(() => {
         unlock();
@@ -79,10 +84,16 @@ export function ScreenOpening() {
     const markReady = () => {
       if (ready) return;
       ready = true;
+      window.clearTimeout(waitTimer);
+      setWaiting(false);
       maybeOpen();
     };
 
     maxTimer = window.setTimeout(markReady, MAX_WAIT_MS);
+    // 一线朱砂走完还没好，才把小环亮出来
+    waitTimer = window.setTimeout(() => {
+      if (!ready) setWaiting(true);
+    }, 1150);
 
     const onLoad = () => {
       // 字体还没到就拉开，屏风上的字会在开屏途中跳一下；等一等，但不久等
@@ -104,6 +115,7 @@ export function ScreenOpening() {
       window.clearTimeout(openTimer);
       window.clearTimeout(endTimer);
       window.clearTimeout(maxTimer);
+      window.clearTimeout(waitTimer);
       window.removeEventListener("load", onLoad);
       unlock();
     };
@@ -136,8 +148,14 @@ export function ScreenOpening() {
         >
           <Seal text="启" size="1.8rem" tilt={-3} />
         </span>
-        <span className="so-track">
-          <span className="so-fill" />
+        <span className="so-wait">
+          <span className="so-track">
+            <span className="so-fill" />
+          </span>
+          {/* 位置先占着，等真的要等时才把环放进来，免得题签忽长忽短 */}
+          <span className="so-slot">
+            {waiting && <span className="so-spin" />}
+          </span>
         </span>
       </div>
     </div>
@@ -153,20 +171,31 @@ function Wing({ side }: { side: Side }) {
   const slices = side === "l" ? [0, 1, 2, 3] : [7, 6, 5, 4];
   return (
     <div className={`so-wing so-wing--${side}`}>
-      <Leaf slices={slices} index={0} />
+      <Leaf side={side} slices={slices} index={0} />
     </div>
   );
 }
 
-function Leaf({ slices, index }: { slices: number[]; index: number }) {
+function Leaf({
+  side,
+  slices,
+  index,
+}: {
+  side: Side;
+  slices: number[];
+  index: number;
+}) {
   const last = index === slices.length - 1;
   return (
     <div
       className="so-leaf"
       data-root={index === 0 ? "" : undefined}
+      data-last={last ? "" : undefined}
       style={
         {
+          // 八扇的切片；窄屏改六扇后按 --slicen 重新裁
           "--slice": slices[index],
+          "--slicen": side === "l" ? index : 5 - index,
           "--i": index,
           "--rel": `${TILT[index]}deg`,
         } as CSSProperties
@@ -179,7 +208,7 @@ function Leaf({ slices, index }: { slices: number[]; index: number }) {
         <span className="so-frame" />
         <span className="so-verso" />
       </div>
-      {!last && <Leaf slices={slices} index={index + 1} />}
+      {!last && <Leaf side={side} slices={slices} index={index + 1} />}
     </div>
   );
 }
