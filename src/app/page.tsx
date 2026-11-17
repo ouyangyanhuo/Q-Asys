@@ -3,6 +3,7 @@ import { ComposeCard } from "@/components/compose-card";
 import { LettersStream } from "@/components/letters-stream";
 import { SiteFooter } from "@/components/site-footer";
 import { PostageStamp, Postmark } from "@/components/stamp-badge";
+import { TextFontLoader } from "@/components/text-font-loader";
 import { getStats, listPublished } from "@/lib/store";
 
 export const revalidate = 60;
@@ -151,6 +152,7 @@ export default async function HomePage() {
       </main>
 
       <SiteFooter />
+      <TextFontLoader />
     </div>
   );
 }

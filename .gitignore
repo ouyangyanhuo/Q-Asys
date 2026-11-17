@@ -11,3 +11,10 @@ next-env.d.ts
 .shots/
 .shots/
 .workbuddy/
+
+# 本地字体工具链
+.venv/
+.fonts/
+
+# 运行时切字用的源字体（由 scripts/fetch-fonts.mjs 获取）
+assets/fonts/*.ttf

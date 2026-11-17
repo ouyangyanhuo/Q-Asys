@@ -48,7 +48,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
             io?.disconnect();
           }
         },
-        { rootMargin: "600px 0px" },
+        { rootMargin: "200px 0px" },
       );
       io.observe(anchor);
     } else {

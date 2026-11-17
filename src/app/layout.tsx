@@ -1,8 +1,4 @@
 import type { Metadata, Viewport } from "next";
-// 随站分发的宋与楷：按 unicode-range 切成小片，用到哪些字才取哪几片；
-// 本机已有苹果宋楷的设备（见 globals.css 的字体栈）一片都不会下载
-import "@fontsource-variable/noto-serif-sc/wght.css";
-import "lxgw-wenkai-screen-webfont/lxgwwenkaiscreen.css";
 import "./globals.css";
 import { PaperScene } from "@/components/paper-scene";
 import { ToastContainer } from "@/components/toast";

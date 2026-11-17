@@ -6,18 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "node scripts/fetch-fonts.mjs"
   },
   "dependencies": {
-    "@fontsource-variable/noto-serif-sc": "^5.3.1",
     "@neondatabase/serverless": "^1.2.1",
     "jose": "^6.2.17",
     "lucide-react": "^1.73.0",
-    "lxgw-wenkai-screen-webfont": "^1.7.0",
     "next": "^15.5.29",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.7.0",
+    "subset-font": "^2.9.0",
     "three": "^0.187.0"
   },
   "devDependencies": {

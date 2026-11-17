@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* ── 随站分发的字：固定文案子集 ─────────────────────── */
+@font-face {
+  font-family: "Chisu Song";
+  src: url("/fonts/v1/ui-song.woff2") format("woff2-variations");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Chisu Kai";
+  src: url("/fonts/v1/ui-kai.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   /* 纸 · 墨 · 朱砂，另备几色国画颜料给邮票用 */
   --color-paper: #f6f1e6;
@@ -18,11 +35,15 @@
   --color-gold: #f5b84c;
   --color-stamp: #fffdf8;
 
-  /* 本机有好字就用本机的（苹果的宋与楷），没有再落到随站分发的字 */
+  /* 本机有好字就用本机的（苹果的宋与楷），没有再落到随站分发的子集：
+     Chisu Song / Chisu Kai 只含固定文案（约 420KB，首屏即用）；
+     Chisu * Page 是这一封信的按页子集，只补 UI 没覆盖的字（几 KB 起）；
+     Chisu * Text 含常用三千八百字，首页后台静默加载。 */
   --font-song: "Songti SC", "STSong", "Source Han Serif SC",
-    "Noto Serif CJK SC", "Noto Serif SC Variable", "SimSun", Georgia, serif;
-  --font-kai: "Kaiti SC", "STKaiti", "LXGW WenKai Screen", "KaiTi",
-    "FangSong", "Songti SC", serif;
+    "Noto Serif CJK SC", "Chisu Song", "Chisu Song Page", "Chisu Song Text",
+    "SimSun", Georgia, serif;
+  --font-kai: "Kaiti SC", "STKaiti", "Chisu Kai", "Chisu Kai Page",
+    "Chisu Kai Text", "KaiTi", "FangSong", "Songti SC", serif;
   --font-hei: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
     "Source Han Sans SC", system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Consolas,

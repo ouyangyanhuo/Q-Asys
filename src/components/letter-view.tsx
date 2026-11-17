@@ -8,6 +8,7 @@ import {
 } from "@/components/stamp-badge";
 import { LetterActions } from "@/components/letter-actions";
 import { formatFullDate } from "@/lib/format";
+import { pageFontPlan, pageFontUrl } from "@/lib/page-font";
 import type { Question } from "@/lib/types";
 
 /**
@@ -25,9 +26,23 @@ export function LetterView({
   const postmarkDate = q.createdAt
     ? q.createdAt.slice(0, 7).replace("-", ".")
     : "2026.11";
+  const pageFonts = pageFontPlan(q);
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {pageFonts.length > 0 && (
+        <style
+          // 只含这一封信里 UI 子集没有的字；本机有好字时浏览器不会来取
+          dangerouslySetInnerHTML={{
+            __html: pageFonts
+              .map((font) => {
+                const song = font.family === "song";
+                return `@font-face{font-family:"${song ? "Chisu Song Page" : "Chisu Kai Page"}";src:url("${pageFontUrl(q, font)}") format("${song ? "woff2-variations" : "woff2"}");font-weight:${song ? "200 900" : "400"};font-style:normal;font-display:swap;}`;
+              })
+              .join(""),
+          }}
+        />
+      )}
       <main className="mx-auto w-full max-w-[780px] flex-1 px-5 py-12 md:px-8 md:py-20">
         {/* 面包屑导航与返回 */}
         <div className="flex items-center justify-between">
