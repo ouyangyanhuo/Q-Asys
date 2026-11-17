@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { ComposeCard } from "@/components/compose-card";
 import { LettersStream } from "@/components/letters-stream";
 import { SiteFooter } from "@/components/site-footer";
+import { ScreenOpening } from "@/components/screen-opening";
 import { PostageStamp, Postmark } from "@/components/stamp-badge";
 import { TextFontLoader } from "@/components/text-font-loader";
 import { getStats, listPublished } from "@/lib/store";
@@ -14,6 +15,7 @@ export default async function HomePage() {
 
   return (
     <div className="relative flex min-h-dvh flex-col">
+      <ScreenOpening />
       <main className="flex-1">
         {/* 首屏：写信台与题头 */}
         <section className="mx-auto max-w-[1180px] px-6 md:px-10">

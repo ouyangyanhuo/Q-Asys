@@ -132,6 +132,12 @@ html[data-theme="night"] {
     }
   }
 
+  /* 开屏期间锁住滚动，并把滚动条让出的宽度补回来，避免开屏一撤整页横跳 */
+  html[data-screen="on"] {
+    overflow: hidden;
+    padding-right: var(--so-gutter, 0px);
+  }
+
   body {
     background-color: var(--color-paper);
     color: var(--color-ink);
@@ -921,6 +927,426 @@ html[data-theme="night"] {
   }
   .tilt-card.is-tracking {
     transition: transform 0.14s ease-out;
+  }
+}
+
+/* ── 开屏：六扇屏风 ───────────────────────────────────────
+   首屏未就绪时，六扇合着，中缝贴一张题签；
+   页面加载既毕（至少满一秒），两翼各自折起退场，把整页让出来。
+   漆色是材料色，不随明暗语义走，故在此另立。 */
+
+.screen-open {
+  --so-panel: calc(100% / 3);
+  /* 屏风自己的材料色：漆、绢、金线、题签纸。
+     不跟全站的纸墨令牌走——夜里这是一架被灯照着的屏，白天是一架素屏。 */
+  --so-lacquer: #402e1e;
+  --so-face: #ecdfc8;
+  --so-ink: #2c241b;
+  --so-gilt: rgba(190, 141, 60, 0.55);
+  --so-label: #fbf5e7;
+  --so-text: #241f18;
+  --so-text-faint: #6d6150;
+  --so-light: rgba(255, 250, 236, 0.16);
+  --so-glow: rgba(255, 241, 212, 0.55);
+  --so-rail-t: 0.8rem;
+  --so-rail-b: 1.1rem;
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  perspective: 2400px;
+  perspective-origin: 50% 44%;
+
+  /* 脚本若没跑起来，六秒后自己退场，别把人关在门外 */
+  animation: so-failsafe 1ms linear 6s forwards;
+}
+
+/* 夜里这架屏是被灯照着的：绢面暖而亮，墨反而是暗的；
+   题签是屏上最亮的一小块，像灯正落在上面。 */
+html[data-theme="night"] .screen-open {
+  --so-lacquer: #1d150f;
+  --so-face: #443729;
+  --so-ink: #100a06;
+  --so-gilt: rgba(226, 170, 92, 0.38);
+  --so-label: #c7b48f;
+  --so-text: #241a11;
+  --so-text-faint: #56452f;
+  --so-light: rgba(255, 198, 122, 0.16);
+  --so-glow: rgba(255, 186, 112, 0.34);
+}
+
+@keyframes so-failsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* 不支持脚本的浏览器根本等不到开屏，直接别显示 */
+@media (scripting: none) {
+  .screen-open {
+    display: none;
+  }
+}
+
+.screen-open__stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+/* 中缝透出来的暖光：只在两翼分开的刹那看得见 */
+.so-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 32% 48% at 50% 48%,
+    var(--so-glow) 0%,
+    transparent 68%
+  );
+  opacity: 0;
+}
+
+.so-wing {
+  position: absolute;
+  inset-block: 0;
+  width: 50%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.so-wing--l {
+  left: 0;
+  transform-origin: left center;
+}
+.so-wing--r {
+  --so-dir: -1;
+  right: 0;
+  transform-origin: right center;
+}
+
+.so-leaf {
+  position: absolute;
+  inset-block: 0;
+  left: calc(var(--i) * var(--so-panel));
+  width: var(--so-panel);
+  transform-origin: left center;
+  /* 立着的屏风是折的：相邻两扇一正一反，交界仍落在原处 */
+  --so-tilt: 1.35deg;
+  transform: rotateY(calc(var(--so-tilt) * var(--so-dir, 1)));
+  transform-style: preserve-3d;
+}
+.so-leaf:nth-child(odd) {
+  --so-tilt: -1.35deg;
+}
+.so-wing--r .so-leaf {
+  right: calc(var(--i) * var(--so-panel));
+  left: auto;
+  transform-origin: right center;
+}
+
+/* 折叶与画心分开两层：外层管立着的折角，内层管开屏时的旋起 */
+.so-fold {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.so-wing--r .so-fold {
+  transform-origin: right center;
+}
+
+.so-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* 自成层叠上下文：明暗渐变只在绢面里叠，别爬出去把漆框也罩住 */
+  isolation: isolate;
+  background-color: var(--so-face);
+  box-shadow: inset 0 0 5rem rgba(0, 0, 0, 0.1);
+}
+
+/* 折光：一扇迎光、一扇背光，立着的折才看得出来 */
+.so-face::before,
+.so-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.so-face::before {
+  z-index: 2;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    transparent 52%
+  );
+}
+.so-leaf:nth-child(odd) .so-face::before {
+  background: linear-gradient(
+    270deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    transparent 54%
+  );
+}
+
+/* 灯火从上方落下来，绢面上半截亮、下缘沉，屏风才有厚度 */
+.so-face::after {
+  z-index: 3;
+  background:
+    radial-gradient(100% 32% at 50% -4%, var(--so-light) 0%, transparent 70%),
+    linear-gradient(180deg, transparent 62%, rgba(0, 0, 0, 0.14) 100%);
+}
+
+/* 夜里墨是暗的，山脊改用一点月光：只提轮廓，不提墨色 */
+html[data-theme="night"] .so-art [data-edge] {
+  stroke: rgba(248, 228, 194, 0.88);
+}
+
+/* 画心：六扇各裁整幅的一竖条，宽高都对齐，凑起来不漏笔 */
+.so-art {
+  position: absolute;
+  top: var(--so-rail-t);
+  bottom: var(--so-rail-b);
+  left: calc(var(--slice) * -100%);
+  width: 600%;
+  overflow: hidden;
+  color: var(--so-ink);
+}
+
+.so-frame {
+  position: absolute;
+  inset: 0;
+  border: 6px solid var(--so-lacquer);
+  border-block-width: var(--so-rail-t) var(--so-rail-b);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+/* 漆框内侧勒一道金线，屏风才不像一块板 */
+.so-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--so-gilt);
+}
+
+.so-hinge {
+  position: absolute;
+  z-index: 3;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background-color: var(--so-gilt);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.so-hinge--t {
+  top: 3.6%;
+}
+.so-hinge--b {
+  bottom: 4%;
+}
+.so-wing--l .so-hinge {
+  right: -0.16rem;
+}
+.so-wing--r .so-hinge {
+  left: -0.16rem;
+}
+
+/* 窄屏上扇面只有六十来像素，边框再照桌面那么粗就成栅栏了 */
+@media (max-width: 640px) {
+  .screen-open {
+    --so-rail-t: 0.5rem;
+    --so-rail-b: 0.7rem;
+  }
+  .so-frame {
+    border-inline-width: 3px;
+  }
+}
+
+/* 中缝的题签：一块淡笺，朱丝双栏，竖着写书名 */
+.so-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  /* 父级的 perspective 会把这一段也拉进 3D 场景，单靠 z-index 压不住扇面，
+     所以抬到 z=2px；居中与抬升写在一个 transform 里，免得被压缩器拆散 */
+  transform: translate(-50%, -50%) translateZ(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  width: clamp(3.8rem, 6.4vw, 4.8rem);
+  padding: 1.25rem 0 1rem;
+  background-color: var(--so-label);
+  border: 1px solid color-mix(in oklab, var(--color-seal) 32%, transparent);
+  box-shadow:
+    0 34px 70px -46px color-mix(in oklab, var(--color-ink) 80%, transparent),
+    0 2px 6px -4px rgba(0, 0, 0, 0.18);
+}
+.so-label::before {
+  content: "";
+  position: absolute;
+  inset: 0.3rem;
+  border: 1px solid color-mix(in oklab, var(--color-seal) 15%, transparent);
+  pointer-events: none;
+}
+
+.so-title {
+  writing-mode: vertical-rl;
+  font-family: var(--font-kai);
+  font-size: clamp(1.6rem, 2.6vw, 2.05rem);
+  line-height: 1;
+  letter-spacing: 0.24em;
+  /* 末字后的字距留着，末尾会空一截；补回去才是视觉居中 */
+  text-indent: 0.24em;
+  color: var(--so-text);
+}
+
+.so-sub {
+  writing-mode: vertical-rl;
+  font-family: var(--font-kai);
+  font-size: var(--text-note);
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  color: var(--so-text-faint);
+}
+
+.so-label > .stamp-press {
+  display: inline-flex;
+  margin-block-start: 0.1rem;
+}
+
+/* 一线朱砂由左向右洇开，恰好一秒 */
+.so-track {
+  position: relative;
+  width: 2.6rem;
+  height: 1px;
+  margin-block-start: 0.15rem;
+  overflow: hidden;
+  background-color: var(--color-rule);
+}
+.so-fill {
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-seal);
+  transform-origin: left center;
+  animation:
+    so-fill 1.15s var(--ease-paper) forwards,
+    so-inhale 2.4s ease-in-out 1.15s infinite;
+}
+
+@keyframes so-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* 画完了还在等，就让那一线轻轻喘口气，别像卡住 */
+@keyframes so-inhale {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+/* ── 拉开 ─────────────────────────────────────────────── */
+
+.screen-open[data-phase="opening"] .so-glow {
+  animation: so-glow 1.1s ease-out forwards;
+}
+.screen-open[data-phase="opening"] .so-label {
+  animation: so-label-out 0.34s var(--ease-paper) forwards;
+}
+.screen-open[data-phase="opening"] .so-wing--l {
+  animation: so-wing-l 1.02s cubic-bezier(0.72, 0, 0.2, 1) 70ms forwards;
+}
+.screen-open[data-phase="opening"] .so-wing--r {
+  animation: so-wing-r 1.02s cubic-bezier(0.72, 0, 0.2, 1) 70ms forwards;
+}
+.screen-open[data-phase="opening"] .so-fold {
+  animation: so-fold-l 0.82s cubic-bezier(0.56, 0.04, 0.32, 1) both;
+  /* 离中缝越近越早折：先开中间，再一扇扇朝外让 */
+  animation-delay: calc(var(--depth) * 52ms);
+}
+.screen-open[data-phase="opening"] .so-wing--r .so-fold {
+  animation-name: so-fold-r;
+}
+
+@keyframes so-wing-l {
+  to {
+    transform: translate3d(-104%, 0, 0) rotateY(-13deg);
+  }
+}
+@keyframes so-wing-r {
+  to {
+    transform: translate3d(104%, 0, 0) rotateY(13deg);
+  }
+}
+@keyframes so-fold-l {
+  to {
+    transform: rotateY(26deg);
+  }
+}
+@keyframes so-fold-r {
+  to {
+    transform: rotateY(-26deg);
+  }
+}
+
+@keyframes so-label-out {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateZ(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -53%) scale(0.97) translateZ(2px);
+  }
+}
+
+@keyframes so-glow {
+  0% {
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 减弱动态：不折屏，整幅淡出即可 */
+@media (prefers-reduced-motion: reduce) {
+  .so-fill {
+    animation: so-fill 0.3s linear forwards;
+  }
+  .screen-open[data-phase="opening"] {
+    animation: so-dissolve 0.32s ease forwards;
+  }
+  .screen-open[data-phase="opening"] :is(.so-wing, .so-fold) {
+    animation: none;
+  }
+  .screen-open[data-phase="opening"] .so-label {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+@keyframes so-dissolve {
+  to {
+    opacity: 0;
   }
 }
 
