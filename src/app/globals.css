@@ -1087,7 +1087,7 @@ html[data-theme="night"] .screen-open {
   bottom: var(--so-rail-b);
   left: calc(var(--slice) * -100%);
   width: calc(var(--so-total) * 100%);
-  background-image: url("/screen/byobu.jpg");
+  background-image: url("/screen/byobu.webp");
   background-size: cover;
   background-position: 50% 42%;
   filter: var(--so-art-filter);

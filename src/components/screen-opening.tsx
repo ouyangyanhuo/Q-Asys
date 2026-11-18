@@ -167,7 +167,7 @@ export function ScreenOpening() {
       onClick={() => actionRef.current()}
     >
       {/* 画心是整屏第一眼要看的东西，别等 CSS 慢慢发现它 */}
-      <link rel="preload" as="image" href="/screen/byobu.jpg" fetchPriority="high" />
+      <link rel="preload" as="image" href="/screen/byobu.webp" fetchPriority="high" />
       <span className="so-glow" />
       <div className="screen-open__stage">
         <Wing side="l" />
