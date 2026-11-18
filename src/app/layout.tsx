@@ -58,6 +58,28 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* 首屏关键渲染路径：核心画心与字阶预加载，消除 FOUT 与加载抖动 */}
+        <link
+          rel="preload"
+          href="/screen/byobu.webp"
+          as="image"
+          type="image/webp"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          href="/fonts/v1/ui-song.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preload"
+          href="/fonts/v1/ui-kai.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="grain min-h-dvh antialiased">
         <PaperScene />

@@ -73,14 +73,43 @@ export function TextFontLoader() {
       loadTextFaces();
     };
 
-    const idle = window.requestIdleCallback
-      ? window.requestIdleCallback(() => void run(), { timeout: 2000 })
-      : window.setTimeout(() => void run(), 300);
+    const schedule = () => {
+      if (cancelled) return () => {};
+      const idle = window.requestIdleCallback
+        ? window.requestIdleCallback(() => void run(), { timeout: 4000 })
+        : window.setTimeout(() => void run(), 600);
 
+      return () => {
+        if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+        window.clearTimeout(idle);
+      };
+    };
+
+    const doc = document.documentElement;
+    if (doc.hasAttribute("data-screen")) {
+      let cleanSchedule: (() => void) | undefined;
+      const onDone = () => {
+        window.removeEventListener("qasys-screen-done", onDone);
+        window.clearTimeout(fallback);
+        cleanSchedule = schedule();
+      };
+
+      window.addEventListener("qasys-screen-done", onDone);
+      // 兜底：开屏事件若未捕获，5秒后在空闲时段补齐
+      const fallback = window.setTimeout(onDone, 5000);
+
+      return () => {
+        cancelled = true;
+        window.removeEventListener("qasys-screen-done", onDone);
+        window.clearTimeout(fallback);
+        cleanSchedule?.();
+      };
+    }
+
+    const clean = schedule();
     return () => {
       cancelled = true;
-      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
-      window.clearTimeout(idle);
+      clean?.();
     };
   }, []);
 

@@ -391,24 +391,55 @@ export function PaperScene() {
     let cleanup: (() => void) | undefined;
 
     // three 体积不小，且建场景是一次 200ms 级的长任务。
-    // 等浏览器空闲再开工，别让它和首屏抢主线程；失败就保留纯 CSS 背景。
+    // 避开开屏 3D 折叠动画与首屏水墨显影的高帧率关键期，等开屏完成并在浏览器空闲时再装配。
     const start = () => {
+      if (disposed) return;
       import("three")
         .then((THREE) => {
           if (disposed) return;
           cleanup = buildScene(THREE, canvas);
+          // 场景就绪后标记 data-ready，平滑淡入纸笺微粒，如晨雾初凝
+          canvas.setAttribute("data-ready", "true");
         })
         .catch(() => undefined);
     };
 
-    const idle = window.requestIdleCallback
-      ? window.requestIdleCallback(start, { timeout: 2000 })
-      : window.setTimeout(start, 600);
+    const scheduleStart = () => {
+      if (disposed) return;
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(start, { timeout: 3000 });
+      } else {
+        window.setTimeout(start, 500);
+      }
+    };
+
+    const doc = document.documentElement;
+    if (doc.hasAttribute("data-screen")) {
+      let fired = false;
+      const onDone = () => {
+        if (fired || disposed) return;
+        fired = true;
+        window.removeEventListener("qasys-screen-done", onDone);
+        window.clearTimeout(fallback);
+        scheduleStart();
+      };
+
+      window.addEventListener("qasys-screen-done", onDone);
+      // 兜底：若开屏因某些原因未能触发事件，至多等 4.5 秒后自行建场
+      const fallback = window.setTimeout(onDone, 4500);
+
+      return () => {
+        disposed = true;
+        window.removeEventListener("qasys-screen-done", onDone);
+        window.clearTimeout(fallback);
+        cleanup?.();
+      };
+    }
+
+    scheduleStart();
 
     return () => {
       disposed = true;
-      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
-      window.clearTimeout(idle);
       cleanup?.();
     };
   }, [enableScene]);

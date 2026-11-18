@@ -7,6 +7,12 @@ import { Seal } from "./stamp-badge";
 type Phase = "closed" | "opening" | "gone";
 type Side = "l" | "r";
 
+declare global {
+  interface Window {
+    __chisu_screen_played?: boolean;
+  }
+}
+
 /** 至少显示加载一秒：让画心与加载过程舒缓呈现，不闪烁 */
 const MIN_SHOW_MS = 1000;
 /** 迟迟等不到 load 也得开，别让开屏成了门闩 */
@@ -71,13 +77,18 @@ export function ScreenOpening() {
       if (opening) return;
       opening = true;
       played = true;
+      if (typeof window !== "undefined") {
+        window.__chisu_screen_played = true;
+      }
       window.clearTimeout(openTimer);
       window.clearTimeout(stampTimer);
       window.clearTimeout(maxTimer);
       doc.setAttribute("data-screen", "opening");
+      window.dispatchEvent(new CustomEvent("qasys-screen-opening"));
       setPhase("opening");
       endTimer = window.setTimeout(() => {
         unlock();
+        window.dispatchEvent(new CustomEvent("qasys-screen-done"));
         setPhase("gone");
       }, still ? STILL_MS : OPEN_MS);
     };
@@ -86,7 +97,7 @@ export function ScreenOpening() {
       if (stampedLocal || opening) return;
       stampedLocal = true;
       setStamped(true);
-      // 盖章后稳稳驻留 420ms，让用户看清印章落纸，再行开屏
+      // 盖章后稳稳驻留，让用户看清印章落纸，再行开屏
       openTimer = window.setTimeout(doOpen, still ? 160 : STAMP_HOLD_MS);
     };
 
@@ -121,19 +132,48 @@ export function ScreenOpening() {
 
     maxTimer = window.setTimeout(markReady, MAX_WAIT_MS);
 
-    const onLoad = () => {
-      // 字体还没到就拉开，屏风上的字会在开屏途中跳一下；等一等，但不久等
-      const fonts = document.fonts;
-      if (!fonts || fonts.status === "loaded") {
+    // 关键资源就绪判定：屏风画心大图 与 核心字体子集必须就位
+    let imgReady = false;
+    let fontsReady = false;
+
+    const checkBothReady = () => {
+      if (imgReady && fontsReady) {
         markReady();
-        return;
       }
-      fonts.ready.then(markReady).catch(markReady);
-      window.setTimeout(markReady, 700);
     };
 
-    if (document.readyState === "complete") onLoad();
-    else window.addEventListener("load", onLoad, { once: true });
+    const img = new Image();
+    img.src = "/screen/byobu.webp";
+    if (img.complete) {
+      imgReady = true;
+    } else {
+      img.onload = img.onerror = () => {
+        imgReady = true;
+        checkBothReady();
+      };
+    }
+
+    const fonts = document.fonts;
+    if (!fonts || fonts.status === "loaded") {
+      fontsReady = true;
+    } else {
+      fonts.ready
+        .then(() => {
+          fontsReady = true;
+          checkBothReady();
+        })
+        .catch(() => {
+          fontsReady = true;
+          checkBothReady();
+        });
+      // 字体兜底，至多等 700ms
+      window.setTimeout(() => {
+        fontsReady = true;
+        checkBothReady();
+      }, 700);
+    }
+
+    checkBothReady();
 
     lock();
 
@@ -150,7 +190,6 @@ export function ScreenOpening() {
       window.clearTimeout(stampTimer);
       window.clearTimeout(endTimer);
       window.clearTimeout(maxTimer);
-      window.removeEventListener("load", onLoad);
       window.removeEventListener("keydown", onKey);
       unlock();
     };
@@ -159,16 +198,21 @@ export function ScreenOpening() {
   if (phase === "gone") return null;
 
   return (
-    <div
-      data-screen-root=""
-      className="screen-open"
-      data-phase={phase}
-      aria-hidden="true"
-      onClick={() => actionRef.current()}
-    >
-      {/* 画心是整屏第一眼要看的东西，别等 CSS 慢慢发现它 */}
-      <link rel="preload" as="image" href="/screen/byobu.webp" fetchPriority="high" />
-      <span className="so-glow" />
+    <>
+      {/* 极速同步脚本：确保首帧解析时 html 即具备 data-screen="on"，防止正文动画提早空跑 */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `if(!window.__chisu_screen_played){document.documentElement.setAttribute('data-screen','on');}`,
+        }}
+      />
+      <div
+        data-screen-root=""
+        className="screen-open"
+        data-phase={phase}
+        aria-hidden="true"
+        onClick={() => actionRef.current()}
+      >
+        <span className="so-glow" />
       <div className="screen-open__stage">
         <Wing side="l" />
         <Wing side="r" />
@@ -201,6 +245,7 @@ export function ScreenOpening() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
