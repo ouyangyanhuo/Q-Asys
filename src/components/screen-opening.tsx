@@ -1,18 +1,18 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Seal } from "./stamp-badge";
 
 type Phase = "closed" | "opening" | "gone";
 type Side = "l" | "r";
 
-/** 至少亮满一秒：再快也让屏风停一口气，不然只是闪了一下 */
+/** 至少亮满一秒：让画心与题签在开卷前舒缓驻留 */
 const MIN_SHOW_MS = 1200;
 /** 迟迟等不到 load 也得开，别让开屏成了门闩 */
 const MAX_WAIT_MS = 2400;
-/** 折屏（含错峰）与退场都走完再摘节点 */
-const OPEN_MS = 1200;
+/** 一扇扇错峰折屏与退场走完再摘节点 */
+const OPEN_MS = 1380;
 /** 减弱动态时只留一次淡出 */
 const STILL_MS = 420;
 
@@ -20,13 +20,13 @@ const STILL_MS = 420;
 const PER_WING = 4;
 /** 立着时的折角，相对上一扇；一正一反才是屏风 */
 const TILT = [0, 1.8, -3.6, 3.6];
+/** 收拢时的风琴折角，一正一反依次咬合折叠 */
+const FOLD = [0, 80, -160, 160];
 
 /** 一次整页加载只开一回；客户端转场回到首页不再拦人 */
 let played = false;
 
 export function ScreenOpening() {
-  // 一秒多了还没就绪，才亮等待环；就绪即收，不闪
-  const [waiting, setWaiting] = useState(false);
   const [phase, setPhase] = useState<Phase>(() => {
     if (played) return "gone";
     // 客户端转场进来时页面上还没有这层屏风；只有首屏的 SSR 才带着它
@@ -39,6 +39,8 @@ export function ScreenOpening() {
     }
     return "closed";
   });
+
+  const openRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (played) return;
@@ -53,7 +55,6 @@ export function ScreenOpening() {
     let openTimer = 0;
     let endTimer = 0;
     let maxTimer = 0;
-    let waitTimer = 0;
 
     // 只锁内容、不锁滚动条：滚动条一直在，视口宽度不变，背后那层纸才不会横移
     const lock = () => doc.setAttribute("data-screen", "on");
@@ -65,7 +66,6 @@ export function ScreenOpening() {
       played = true;
       window.clearTimeout(openTimer);
       window.clearTimeout(maxTimer);
-      // opening 这一档专门给页面内容做“由小变大”
       doc.setAttribute("data-screen", "opening");
       setPhase("opening");
       endTimer = window.setTimeout(() => {
@@ -73,6 +73,8 @@ export function ScreenOpening() {
         setPhase("gone");
       }, still ? STILL_MS : OPEN_MS);
     };
+
+    openRef.current = open;
 
     const maybeOpen = () => {
       if (!ready || opening) return;
@@ -84,16 +86,10 @@ export function ScreenOpening() {
     const markReady = () => {
       if (ready) return;
       ready = true;
-      window.clearTimeout(waitTimer);
-      setWaiting(false);
       maybeOpen();
     };
 
     maxTimer = window.setTimeout(markReady, MAX_WAIT_MS);
-    // 一线朱砂走完还没好，才把小环亮出来
-    waitTimer = window.setTimeout(() => {
-      if (!ready) setWaiting(true);
-    }, 1150);
 
     const onLoad = () => {
       // 字体还没到就拉开，屏风上的字会在开屏途中跳一下；等一等，但不久等
@@ -111,12 +107,20 @@ export function ScreenOpening() {
 
     lock();
 
+    // 点击或按键可直接开屏，不必干等
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
+        open();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+
     return () => {
       window.clearTimeout(openTimer);
       window.clearTimeout(endTimer);
       window.clearTimeout(maxTimer);
-      window.clearTimeout(waitTimer);
       window.removeEventListener("load", onLoad);
+      window.removeEventListener("keydown", onKey);
       unlock();
     };
   }, []);
@@ -129,6 +133,7 @@ export function ScreenOpening() {
       className="screen-open"
       data-phase={phase}
       aria-hidden="true"
+      onClick={() => openRef.current()}
     >
       {/* 画心是整屏第一眼要看的东西，别等 CSS 慢慢发现它 */}
       <link rel="preload" as="image" href="/screen/byobu.jpg" fetchPriority="high" />
@@ -144,19 +149,21 @@ export function ScreenOpening() {
         {/* 钤印：落到纸上的那一下，是开屏前唯一的动静 */}
         <span
           className="stamp-press"
-          style={{ "--d": "320ms" } as CSSProperties}
+          style={{ "--d": "240ms" } as CSSProperties}
         >
-          <Seal text="启" size="1.8rem" tilt={-3} />
+          <Seal text="启" size="1.85rem" tilt={-3} />
         </span>
-        <span className="so-wait">
-          <span className="so-track">
+
+        {/* 展卷就绪动效：醒目而典雅的朱砂同心环、洇墨细轨与展卷提示 */}
+        <div className="so-load" aria-label="展卷中">
+          <div className="so-spinner" aria-hidden="true">
+            <span className="so-spinner__dot" />
+          </div>
+          <div className="so-track">
             <span className="so-fill" />
-          </span>
-          {/* 位置先占着，等真的要等时才把环放进来，免得题签忽长忽短 */}
-          <span className="so-slot">
-            {waiting && <span className="so-spin" />}
-          </span>
-        </span>
+          </div>
+          <span className="so-load-text">展卷中</span>
+        </div>
       </div>
     </div>
   );
@@ -198,6 +205,7 @@ function Leaf({
           "--slicen": side === "l" ? index : 5 - index,
           "--i": index,
           "--rel": `${TILT[index]}deg`,
+          "--fold": `${FOLD[index]}deg`,
         } as CSSProperties
       }
     >
