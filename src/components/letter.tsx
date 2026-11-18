@@ -112,6 +112,7 @@ export function Letter({
           {/* 右上角邮戳与迷你邮票：充满书信仪式感 */}
           <div className="flex items-center gap-2 transition-transform duration-300 group-hover:scale-102">
             <Postmark
+              id={q.id}
               place="尺素"
               date={q.createdAt ? q.createdAt.slice(0, 7).replace("-", ".") : "2026.11"}
               className="hidden scale-75 sm:block"

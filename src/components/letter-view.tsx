@@ -67,6 +67,7 @@ export function LetterView({
           {/* 右上角邮品装点 */}
           <div className="absolute right-6 top-6 flex items-center gap-2 sm:right-10 sm:top-8">
             <Postmark
+              id={q.id}
               place="尺素"
               date={postmarkDate}
               className="hidden scale-85 sm:block"

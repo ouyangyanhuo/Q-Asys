@@ -4,11 +4,11 @@ import { PaperScene } from "@/components/paper-scene";
 import { ToastContainer } from "@/components/toast";
 
 export const metadata: Metadata = {
-  title: "尺素 · 不署名的来信",
+  title: "尺素 · 不必具名",
   description:
     "有言欲问，不必具名。世路匆忙，容我逐函细读，徐徐作复。",
   openGraph: {
-    title: "尺素 · 不署名的来信",
+    title: "尺素 · 不必具名",
     description: "见字如面，纸短情长。凡有所书，皆郑重受之。",
     type: "website",
     locale: "zh_CN",

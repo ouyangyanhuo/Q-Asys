@@ -12,7 +12,7 @@ const MIN_SHOW_MS = 1000;
 /** 迟迟等不到 load 也得开，别让开屏成了门闩 */
 const MAX_WAIT_MS = 2500;
 /** 印章盖下后在纸上静置留白的时间：盖上去以后等一小段时间再开屏 */
-const STAMP_HOLD_MS = 900;
+const STAMP_HOLD_MS = 1000;
 /** 一扇扇错峰折屏与退场走完再摘节点 */
 const OPEN_MS = 1380;
 /** 减弱动态时只留一次淡出 */
@@ -176,7 +176,7 @@ export function ScreenOpening() {
 
       <div className="so-label">
         <span className="so-title">尺素</span>
-        <span className="so-sub">不署名的来信</span>
+        <span className="so-sub">不必具名</span>
 
         {/* 印章/加载槽位：先显加载，就绪后以“启”字朱印覆之 */}
         <div className="so-slot">

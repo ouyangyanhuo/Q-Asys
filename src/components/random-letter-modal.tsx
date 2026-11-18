@@ -124,6 +124,7 @@ export function RandomLetterModal({ letters, isOpen, onClose }: RandomLetterModa
 
               <div className="mt-7 flex items-center justify-between gap-3 border-t border-rule pt-4">
                 <Postmark
+                  id={selected.id}
                   place="尺素"
                   date={selected.createdAt.slice(0, 7).replace("-", ".")}
                   className="scale-75"

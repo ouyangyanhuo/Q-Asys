@@ -65,6 +65,7 @@ export function ShareModal({ question, number, isOpen, onClose }: ShareModalProp
 
           <div className="flex items-center gap-2">
             <Postmark
+              id={question.id}
               place="尺素"
               date={question.createdAt.slice(0, 7).replace("-", ".")}
               className="hidden scale-75 sm:block"
