@@ -1227,8 +1227,15 @@ html[data-theme="night"] .screen-open {
   color: var(--so-text-faint);
 }
 
-.so-label > .stamp-press {
-  display: inline-flex;
+/* 印章/加载槽位：固定高度避免题签跳动，加载中与盖印居中咬合 */
+.so-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 4.6rem;
   margin-block-start: 0.1rem;
 }
 
@@ -1238,7 +1245,25 @@ html[data-theme="night"] .screen-open {
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-  margin-block-start: 0.2rem;
+  transition: opacity 0.22s var(--ease-paper), transform 0.26s var(--ease-paper);
+}
+
+/* 盖章瞬间，加载动效微缩并淡出，由落下的朱印覆盖 */
+.so-load--covered {
+  opacity: 0;
+  transform: scale(0.82);
+  pointer-events: none;
+}
+
+/* 盖印包裹层：绝对居中叠加在加载动效正上方，0.38s 落印夯实 */
+.so-stamp-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  z-index: 2;
+  animation: stamp-press 0.38s var(--ease-press) both;
 }
 
 .so-spinner {
