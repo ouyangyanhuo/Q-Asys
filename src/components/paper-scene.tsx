@@ -654,8 +654,8 @@ export function PaperScene() {
       };
 
       window.addEventListener("qasys-screen-done", onDone);
-      // 兜底：若开屏因某些原因未能触发事件，至多等 4.5 秒后自行建场
-      const fallback = window.setTimeout(onDone, 4500);
+      // 兜底：若开屏因某些原因未能触发事件，至多等 6 秒后自行建场
+      const fallback = window.setTimeout(onDone, 6000);
 
       return () => {
         disposed = true;

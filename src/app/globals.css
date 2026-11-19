@@ -1523,7 +1523,7 @@ html[data-theme="night"] .screen-open {
 /* ── 屏开：一扇一扇风琴折叠与退场 ────────────────────────── */
 
 .screen-open[data-phase="opening"] .so-glow {
-  animation: so-glow 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: so-glow 1.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .screen-open[data-phase="opening"] .so-label {
   animation: so-label-out 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -1535,12 +1535,12 @@ html[data-theme="night"] .screen-open {
   animation-delay: calc(80ms + (var(--so-max-i, 3) - var(--i)) * 220ms);
 }
 
-/* 全扇次第折叠咬合完毕后，整架屏风叠合为紧凑屏柱，平滑滑向两侧淡出 */
+/* 全扇次第折叠咬合完毕后（Leaf 1 约 1000ms 收拢），整架屏风叠合为屏柱平滑滑向两侧淡出（880ms + 620ms = 1500ms） */
 .screen-open[data-phase="opening"] .so-wing--l {
-  animation: so-wing-l 0.58s cubic-bezier(0.32, 0.04, 0.16, 1) 740ms both;
+  animation: so-wing-l 0.62s cubic-bezier(0.32, 0.04, 0.16, 1) 880ms both;
 }
 .screen-open[data-phase="opening"] .so-wing--r {
-  animation: so-wing-r 0.58s cubic-bezier(0.32, 0.04, 0.16, 1) 740ms both;
+  animation: so-wing-r 0.62s cubic-bezier(0.32, 0.04, 0.16, 1) 880ms both;
 }
 
 @keyframes so-fold {

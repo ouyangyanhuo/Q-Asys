@@ -95,8 +95,8 @@ export function TextFontLoader() {
       };
 
       window.addEventListener("qasys-screen-done", onDone);
-      // 兜底：开屏事件若未捕获，5秒后在空闲时段补齐
-      const fallback = window.setTimeout(onDone, 5000);
+      // 兜底：开屏事件若未捕获，6.5秒后在空闲时段补齐
+      const fallback = window.setTimeout(onDone, 6500);
 
       return () => {
         cancelled = true;

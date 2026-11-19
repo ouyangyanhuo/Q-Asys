@@ -19,8 +19,8 @@ const MIN_SHOW_MS = 1000;
 const MAX_WAIT_MS = 2500;
 /** 印章盖下后在纸上静置留白的时间：盖上去以后等一小段时间再开屏 */
 const STAMP_HOLD_MS = 1000;
-/** 一扇扇错峰折屏与退场走完再摘节点 */
-const OPEN_MS = 1380;
+/** 一扇扇错峰折屏（1000ms）与两侧滑出淡出（880ms + 620ms = 1500ms）彻底走完后再摘节点 */
+const OPEN_MS = 1650;
 /** 减弱动态时只留一次淡出 */
 const STILL_MS = 420;
 
