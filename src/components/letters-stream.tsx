@@ -216,7 +216,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
               key={q.id}
               q={q}
               number={letterNumberMap.get(q.id) ?? 0}
-              index={i}
+              index={i < 12 ? i : (i - 12) % 10}
             />
           ))}
 

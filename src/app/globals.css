@@ -743,6 +743,14 @@ html[data-theme="night"] {
   }
 }
 
+/* 信笺落案：克制轻盈的淡入与微幅落位，避免展开旧笺时大幅跳动 */
+@keyframes letter-enter {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
 /**
  * 首屏专用：从雾里显影。
  * 不再从全透明起步——浏览器会把「透明」算作还没画，整段淡入会把 LCP
@@ -894,6 +902,10 @@ html[data-theme="night"] {
     /* 用 backwards 而不是 both：入场结束后让位给 hover 的 translate，
        否则动画的填充值会一直压着悬停位移 */
     animation: rise 0.8s var(--ease-paper) backwards;
+    animation-delay: var(--d, 0ms);
+  }
+  .letter-enter {
+    animation: letter-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
     animation-delay: var(--d, 0ms);
   }
   .fade-in {
@@ -1869,10 +1881,6 @@ html[data-motion="still"] .scene-cursor {
       animation-range: entry 0% entry 85%;
     }
   }
-}
-
-html[data-motion="still"] .footer-colophon {
-  animation: none;
 }
 
 /* 强制高对比模式：阴影与渐变会被系统抹掉，边界改用实线兜底 */
