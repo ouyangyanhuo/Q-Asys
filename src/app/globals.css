@@ -519,6 +519,45 @@ html[data-theme="night"] {
     }
   }
 
+  /* 滚动字轮：上下纵轴翻滚切字，宛如活字印轮 */
+  .roll-slot {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    height: 1.35em;
+    line-height: 1.35em;
+    overflow: hidden;
+    vertical-align: middle;
+  }
+
+  .roll-track {
+    display: flex;
+    flex-direction: column;
+    transform: translate3d(0, 0, 0);
+    transition: transform 0.42s var(--ease-paper);
+    transition-delay: var(--roll-d, 0ms);
+    will-change: transform;
+  }
+
+  .roll-slot[data-rolled="true"] .roll-track {
+    transform: translate3d(0, -50%, 0);
+  }
+
+  .roll-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.35em;
+    line-height: 1.35em;
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .roll-track {
+      transition: none;
+    }
+  }
+
   /* ── 印 · 票 · 戳 ───────────────────────────────────── */
 
   .worn {

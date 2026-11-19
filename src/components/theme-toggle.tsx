@@ -198,15 +198,24 @@ export function MotionToggle({ className = "" }: { className?: string }) {
       type="button"
       onClick={toggle}
       aria-pressed={still}
-      title={still ? "纸页已静，点此起风" : "令飞笺暂歇"}
+      aria-label={still ? "动风" : "止风"}
+      title={still ? "纸页已静，点此动风" : "令飞笺暂歇"}
       className={`btn btn-line btn-sm ${motion ? "" : "invisible"} ${
         still ? "border-seal/50 text-seal" : ""
       } ${className}`}
     >
-      <span aria-hidden="true" className="font-kai tracking-normal">
-        {still ? "静" : "风"}
+      <span aria-hidden="true" className="inline-flex items-center">
+        <span
+          className="roll-slot"
+          data-rolled={still ? "true" : "false"}
+        >
+          <span className="roll-track">
+            <span className="roll-item">止</span>
+            <span className="roll-item">动</span>
+          </span>
+        </span>
+        <span>风</span>
       </span>
-      止风
     </button>
   );
 }
