@@ -68,11 +68,20 @@
 :root {
   color-scheme: light;
 
-  --scene-warm: rgba(232, 214, 176, 0.34);
-  --scene-cool: rgba(212, 226, 220, 0.26);
-  --scene-bloom: rgba(178, 58, 44, 0.07);
+  --scene-warm: rgba(232, 214, 176, 0.36);
+  --scene-cool: rgba(204, 222, 214, 0.28);
+  --scene-bloom: rgba(178, 58, 44, 0.065);
   --scene-sweep: rgba(255, 252, 240, 0.55);
-  --scene-vignette: rgba(74, 58, 38, 0.1);
+  --scene-vignette: rgba(74, 58, 38, 0.11);
+  /* 宣纸乌丝栏、晴窗光影、竹影与远山淡墨 */
+  --scene-ruling: rgba(132, 114, 88, 0.065);
+  --scene-ruling-border: rgba(178, 58, 44, 0.07);
+  --scene-sunbeam: rgba(255, 250, 232, 0.52);
+  --scene-bamboo: rgba(62, 54, 42, 0.085);
+  --scene-mountain-far: rgba(108, 116, 104, 0.115);
+  --scene-mountain-mid: rgba(84, 88, 78, 0.145);
+  --scene-mountain-near: rgba(68, 62, 52, 0.095);
+  --scene-cursor: rgba(255, 246, 218, 0.48);
 
   --shadow-sheet:
     inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(28, 25, 23, 0.04),
@@ -106,11 +115,20 @@ html[data-theme="night"] {
   --color-ochre: #d39a4e;
   --color-stamp: #2b251f;
 
-  --scene-warm: rgba(126, 82, 46, 0.28);
-  --scene-cool: rgba(64, 82, 92, 0.2);
-  --scene-bloom: rgba(210, 78, 62, 0.12);
+  --scene-warm: rgba(142, 92, 48, 0.3);
+  --scene-cool: rgba(58, 78, 92, 0.24);
+  --scene-bloom: rgba(214, 84, 62, 0.13);
   --scene-sweep: rgba(255, 198, 126, 0.16);
-  --scene-vignette: rgba(0, 0, 0, 0.58);
+  --scene-vignette: rgba(0, 0, 0, 0.62);
+  /* 夜读暗金格、月窗青辉、月下竹影、青黛夜山与持烛微光 */
+  --scene-ruling: rgba(214, 190, 148, 0.045);
+  --scene-ruling-border: rgba(220, 93, 75, 0.08);
+  --scene-sunbeam: rgba(168, 198, 222, 0.1);
+  --scene-bamboo: rgba(6, 8, 12, 0.42);
+  --scene-mountain-far: rgba(82, 102, 118, 0.17);
+  --scene-mountain-mid: rgba(50, 64, 78, 0.25);
+  --scene-mountain-near: rgba(24, 30, 38, 0.36);
+  --scene-cursor: rgba(248, 188, 104, 0.11);
 
   --shadow-sheet:
     inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 3px rgba(0, 0, 0, 0.3),
@@ -919,8 +937,35 @@ html[data-theme="night"] {
   .scene-sweep {
     animation: sweep 54s cubic-bezier(0.45, 0, 0.55, 1) infinite;
   }
+  .scene-sunbeam {
+    animation: sunbeam-breathe 26s ease-in-out infinite alternate;
+  }
+  .scene-bamboo-a {
+    animation: bamboo-sway-a 17s ease-in-out infinite alternate;
+  }
+  .scene-bamboo-b {
+    animation: bamboo-sway-b 23s ease-in-out infinite alternate;
+  }
 
-  html[data-motion="still"] :is(.scene-wash, .scene-bloom, .scene-sweep, .sway) {
+  html[data-motion="still"]
+    :is(
+      .scene-wash,
+      .scene-bloom,
+      .scene-sweep,
+      .scene-sunbeam,
+      .scene-bamboo-a,
+      .scene-bamboo-b,
+      .sway
+    ),
+  html[data-screen="on"]
+    :is(
+      .scene-wash,
+      .scene-bloom,
+      .scene-sweep,
+      .scene-sunbeam,
+      .scene-bamboo-a,
+      .scene-bamboo-b
+    ) {
     animation-play-state: paused;
   }
 
@@ -1573,6 +1618,203 @@ html[data-theme="night"] .screen-open {
     transparent 100%
   );
   will-change: transform, opacity;
+}
+
+/* 宣纸竖格暗纹（乌丝栏）：像案头摊开的一整张古笺，四周渐隐不夺正文 */
+.scene-ruling {
+  position: absolute;
+  inset: clamp(18px, 3vh, 36px) clamp(18px, 3vw, 44px);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--scene-ruling) 0 1px,
+    transparent 1px 56px
+  );
+  border-block: 1px solid var(--scene-ruling-border);
+  mask-image: radial-gradient(
+    ellipse 86% 80% at 50% 45%,
+    rgba(0, 0, 0, 0.22) 0%,
+    rgba(0, 0, 0, 0.72) 55%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 86% 80% at 50% 45%,
+    rgba(0, 0, 0, 0.22) 0%,
+    rgba(0, 0, 0, 0.72) 55%,
+    transparent 100%
+  );
+}
+
+/* 晴窗斜光 / 月窗清辉：自左上角柔和漫射的暖光，无生硬条纹 */
+.scene-sunbeam {
+  position: absolute;
+  left: -16vw;
+  top: -18vh;
+  width: 76vmax;
+  height: 66vmax;
+  background: linear-gradient(
+    122deg,
+    transparent 12%,
+    var(--scene-sunbeam) 32%,
+    transparent 52%,
+    var(--scene-sunbeam) 68%,
+    transparent 88%
+  );
+  filter: blur(38px);
+  mask-image: radial-gradient(
+    ellipse 64% 58% at 22% 20%,
+    #000 0%,
+    rgba(0, 0, 0, 0.42) 48%,
+    transparent 82%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 64% 58% at 22% 20%,
+    #000 0%,
+    rgba(0, 0, 0, 0.42) 48%,
+    transparent 82%
+  );
+  transform-origin: 15% 10%;
+  will-change: transform, opacity;
+}
+
+/* 窗外竹影：投在宣纸右上角的微朦墨影，随微风两层错落轻摇 */
+.scene-bamboo {
+  position: absolute;
+  right: -3vw;
+  top: -4vh;
+  width: min(52vw, 660px);
+  height: auto;
+  color: var(--scene-bamboo);
+  filter: blur(2.6px);
+  mask-image: radial-gradient(
+    ellipse 82% 84% at 88% 12%,
+    #000 18%,
+    rgba(0, 0, 0, 0.55) 58%,
+    transparent 96%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 82% 84% at 88% 12%,
+    #000 18%,
+    rgba(0, 0, 0, 0.55) 58%,
+    transparent 96%
+  );
+}
+
+html[data-theme="night"] .scene-bamboo {
+  filter: blur(3.4px);
+}
+
+.scene-bamboo-a {
+  transform-origin: 94% 6%;
+  will-change: transform;
+}
+
+.scene-bamboo-b {
+  transform-origin: 98% 14%;
+  will-change: transform;
+}
+
+/* 远山淡墨：页面底缘的三叠烟岚层峦，随滚动产生轻微手卷视差 */
+.scene-mountains {
+  position: absolute;
+  inset-inline: -4vw;
+  bottom: -6px;
+  width: 108vw;
+  height: clamp(210px, 36vh, 390px);
+  mask-image: linear-gradient(
+    to top,
+    #000 0%,
+    rgba(0, 0, 0, 0.92) 72%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to top,
+    #000 0%,
+    rgba(0, 0, 0, 0.92) 72%,
+    transparent 100%
+  );
+}
+
+.scene-mountain-far {
+  transform: translate3d(
+    calc(var(--scroll-p, 0) * -18px),
+    calc(var(--scroll-p, 0) * 14px),
+    0
+  );
+  transition: transform 0.25s ease-out;
+}
+
+.scene-mountain-mid {
+  transform: translate3d(
+    calc(var(--scroll-p, 0) * 24px),
+    calc(var(--scroll-p, 0) * 8px),
+    0
+  );
+  transition: transform 0.25s ease-out;
+}
+
+.scene-mountain-near {
+  transform: translate3d(
+    calc(var(--scroll-p, 0) * -12px),
+    0,
+    0
+  );
+  transition: transform 0.25s ease-out;
+}
+
+/* 持烛夜读 / 案头暖光：柔和跟随指针的纸面光晕 */
+.scene-cursor {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    520px circle at var(--mx, 50%) var(--my, 35%),
+    var(--scene-cursor) 0%,
+    transparent 70%
+  );
+  transition: opacity 0.9s ease-out;
+}
+
+.scene[data-pointer="active"] .scene-cursor {
+  opacity: 1;
+}
+
+html[data-motion="still"] .scene-cursor {
+  opacity: 0;
+}
+
+@keyframes sunbeam-breathe {
+  0% {
+    opacity: 0.72;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(1.6vw, 1.2vh, 0) scale(1.04);
+  }
+}
+
+@keyframes bamboo-sway-a {
+  0% {
+    transform: rotate(-1.4deg) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: rotate(1.1deg) translate3d(-4px, 3px, 0);
+  }
+  100% {
+    transform: rotate(2.1deg) translate3d(-7px, 5px, 0);
+  }
+}
+
+@keyframes bamboo-sway-b {
+  0% {
+    transform: rotate(1.6deg) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: rotate(-0.8deg) translate3d(3px, 4px, 0);
+  }
+  100% {
+    transform: rotate(-2.2deg) translate3d(6px, 2px, 0);
+  }
 }
 
 .scene-webgl {
