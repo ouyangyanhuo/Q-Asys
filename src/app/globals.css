@@ -144,7 +144,8 @@ html[data-theme="night"] {
   html {
     scroll-behavior: smooth;
     scrollbar-color: var(--color-rule) transparent;
-    /* 滚动条一直占着那条宽度，开屏前后布局不跳 */
+    /* 滚动条槽位常驻，开屏锁滚前后视口宽度完全不变，页面不横移 */
+    scrollbar-gutter: stable;
     overflow-y: scroll;
 
     @media (prefers-reduced-motion: reduce) {
@@ -152,10 +153,14 @@ html[data-theme="night"] {
     }
   }
 
-  /* 开屏只锁内容、不收滚动条：滚动条常驻，视口宽度始终一样，
-     背后那层固定的纸才不会在开屏结束时横移一段。 */
+  /* 开屏期间彻底锁定页面滚动（html 与 body 同锁，配合 scrollbar-gutter 防止横移） */
+  html[data-screen] {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
   html[data-screen] body {
     overflow: hidden;
+    touch-action: none;
   }
 
   /* 当开屏屏风合着时，正文入场动画（develop、rise、sway）先保持静止；

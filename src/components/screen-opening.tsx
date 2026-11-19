@@ -69,9 +69,22 @@ export function ScreenOpening() {
     let endTimer = 0;
     let maxTimer = 0;
 
-    // 只锁内容、不锁滚动条：滚动条一直在，视口宽度不变，背后那层纸才不会横移
-    const lock = () => doc.setAttribute("data-screen", "on");
-    const unlock = () => doc.removeAttribute("data-screen");
+    // 开屏期间禁止滚轮、触控拖拽与方向/翻页键滚动页面
+    const preventScroll = (e: Event) => {
+      e.preventDefault();
+    };
+
+    const lock = () => {
+      doc.setAttribute("data-screen", "on");
+      window.addEventListener("wheel", preventScroll, { passive: false });
+      window.addEventListener("touchmove", preventScroll, { passive: false });
+    };
+    const unlock = () => {
+      doc.removeAttribute("data-screen");
+      window.removeEventListener("wheel", preventScroll);
+      window.removeEventListener("touchmove", preventScroll);
+      window.removeEventListener("keydown", onKey);
+    };
 
     const doOpen = () => {
       if (opening) return;
@@ -175,14 +188,24 @@ export function ScreenOpening() {
 
     checkBothReady();
 
-    lock();
-
     // 点击或按键可直接开屏，不必干等
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
+        e.preventDefault();
         handleAction();
+      } else if (
+        e.key === "ArrowDown" ||
+        e.key === "ArrowUp" ||
+        e.key === "PageDown" ||
+        e.key === "PageUp" ||
+        e.key === "Home" ||
+        e.key === "End"
+      ) {
+        e.preventDefault();
       }
     };
+
+    lock();
     window.addEventListener("keydown", onKey);
 
     return () => {
@@ -190,7 +213,6 @@ export function ScreenOpening() {
       window.clearTimeout(stampTimer);
       window.clearTimeout(endTimer);
       window.clearTimeout(maxTimer);
-      window.removeEventListener("keydown", onKey);
       unlock();
     };
   }, []);

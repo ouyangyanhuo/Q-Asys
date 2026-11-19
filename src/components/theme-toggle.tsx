@@ -214,7 +214,7 @@ export function MotionToggle({ className = "" }: { className?: string }) {
             <span className="roll-item">动</span>
           </span>
         </span>
-        <span>风</span>
+        <span className="roll-item">风</span>
       </span>
     </button>
   );
