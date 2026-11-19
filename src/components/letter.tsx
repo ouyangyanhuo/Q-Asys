@@ -58,7 +58,7 @@ export function Letter({
     <>
       <article
         className="letter-enter group relative overflow-hidden border border-rule/80 bg-paper-soft/80 p-6 transition-all duration-500 ease-[cubic-bezier(0.22,0.68,0.25,1)] hover:-translate-y-1.5 hover:rotate-[-0.25deg] hover:border-seal/45 hover:bg-paper-soft hover:shadow-[0_26px_52px_-26px_rgba(28,25,23,0.32)] md:p-8"
-        style={{ "--d": `${index < 4 ? index * 55 : 0}ms` } as React.CSSProperties}
+        style={{ "--d": `${index < 4 ? index * 110 : 0}ms` } as React.CSSProperties}
       >
         {/* 桌面掠过时，纸角被掀起一分 */}
         <div

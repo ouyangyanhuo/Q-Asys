@@ -428,8 +428,9 @@ html[data-theme="night"] {
     }
   }
 
-  /* 分段选择：原生单选钮，方向键自带；选中态靠底线而不只靠颜色 */
+  /* 分段选择：原生单选钮，方向键自带；选中态靠底线滑动而不只靠颜色 */
   .seg {
+    position: relative;
     display: inline-flex;
     align-items: stretch;
     border: 1px solid var(--color-rule);
@@ -459,12 +460,25 @@ html[data-theme="night"] {
     & label:has(:checked) {
       color: var(--color-seal);
       background-color: var(--color-paper-soft);
+    }
+    /* 底部滑动朱红横线：随选中项平滑位移并动态贴合「依时」宽度 */
+    & .seg-indicator {
+      position: absolute;
+      left: 0;
+      bottom: 0.25rem;
+      height: 1.5px;
+      background-color: var(--color-seal);
+      pointer-events: none;
+      will-change: transform, width;
 
-      &::after {
-        content: "";
-        position: absolute;
-        inset: auto 0.625rem 0.25rem;
-        border-block-end: 1.5px solid currentColor;
+      &[data-ready="true"] {
+        transition:
+          transform 0.36s var(--ease-paper),
+          width 0.26s var(--ease-paper);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none !important;
       }
     }
     & label:has(:focus-visible) {
@@ -478,6 +492,30 @@ html[data-theme="night"] {
       inline-size: 1px;
       block-size: 1px;
       pointer-events: none;
+    }
+
+    /* 「依时 · 昼/夜」平滑展开与收拢：纯 CSS Grid 0fr <-> 1fr 驱动宽度动画 */
+    & .seg-clock-tag {
+      display: inline-grid;
+      grid-template-columns: 0fr;
+      opacity: 0;
+      transition:
+        grid-template-columns 0.36s var(--ease-paper),
+        opacity 0.28s ease;
+
+      & > span {
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      &[data-open="true"] {
+        grid-template-columns: 1fr;
+        opacity: 1;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
     }
   }
 
@@ -743,11 +781,17 @@ html[data-theme="night"] {
   }
 }
 
-/* 信笺落案：克制轻盈的淡入与微幅落位，避免展开旧笺时大幅跳动 */
+/* 信笺落案：从容舒缓的展纸淡入与轻柔落位 */
 @keyframes letter-enter {
   from {
     opacity: 0;
-    translate: 0 8px;
+    translate: 0 22px;
+    scale: 0.985;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
   }
 }
 
@@ -905,7 +949,7 @@ html[data-theme="night"] {
     animation-delay: var(--d, 0ms);
   }
   .letter-enter {
-    animation: letter-enter 0.42s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation: letter-enter 0.78s var(--ease-paper) backwards;
     animation-delay: var(--d, 0ms);
   }
   .fade-in {

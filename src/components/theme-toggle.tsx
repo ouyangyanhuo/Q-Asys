@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   applyMotion,
   applyTone,
@@ -32,11 +32,53 @@ const LABEL: Record<ThemeMode, string> = {
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const [mode, setMode] = useState<ThemeMode | null>(null);
   const [tone, setTone] = useState<ThemeTone>("day");
+  const fieldsetRef = useRef<HTMLFieldSetElement | null>(null);
+  const indicatorRef = useRef<HTMLSpanElement | null>(null);
+  const labelRefs = useRef<Partial<Record<ThemeMode, HTMLLabelElement | null>>>(
+    {},
+  );
+  const readyRef = useRef(false);
 
   useEffect(() => {
     setMode(readThemeMode());
     setTone(currentTone());
   }, []);
+
+  // 底部朱红横线随选中项平滑滑动并跟随「依时」宽度动态伸缩
+  useEffect(() => {
+    if (!mode) return;
+    const indicator = indicatorRef.current;
+    const fieldset = fieldsetRef.current;
+    const active = labelRefs.current[mode];
+    if (!indicator || !fieldset || !active) return;
+
+    const sync = () => {
+      const target = labelRefs.current[mode];
+      if (!target) return;
+      const x = target.offsetLeft + 10;
+      const w = Math.max(0, target.offsetWidth - 20);
+      indicator.style.transform = `translate3d(${x}px, 0, 0)`;
+      indicator.style.width = `${w}px`;
+    };
+
+    sync();
+
+    let raf = 0;
+    if (!readyRef.current) {
+      raf = requestAnimationFrame(() => {
+        readyRef.current = true;
+        indicator.setAttribute("data-ready", "true");
+      });
+    }
+
+    const ro = new ResizeObserver(sync);
+    ro.observe(fieldset);
+    ro.observe(active);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [mode]);
 
   // 依时档：交给定时器守着，跨过点灯/熄灯的时刻就换
   useEffect(() => {
@@ -85,11 +127,17 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
   return (
     <fieldset
+      ref={fieldsetRef}
       className={`seg font-song ${mode ? "" : "invisible"} ${className}`}
     >
       <legend className="sr-only">明暗</legend>
       {THEME_MODES.map((item) => (
-        <label key={item}>
+        <label
+          key={item}
+          ref={(el) => {
+            labelRefs.current[item] = el;
+          }}
+        >
           <input
             type="radio"
             name="theme-mode"
@@ -98,13 +146,20 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
             onChange={() => choose(item)}
           />
           {LABEL[item]}
-          {item === "clock" && mode === "clock" && (
-            <span className="ml-1 font-kai tracking-normal text-ink-faint">
-              · {tone === "night" ? "夜" : "昼"}
+          {item === "clock" && (
+            <span
+              className="seg-clock-tag"
+              data-open={mode === "clock" ? "true" : "false"}
+              aria-hidden={mode !== "clock"}
+            >
+              <span className="pl-1 font-kai tracking-normal text-ink-faint">
+                · {tone === "night" ? "夜" : "昼"}
+              </span>
             </span>
           )}
         </label>
       ))}
+      <span ref={indicatorRef} className="seg-indicator" aria-hidden="true" />
     </fieldset>
   );
 }
