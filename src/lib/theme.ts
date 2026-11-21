@@ -79,6 +79,43 @@ export function applyTone(tone: ThemeTone): void {
   );
 }
 
+/**
+ * 无闪烁切色：
+ * 1. 先以 data-theme-switching 临时压住各元素参差不齐的 transition，避免底色、卡片、文字各走各的时长造成频闪；
+ * 2. 若浏览器支持 View Transitions API，用整页 GPU 交叉淡化，让宣纸、卡片、远山与 WebGL 同步溶入新色调。
+ */
+export function transitionTone(tone: ThemeTone): void {
+  if (typeof document === "undefined") return;
+  if (tone === currentTone()) return;
+
+  const root = document.documentElement;
+  const commit = () => {
+    root.setAttribute("data-theme-switching", "");
+    applyTone(tone);
+    // 强制同步刷新样式，确保新色在同一帧内全部落定
+    void root.offsetWidth;
+    requestAnimationFrame(() => {
+      root.removeAttribute("data-theme-switching");
+    });
+  };
+
+  const doc = document as Document & {
+    startViewTransition?: (cb: () => void) => { finished: Promise<void> };
+  };
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (typeof doc.startViewTransition === "function" && !reduce) {
+    doc.startViewTransition(() => {
+      root.setAttribute("data-theme-switching", "");
+      applyTone(tone);
+      void root.offsetWidth;
+      root.removeAttribute("data-theme-switching");
+    });
+  } else {
+    commit();
+  }
+}
+
 /** 当前页面上的明暗，供定时器比对是否需要切换 */
 export function currentTone(): ThemeTone {
   if (typeof document === "undefined") return "day";

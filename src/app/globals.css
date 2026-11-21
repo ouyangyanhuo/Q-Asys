@@ -182,9 +182,21 @@ html[data-theme="night"] {
     font-family: var(--font-song);
     text-rendering: optimizeLegibility;
     overflow-x: clip;
-    transition:
-      background-color 0.4s ease,
-      color 0.4s ease;
+  }
+
+  /* 昼夜切色瞬间冻结各元素参差不齐的 transition，避免底色、卡片与文字不同步频闪；
+     仅保留分段按钮自身的横线滑动与宽度展开动画 */
+  html[data-theme-switching] *:not(.seg-indicator):not(.seg-clock-tag),
+  html[data-theme-switching] *::before,
+  html[data-theme-switching] *::after {
+    transition: none !important;
+  }
+
+  /* View Transitions API 整页统一交叉淡化：底纸、信笺、竹影、远山与 WebGL 同步溶入新色调 */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.28s;
+    animation-timing-function: ease-out;
   }
 
   ::selection {

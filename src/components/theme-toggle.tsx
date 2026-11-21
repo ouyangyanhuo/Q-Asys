@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   applyMotion,
-  applyTone,
   currentTone,
   MOTION_KEY,
   readMotion,
@@ -13,6 +12,7 @@ import {
   saveThemeMode,
   THEME_MODE_KEY,
   THEME_MODES,
+  transitionTone,
   type Motion,
   type ThemeMode,
   type ThemeTone,
@@ -87,7 +87,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     const sync = () => {
       const next = resolveTone("clock");
       if (next === currentTone()) return;
-      applyTone(next);
+      transitionTone(next);
       setTone(next);
     };
 
@@ -111,7 +111,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       const nextTone = resolveTone(next);
       setMode(next);
       setTone(nextTone);
-      applyTone(nextTone);
+      transitionTone(nextTone);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -122,7 +122,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     saveThemeMode(next);
     const nextTone = resolveTone(next);
     setTone(nextTone);
-    applyTone(nextTone);
+    transitionTone(nextTone);
   }, []);
 
   return (

@@ -506,7 +506,9 @@ function buildScene(THREE: Three, canvas: HTMLCanvasElement) {
 
   const onPalette = () => {
     applyPalette();
+    // 切换昼夜时立刻同步补画一帧，确保 WebGL 画布与页面在同一帧切色，不滞后一帧
     if (isStill()) settle();
+    else draw();
   };
 
   readScroll();
