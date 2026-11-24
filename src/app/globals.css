@@ -825,69 +825,200 @@ html[data-theme="night"] {
     z-index: 70;
   }
 
-  /* ── 古画手卷：横向漫游展卷 ─────────────────────────────── */
-  .handscroll-track {
-    --card-w: min(620px, 86vw);
-    display: flex;
-    align-items: stretch;
-    gap: clamp(1.25rem, 3vw, 2.5rem);
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: max(1.25rem, calc((100vw - var(--card-w)) / 2));
-    padding-inline: max(1.25rem, calc((100vw - var(--card-w)) / 2));
-    padding-block: 1.5rem 2.25rem;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    cursor: grab;
-    user-select: none;
+  /* ── 古画手卷：从页面中央向两侧展开，随页面滚动驱动横移 ─── */
+  .handscroll-viewport {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    clip-path: inset(0 50% 0 50%);
+    opacity: 0.35;
+    transition:
+      clip-path 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.65s ease-out;
+    will-change: clip-path, opacity;
   }
-  .handscroll-track::-webkit-scrollbar {
-    display: none;
+  .handscroll-viewport[data-unrolled="true"] {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
   }
-  .handscroll-track[data-dragging="true"] {
-    cursor: grabbing;
-    scroll-snap-type: none;
-  }
-
-  /* 左右卷缘柔雾遮罩：大屏下两侧信笺如从纸雾中徐徐展来 */
-  @media (min-width: 768px) {
-    .handscroll-stage {
-      mask-image: linear-gradient(
-        90deg,
-        transparent 0%,
-        #000 7%,
-        #000 93%,
-        transparent 100%
-      );
-      -webkit-mask-image: linear-gradient(
-        90deg,
-        transparent 0%,
-        #000 7%,
-        #000 93%,
-        transparent 100%
-      );
+  @media (prefers-reduced-motion: reduce) {
+    .handscroll-viewport {
+      clip-path: none;
+      opacity: 1;
+      transition: none;
     }
   }
 
-  /* 单幅册页：居中聚焦清晰前倾，两侧微退半步产生景深 */
-  .handscroll-card {
-    flex: 0 0 var(--card-w);
-    width: var(--card-w);
-    scroll-snap-align: center;
-    transform: scale(0.935) translateY(6px);
-    opacity: 0.56;
-    filter: saturate(0.75);
-    transition:
-      transform 0.52s var(--ease-paper),
-      opacity 0.45s ease,
-      filter 0.45s ease;
-    will-change: transform, opacity;
+  /* 横向平移舞台：上下留足轴头突出余量，由页面纵滚平滑驱动 translate3d */
+  .handscroll-track {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    padding-block: 18px 24px;
   }
-  .handscroll-card[data-active="true"] {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-    filter: saturate(1);
+
+  /* 实体画卷整体：[上一卷] + [左画轴] + [宣纸画心] + [右画轴] + [下一卷] */
+  .handscroll-sheet {
+    display: inline-flex;
+    align-items: stretch;
+    flex: 0 0 auto;
+    padding-inline: max(1.25rem, calc((100vw - 1180px) / 2 + 1.5rem));
+    will-change: transform;
+  }
+  @media (min-width: 768px) {
+    .handscroll-sheet {
+      padding-inline: max(2.5rem, calc((100vw - 1180px) / 2 + 2.5rem));
+    }
+  }
+
+  /* 画轴外侧的「上一卷 / 下一卷」卷签按钮 */
+  .handscroll-vol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    flex: 0 0 auto;
+    width: clamp(58px, 6vw, 76px);
+    padding: 1.25rem 0.5rem;
+  }
+  .handscroll-vol--prev {
+    margin-inline-end: clamp(0.75rem, 1.8vw, 1.5rem);
+  }
+  .handscroll-vol--next {
+    margin-inline-start: clamp(0.75rem, 1.8vw, 1.5rem);
+  }
+
+  /* 左右紫檀画轴 + 金铜轴头（作为画卷本身的一部分随滚动进出屏幕） */
+  .handscroll-roller {
+    position: relative;
+    z-index: 5;
+    flex: 0 0 clamp(16px, 1.6vw, 22px);
+    width: clamp(16px, 1.6vw, 22px);
+    margin-block: -10px;
+    border-radius: 3px;
+    background: linear-gradient(
+      90deg,
+      #1a120d 0%,
+      #3d281c 28%,
+      #593b2a 48%,
+      #2b1c14 78%,
+      #140d09 100%
+    );
+    box-shadow:
+      0 14px 30px -12px rgba(20, 14, 10, 0.52),
+      inset 0 0 0 1px rgba(255, 224, 178, 0.14);
+  }
+  .handscroll-roller::before,
+  .handscroll-roller::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 124%;
+    height: 11px;
+    border-radius: 2px;
+    background: linear-gradient(
+      90deg,
+      #6f5330 0%,
+      #d6b376 42%,
+      #ecd29d 56%,
+      #8b6a3e 85%,
+      #4a351c 100%
+    );
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+  }
+  .handscroll-roller::before {
+    top: -6px;
+  }
+  .handscroll-roller::after {
+    bottom: -6px;
+  }
+
+  /* 连续宣纸画心：上下锦绫装裱边 + 上下左右留白间距，让每封信疏朗舒展 */
+  .handscroll-paper {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    gap: clamp(1.5rem, 2.8vw, 2.4rem);
+    padding-block: clamp(1.5rem, 3.2vh, 2.4rem);
+    padding-inline: clamp(1.5rem, 3vw, 2.5rem);
+    background-color: var(--color-paper-soft);
+    background-image: repeating-linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--color-rule) 24%, transparent) 0 1px,
+      transparent 1px 44px
+    );
+    border-block: 10px solid color-mix(in oklab, var(--color-kraft) 82%, var(--color-paper-deep));
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--color-seal) 28%, var(--color-rule)),
+      inset 0 -1px 0 color-mix(in oklab, var(--color-seal) 28%, var(--color-rule)),
+      0 22px 48px -28px rgba(28, 25, 23, 0.34);
+  }
+
+  /* 贴近左右实体画轴的卷纸弧影（随轴一起移动） */
+  .handscroll-paper::before,
+  .handscroll-paper::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    z-index: 4;
+    width: 34px;
+    pointer-events: none;
+  }
+  .handscroll-paper::before {
+    left: 0;
+    background: linear-gradient(
+      90deg,
+      rgba(28, 22, 16, 0.16) 0%,
+      rgba(28, 22, 16, 0.05) 45%,
+      transparent 100%
+    );
+  }
+  .handscroll-paper::after {
+    right: 0;
+    background: linear-gradient(
+      270deg,
+      rgba(28, 22, 16, 0.16) 0%,
+      rgba(28, 22, 16, 0.05) 45%,
+      transparent 100%
+    );
+  }
+  html[data-theme="night"] .handscroll-paper::before {
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.48) 0%,
+      rgba(0, 0, 0, 0.16) 45%,
+      transparent 100%
+    );
+  }
+  html[data-theme="night"] .handscroll-paper::after {
+    background: linear-gradient(
+      270deg,
+      rgba(0, 0, 0, 0.48) 0%,
+      rgba(0, 0, 0, 0.16) 45%,
+      transparent 100%
+    );
+  }
+
+  /* 引首 & 尾跋：画卷首尾留白题签 */
+  .handscroll-endpiece {
+    flex: 0 0 clamp(140px, 15vw, 190px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.5rem 1.25rem;
+    border: 1px solid color-mix(in oklab, var(--color-rule) 60%, transparent);
+    background: color-mix(in oklab, var(--color-paper) 55%, transparent);
+  }
+
+  /* 铺在画卷上的单封信：独立宣纸信笺，与画卷上下及左右信件均保持舒朗间距 */
+  .handscroll-card {
+    position: relative;
+    flex: 0 0 min(470px, 82vw);
+    width: min(470px, 82vw);
   }
 
   /* 长信内部极细滚动条 */

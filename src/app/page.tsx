@@ -3,7 +3,7 @@ import { ComposeCard } from "@/components/compose-card";
 import { LettersStream } from "@/components/letters-stream";
 import { SiteFooter } from "@/components/site-footer";
 import { ScreenOpening } from "@/components/screen-opening";
-import { PostageStamp, Postmark } from "@/components/stamp-badge";
+import { Postmark } from "@/components/stamp-badge";
 import { TextFontLoader } from "@/components/text-font-loader";
 import { getStats, listPublished } from "@/lib/store";
 
@@ -114,40 +114,12 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 读信区域：古画手卷（横向漫游展卷） */}
-        <section id="letters" className="scroll-mt-20 pb-20">
+        {/* 读信区域：古画手卷（纵滚绑定展卷 + 分卷阅读） */}
+        <section id="letters" className="scroll-mt-4">
           <div className="mx-auto max-w-[1180px] px-6 md:px-10">
-            <header
-              data-reveal
-              className="flex flex-col gap-6 border-t border-rule pt-14 sm:flex-row sm:items-end sm:justify-between"
-            >
-              <div>
-                <div className="flex items-baseline gap-2.5">
-                  <h2 className="font-song text-[28px] tracking-[0.08em] text-ink md:text-[32px]">
-                    来鸿
-                  </h2>
-                  <span className="font-mono text-[11px] tracking-[0.18em] text-ink-faint">
-                    / LETTERS · 展卷细读
-                  </span>
-                </div>
-                <p className="mt-2.5 font-kai text-[13.5px] leading-relaxed text-ink-faint">
-                  随风而散者，不可胜数；落于纸上者，皆可细读。
-                </p>
-              </div>
-
-              <div className="hidden items-center gap-4 sm:flex">
-                <PostageStamp theme="lantern" color="seal" price="80" size="sm" />
-                <div className="sway flex h-10 w-10 items-center justify-center border border-seal/35 font-kai text-[15px] text-seal/80 shadow-2xs">
-                  笺
-                </div>
-              </div>
-            </header>
+            <div className="border-t border-rule" />
           </div>
-
-          {/* 横向手卷全幅展台 */}
-          <div data-reveal className="mt-8">
-            <LettersStream initialLetters={letters} total={total} />
-          </div>
+          <LettersStream initialLetters={letters} total={total} />
         </section>
       </main>
 

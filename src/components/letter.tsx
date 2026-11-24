@@ -61,37 +61,22 @@ export function Letter({
   return (
     <>
       <article
-        onClick={() => {
-          if (!active && onSelect) onSelect();
-        }}
-        className={`sheet group relative flex h-full flex-col overflow-hidden bg-paper-soft/95 p-6 transition-all duration-500 ease-[cubic-bezier(0.22,0.68,0.25,1)] md:p-8 ${
+        className={`sheet group relative flex h-full flex-col overflow-hidden bg-paper/95 px-6 py-6 transition-all duration-400 md:px-7 md:py-7 ${
           active
-            ? "border-seal/35 shadow-[0_26px_54px_-28px_rgba(28,25,23,0.34)]"
-            : "cursor-pointer border-rule/80 hover:border-seal/35"
+            ? "border-seal/40 shadow-[0_18px_38px_-22px_rgba(28,25,23,0.28)]"
+            : "border-rule/80 hover:border-seal/35"
         }`}
       >
-        {/* 册页内框细线 */}
-        <div
-          className="pointer-events-none absolute inset-2.5 border border-rule/30"
-          aria-hidden="true"
-        />
-
-        {/* 右上纸角折影 */}
-        <div
-          className="pointer-events-none absolute right-0 top-0 h-10 w-10 origin-top-right bg-linear-to-bl from-paper-deep/75 via-transparent to-transparent opacity-75 transition-all duration-500 group-hover:scale-115 group-hover:opacity-100"
-          aria-hidden="true"
-        />
-
-        {/* 顶边朱线：居中聚焦时徐徐展开 */}
+        {/* 顶边朱砂细眉：滑入画心中央或悬停时微微显出 */}
         <span
-          className={`pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left bg-linear-to-r from-seal/55 via-seal/25 to-transparent transition-transform duration-700 ease-[cubic-bezier(0.22,0.68,0.25,1)] ${
-            active ? "scale-x-100" : "scale-x-0"
+          className={`pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left bg-linear-to-r from-seal/55 via-seal/20 to-transparent transition-transform duration-700 ease-[cubic-bezier(0.22,0.68,0.25,1)] ${
+            active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-75"
           }`}
           aria-hidden="true"
         />
 
         {/* 顶部元信息栏与邮戳徽章 */}
-        <div className="relative flex items-start justify-between gap-4 border-b border-rule/50 pb-5">
+        <div className="relative flex items-start justify-between gap-4 border-b border-rule/50 pb-4">
           <div className="flex flex-col gap-1.5 font-hei text-[11px] tracking-[0.2em] text-ink-faint">
             <div className="flex items-center gap-2.5">
               {q.status === "pending" ? (
@@ -149,11 +134,7 @@ export function Letter({
         </div>
 
         {/* 信件正文 + 回信（长信可在册页内顺滑纵滚，保持手卷天际线齐整） */}
-        <div
-          className={`handscroll-body relative mt-5 flex-1 overflow-y-auto pr-1 ${
-            active ? "" : "pointer-events-none"
-          } max-h-[min(46vh,360px)]`}
-        >
+        <div className="handscroll-body relative mt-5 flex-1 overflow-y-auto pr-1 max-h-[min(46vh,360px)]">
           <Link
             href={q.status === "pending" ? `/p/${q.id}` : `/q/${q.id}`}
             prefetch={false}
@@ -203,11 +184,7 @@ export function Letter({
             </p>
           </div>
         ) : (
-          <div
-            className={`relative mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4 ${
-              active ? "" : "pointer-events-none"
-            }`}
-          >
+          <div className="relative mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4">
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               {/* 微光按钮 */}
               <div className="relative">
