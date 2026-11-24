@@ -824,6 +824,85 @@ html[data-theme="night"] {
     pointer-events: none;
     z-index: 70;
   }
+
+  /* ── 古画手卷：横向漫游展卷 ─────────────────────────────── */
+  .handscroll-track {
+    --card-w: min(620px, 86vw);
+    display: flex;
+    align-items: stretch;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: max(1.25rem, calc((100vw - var(--card-w)) / 2));
+    padding-inline: max(1.25rem, calc((100vw - var(--card-w)) / 2));
+    padding-block: 1.5rem 2.25rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    cursor: grab;
+    user-select: none;
+  }
+  .handscroll-track::-webkit-scrollbar {
+    display: none;
+  }
+  .handscroll-track[data-dragging="true"] {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+
+  /* 左右卷缘柔雾遮罩：大屏下两侧信笺如从纸雾中徐徐展来 */
+  @media (min-width: 768px) {
+    .handscroll-stage {
+      mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 7%,
+        #000 93%,
+        transparent 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        90deg,
+        transparent 0%,
+        #000 7%,
+        #000 93%,
+        transparent 100%
+      );
+    }
+  }
+
+  /* 单幅册页：居中聚焦清晰前倾，两侧微退半步产生景深 */
+  .handscroll-card {
+    flex: 0 0 var(--card-w);
+    width: var(--card-w);
+    scroll-snap-align: center;
+    transform: scale(0.935) translateY(6px);
+    opacity: 0.56;
+    filter: saturate(0.75);
+    transition:
+      transform 0.52s var(--ease-paper),
+      opacity 0.45s ease,
+      filter 0.45s ease;
+    will-change: transform, opacity;
+  }
+  .handscroll-card[data-active="true"] {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    filter: saturate(1);
+  }
+
+  /* 长信内部极细滚动条 */
+  .handscroll-body {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-rule) 80%, transparent) transparent;
+    user-select: text;
+  }
+  .handscroll-body::-webkit-scrollbar {
+    width: 4px;
+  }
+  .handscroll-body::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--color-rule) 80%, transparent);
+    border-radius: 999px;
+  }
 }
 
 /* ── 动 ───────────────────────────────────────────────────

@@ -17,15 +17,20 @@ interface Spark {
 export function Letter({
   q,
   number,
-  index = 0,
+  active = true,
+  onSelect,
 }: {
   q: Question;
   number: number;
   index?: number;
+  active?: boolean;
+  onSelect?: () => void;
 }) {
   const [resonated, setResonated] = useState(false);
   const [resonanceCount, setResonanceCount] = useState(
-    Math.abs(q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % 24) + 6
+    Math.abs(
+      q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % 24,
+    ) + 6,
   );
   const [shareOpen, setShareOpen] = useState(false);
   const [sparks, setSparks] = useState<Spark[]>([]);
@@ -41,7 +46,6 @@ export function Letter({
       setResonated(true);
       setResonanceCount((prev) => prev + 1);
 
-      // 产生向上漂浮消散的微光粒子
       const newSparks: Spark[] = [
         { id: Date.now() + 1, x: -14 },
         { id: Date.now() + 2, x: 2 },
@@ -57,42 +61,56 @@ export function Letter({
   return (
     <>
       <article
-        className="letter-enter group relative overflow-hidden border border-rule/80 bg-paper-soft/80 p-6 transition-all duration-500 ease-[cubic-bezier(0.22,0.68,0.25,1)] hover:-translate-y-1.5 hover:rotate-[-0.25deg] hover:border-seal/45 hover:bg-paper-soft hover:shadow-[0_26px_52px_-26px_rgba(28,25,23,0.32)] md:p-8"
-        style={{ "--d": `${index < 4 ? index * 110 : 0}ms` } as React.CSSProperties}
+        onClick={() => {
+          if (!active && onSelect) onSelect();
+        }}
+        className={`sheet group relative flex h-full flex-col overflow-hidden bg-paper-soft/95 p-6 transition-all duration-500 ease-[cubic-bezier(0.22,0.68,0.25,1)] md:p-8 ${
+          active
+            ? "border-seal/35 shadow-[0_26px_54px_-28px_rgba(28,25,23,0.34)]"
+            : "cursor-pointer border-rule/80 hover:border-seal/35"
+        }`}
       >
-        {/* 桌面掠过时，纸角被掀起一分 */}
+        {/* 册页内框细线 */}
         <div
-          className="pointer-events-none absolute right-0 top-0 h-10 w-10 origin-top-right scale-100 bg-linear-to-bl from-paper-deep/70 via-transparent to-transparent opacity-70 transition-all duration-500 ease-[cubic-bezier(0.22,0.68,0.25,1)] group-hover:scale-125 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-2.5 border border-rule/30"
           aria-hidden="true"
         />
 
-        {/* 顶边朱线自左向右抽出 */}
+        {/* 右上纸角折影 */}
+        <div
+          className="pointer-events-none absolute right-0 top-0 h-10 w-10 origin-top-right bg-linear-to-bl from-paper-deep/75 via-transparent to-transparent opacity-75 transition-all duration-500 group-hover:scale-115 group-hover:opacity-100"
+          aria-hidden="true"
+        />
+
+        {/* 顶边朱线：居中聚焦时徐徐展开 */}
         <span
-          className="pointer-events-none absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-seal/45 transition-transform duration-700 ease-[cubic-bezier(0.22,0.68,0.25,1)] group-hover:scale-x-100"
+          className={`pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left bg-linear-to-r from-seal/55 via-seal/25 to-transparent transition-transform duration-700 ease-[cubic-bezier(0.22,0.68,0.25,1)] ${
+            active ? "scale-x-100" : "scale-x-0"
+          }`}
           aria-hidden="true"
         />
 
-        {/* 顶部元信息栏与邮票徽章 */}
-        <div className="flex items-start justify-between gap-4">
+        {/* 顶部元信息栏与邮戳徽章 */}
+        <div className="relative flex items-start justify-between gap-4 border-b border-rule/50 pb-5">
           <div className="flex flex-col gap-1.5 font-hei text-[11px] tracking-[0.2em] text-ink-faint">
             <div className="flex items-center gap-2.5">
               {q.status === "pending" ? (
-                <span className="font-kai text-[11px] tracking-[0.18em] text-seal">
+                <span className="font-kai text-[11.5px] tracking-[0.18em] text-seal">
                   私 函
                 </span>
               ) : (
-                <span className="font-mono text-[11.5px] font-medium text-ink-faint">
+                <span className="font-mono text-[12px] font-medium text-ink">
                   NO.{String(number).padStart(3, "0")}
                 </span>
               )}
-              <span className="h-2 w-px bg-rule" />
+              <span className="h-2.5 w-px bg-rule" />
               <time dateTime={q.createdAt}>{formatDay(q.createdAt)}</time>
             </div>
 
             <div className="flex items-center gap-2">
               {q.status === "pending" ? (
                 <span className="inline-flex items-center gap-1 font-kai text-[11px] text-seal">
-                  <span className="h-1.5 w-1.5 rounded-full bg-seal/70" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-seal/75" />
                   候复 · 仅你可见
                 </span>
               ) : q.answer ? (
@@ -109,12 +127,15 @@ export function Letter({
             </div>
           </div>
 
-          {/* 右上角邮戳与迷你邮票：充满书信仪式感 */}
           <div className="flex items-center gap-2 transition-transform duration-300 group-hover:scale-102">
             <Postmark
               id={q.id}
               place="尺素"
-              date={q.createdAt ? q.createdAt.slice(0, 7).replace("-", ".") : "2026.11"}
+              date={
+                q.createdAt
+                  ? q.createdAt.slice(0, 7).replace("-", ".")
+                  : "2026.11"
+              }
               className="hidden scale-75 sm:block"
             />
             <PostageStamp
@@ -127,126 +148,128 @@ export function Letter({
           </div>
         </div>
 
-        {/* 问询信件正文 */}
-        <div className="mt-5">
+        {/* 信件正文 + 回信（长信可在册页内顺滑纵滚，保持手卷天际线齐整） */}
+        <div
+          className={`handscroll-body relative mt-5 flex-1 overflow-y-auto pr-1 ${
+            active ? "" : "pointer-events-none"
+          } max-h-[min(46vh,360px)]`}
+        >
           <Link
             href={q.status === "pending" ? `/p/${q.id}` : `/q/${q.id}`}
-            className="block group/link"
+            prefetch={false}
+            className="group/link block"
           >
-            <p className="font-kai text-[19px] leading-[1.88] text-ink transition-colors duration-300 group-hover/link:text-seal md:text-[21px]">
+            <p className="whitespace-pre-wrap font-kai text-[18.5px] leading-[1.88] text-ink transition-colors duration-300 group-hover/link:text-seal md:text-[20.5px]">
               {q.body}
             </p>
           </Link>
 
-          {q.nickname ? (
-            <p className="mt-3 text-right font-kai text-[12.5px] text-ink-faint">
-              —— {q.nickname}
-            </p>
+          <p className="mt-3 text-right font-kai text-[12.5px] text-ink-faint">
+            —— {q.nickname || "匿名旅人"}
+          </p>
+
+          {q.answer ? (
+            <div className="mt-6 border-t border-dashed border-rule/90 pt-5">
+              <div className="flex items-start gap-3.5">
+                <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11px] leading-none text-seal shadow-xs">
+                  答
+                </span>
+                <div className="space-y-1.5">
+                  <p className="whitespace-pre-wrap font-song text-[14.5px] leading-[2.08] text-ink-soft md:text-[15.5px]">
+                    {q.answer}
+                  </p>
+                  {q.answeredAt && (
+                    <p className="font-hei text-[11px] tracking-wider text-ink-faint">
+                      复于 {formatFullDate(q.answeredAt)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           ) : (
-            <p className="mt-3 text-right font-kai text-[11.5px] text-ink-faint">
-              —— 匿名旅人
-            </p>
+            <div className="mt-5 border-t border-dashed border-rule/50 pt-3.5">
+              <p className="font-kai text-[12px] text-ink-faint">
+                此函尚在箧中，俟收信人展读，徐徐作复。
+              </p>
+            </div>
           )}
         </div>
 
-        {/* 回信区域 */}
-        {q.answer ? (
-          <div className="mt-6 border-t border-dashed border-rule/90 pt-5">
-            <div className="flex items-start gap-3.5">
-              <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11px] leading-none text-seal shadow-xs">
-                答
-              </span>
-              <div className="space-y-1.5">
-                <p className="whitespace-pre-wrap font-song text-[15px] leading-[2.1] text-ink-soft md:text-[15.5px]">
-                  {q.answer}
-                </p>
-                {q.answeredAt && (
-                  <p className="font-hei text-[11px] tracking-wider text-ink-faint">
-                    复于 {formatFullDate(q.answeredAt)}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-5 border-t border-dashed border-rule/50 pt-3.5">
-            <p className="font-kai text-[12px] text-ink-faint">
-              此函尚在箧中，俟收信人展读，徐徐作复。
-            </p>
-          </div>
-        )}
-
-        {/* 底部操作与微互动：候复中的私函不参与微光与传阅 */}
+        {/* 底部操作与微互动 */}
         {q.status === "pending" ? (
-          <div className="mt-7 border-t border-rule/60 pt-4">
+          <div className="relative mt-6 border-t border-rule/60 pt-4">
             <p className="font-kai text-[11.5px] text-ink-faint">
               此函仅君可见。待收信人作复，自当示人。
             </p>
           </div>
         ) : (
-        <div className="mt-7 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4">
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            {/* 微光按钮 */}
-            <div className="relative">
+          <div
+            className={`relative mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4 ${
+              active ? "" : "pointer-events-none"
+            }`}
+          >
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              {/* 微光按钮 */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={handleResonate}
+                  title="寄一抹微光"
+                  className={`relative flex items-center gap-1.5 rounded-full px-3 py-1 font-hei text-[11px] transition-all duration-300 ${
+                    resonated
+                      ? "bg-seal/10 font-medium text-seal shadow-xs"
+                      : "text-ink-faint hover:bg-paper-deep/40 hover:text-ink active:scale-95"
+                  }`}
+                >
+                  <Sparkle
+                    className={`h-3.5 w-3.5 transition-transform duration-300 ${resonated ? "scale-110 text-seal" : ""}`}
+                    fill={resonated ? "currentColor" : "none"}
+                    strokeWidth={1.8}
+                  />
+                  <span>{resonanceCount}</span>
+                  <span className="hidden sm:inline">微光</span>
+                </button>
+
+                {sparks.map((spark) => (
+                  <span
+                    key={spark.id}
+                    className="spark-rise pointer-events-none absolute left-1/2 top-0 h-2 w-2 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]"
+                    style={{ "--spark-x": `${spark.x}px` } as React.CSSProperties}
+                  />
+                ))}
+              </div>
+
+              {/* 分享 / 生成信笺按钮 */}
               <button
                 type="button"
-                onClick={handleResonate}
-                title="寄一抹微"
-                className={`relative flex items-center gap-1.5 rounded-full px-3 py-1 font-hei text-[11px] transition-all duration-300 ${
-                  resonated
-                    ? "bg-seal/10 text-seal font-medium shadow-xs"
-                    : "text-ink-faint hover:bg-paper-deep/40 hover:text-ink active:scale-95"
-                }`}
+                onClick={() => setShareOpen(true)}
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 font-hei text-[11px] text-ink-faint transition-colors hover:bg-paper-deep/40 hover:text-ink active:scale-95"
               >
-                <Sparkle
-                  className={`h-3.5 w-3.5 transition-transform duration-300 ${resonated ? "scale-110 text-seal" : ""}`}
-                  fill={resonated ? "currentColor" : "none"}
-                  strokeWidth={1.8}
-                />
-                <span>{resonanceCount}</span>
-                <span className="hidden sm:inline">微光</span>
+                <Share className="h-3.5 w-3.5" strokeWidth={1.8} />
+                <span>传 阅</span>
               </button>
-
-              {/* 微光漂浮升腾粒子 */}
-              {sparks.map((spark) => (
-                <span
-                  key={spark.id}
-                  className="spark-rise pointer-events-none absolute left-1/2 top-0 h-2 w-2 rounded-full bg-gold shadow-[0_0_8px_var(--color-gold)]"
-                  style={{ "--spark-x": `${spark.x}px` } as React.CSSProperties}
-                />
-              ))}
             </div>
 
-            {/* 分享 / 生成信笺按钮 */}
-            <button
-              type="button"
-              onClick={() => setShareOpen(true)}
-              className="flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-hei text-[11px] text-ink-faint transition-colors hover:bg-paper-deep/40 hover:text-ink active:scale-95 whitespace-nowrap"
+            <Link
+              href={`/q/${q.id}`}
+              prefetch={false}
+              className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal"
             >
-              <Share className="h-3.5 w-3.5" strokeWidth={1.8} />
-              <span>传 阅</span>
-            </button>
+              <span>专属页</span>
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
-
-          <Link
-            href={`/q/${q.id}`}
-            className="ml-auto flex shrink-0 items-center gap-1 font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal whitespace-nowrap"
-          >
-            <span>专属页</span>
-            <span className="transition-transform duration-300 group-hover/arrow:translate-x-1">→</span>
-          </Link>
-        </div>
         )}
       </article>
 
       {/* 分享弹窗 */}
       {q.status === "published" && (
-      <ShareModal
-        question={q}
-        number={number}
-        isOpen={shareOpen}
-        onClose={() => setShareOpen(false)}
-      />
+        <ShareModal
+          question={q}
+          number={number}
+          isOpen={shareOpen}
+          onClose={() => setShareOpen(false)}
+        />
       )}
     </>
   );

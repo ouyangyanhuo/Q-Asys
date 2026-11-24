@@ -114,41 +114,39 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* 读信区域 */}
-        <section
-          id="letters"
-          className="mx-auto max-w-[1180px] scroll-mt-20 px-6 md:px-10"
-        >
-          <div className="grid gap-10 border-t border-rule pt-14 lg:grid-cols-[180px_minmax(0,1fr)] lg:gap-16">
-            {/* 侧栏 */}
-            <aside data-reveal className="self-start lg:sticky lg:top-24">
-              <div className="flex items-baseline gap-2">
-                <h2 className="font-song text-[28px] tracking-[0.08em] text-ink">
-                  来鸿
-                </h2>
-                <span className="font-mono text-[11px] text-ink-faint">
-                  / LETTERS
-                </span>
+        {/* 读信区域：古画手卷（横向漫游展卷） */}
+        <section id="letters" className="scroll-mt-20 pb-20">
+          <div className="mx-auto max-w-[1180px] px-6 md:px-10">
+            <header
+              data-reveal
+              className="flex flex-col gap-6 border-t border-rule pt-14 sm:flex-row sm:items-end sm:justify-between"
+            >
+              <div>
+                <div className="flex items-baseline gap-2.5">
+                  <h2 className="font-song text-[28px] tracking-[0.08em] text-ink md:text-[32px]">
+                    来鸿
+                  </h2>
+                  <span className="font-mono text-[11px] tracking-[0.18em] text-ink-faint">
+                    / LETTERS · 展卷细读
+                  </span>
+                </div>
+                <p className="mt-2.5 font-kai text-[13.5px] leading-relaxed text-ink-faint">
+                  随风而散者，不可胜数；落于纸上者，皆可细读。
+                </p>
               </div>
 
-              <p className="mt-3 font-kai text-[12.5px] leading-relaxed text-ink-faint">
-                随风而散者，不可胜数；
-                <br />
-                落于纸上者，皆可细读。
-              </p>
-
-              <div className="mt-7 hidden flex-col gap-5 lg:flex">
-                <PostageStamp theme="lantern" color="seal" price="80" />
-                <div className="sway flex h-11 w-11 items-center justify-center border border-seal/35 font-kai text-[16px] text-seal/80 shadow-2xs">
+              <div className="hidden items-center gap-4 sm:flex">
+                <PostageStamp theme="lantern" color="seal" price="80" size="sm" />
+                <div className="sway flex h-10 w-10 items-center justify-center border border-seal/35 font-kai text-[15px] text-seal/80 shadow-2xs">
                   笺
                 </div>
               </div>
-            </aside>
+            </header>
+          </div>
 
-            {/* 信件流交互展示 */}
-            <div data-reveal className="max-w-[720px] pb-32">
-              <LettersStream initialLetters={letters} total={total} />
-            </div>
+          {/* 横向手卷全幅展台 */}
+          <div data-reveal className="mt-8">
+            <LettersStream initialLetters={letters} total={total} />
           </div>
         </section>
       </main>
