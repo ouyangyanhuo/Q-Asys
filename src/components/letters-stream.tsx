@@ -66,6 +66,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   const [mine, setMine] = useState<Question[]>([]);
 
   const runwayRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -90,10 +91,11 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     };
 
     const runway = runwayRef.current;
+    const stage = stageRef.current;
     let mineIo: IntersectionObserver | null = null;
     let viewIo: IntersectionObserver | null = null;
 
-    if (runway && "IntersectionObserver" in window) {
+    if (runway && stage && "IntersectionObserver" in window) {
       mineIo = new IntersectionObserver(
         (entries) => {
           if (entries.some((entry) => entry.isIntersecting)) {
@@ -105,15 +107,16 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       );
       mineIo.observe(runway);
 
+      // 观察单屏高的吸顶展台（而非数千像素高的跑道），避免长卷下 threshold 永不触发
       viewIo = new IntersectionObserver(
         (entries) => {
           const visible = entries.some((entry) => entry.isIntersecting);
           inViewRef.current = visible;
           if (visible) setUnrolled(true);
         },
-        { threshold: 0.08 },
+        { threshold: 0.25 },
       );
-      viewIo.observe(runway);
+      viewIo.observe(stage);
     } else {
       load();
       setUnrolled(true);
@@ -494,7 +497,10 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       className="relative"
     >
       {/* 吸顶画卷展台：滚到此区域时稳稳驻留，纵滚即展卷，卷毕自动放行至页脚 */}
-      <div className="sticky top-0 flex min-h-dvh flex-col justify-center py-4 md:py-6">
+      <div
+        ref={stageRef}
+        className="sticky top-0 flex min-h-dvh flex-col justify-center py-4 md:py-6"
+      >
         {/* 顶部题头 + 筛选与寻笺栏 */}
         <div className="mx-auto w-full max-w-[1180px] px-6 md:px-10">
           <div className="flex flex-col gap-4 border-b border-rule/70 pb-4 lg:flex-row lg:items-end lg:justify-between">

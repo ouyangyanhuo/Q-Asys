@@ -133,8 +133,8 @@ export function Letter({
           </div>
         </div>
 
-        {/* 信件正文 + 回信（长信可在册页内顺滑纵滚，保持手卷天际线齐整） */}
-        <div className="handscroll-body relative mt-6 flex-1 overflow-y-auto pr-1.5 max-h-[min(50vh,480px)]">
+        {/* 信件正文 + 回信（随 470px 卡片定高自适应撑满，长信内部顺滑纵滚） */}
+        <div className="handscroll-body relative mt-5 min-h-0 flex-1 overflow-y-auto pr-1.5">
           <Link
             href={q.status === "pending" ? `/p/${q.id}` : `/q/${q.id}`}
             prefetch={false}
