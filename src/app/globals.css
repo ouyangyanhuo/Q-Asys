@@ -849,12 +849,17 @@ html[data-theme="night"] {
     }
   }
 
-  /* 横向平移舞台：上下留足轴头突出余量，由页面纵滚平滑驱动 translate3d */
+  /* 横向平移舞台：上下留足轴头突出余量，由页面纵滚或鼠标拖拽平滑驱动 translate3d */
   .handscroll-track {
     position: relative;
     display: flex;
     overflow: hidden;
     padding-block: 18px 24px;
+    cursor: grab;
+  }
+  .handscroll-track[data-dragging="true"] {
+    cursor: grabbing;
+    user-select: none;
   }
 
   /* 实体画卷整体：[上一卷] + [左画轴] + [宣纸画心] + [右画轴] + [下一卷] */

@@ -327,6 +327,120 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeIndex, randomModalOpen, scrollToCard, volumeLetters.length]);
 
+  // 鼠标拖拽画卷：与页面纵滚跑道 1:1 联动，拖动手感丝滑且不越界；
+  // 即使起手落在信件正文链接上也能拖拽（位移超过 5px 判定为拖拽并拦截误点）
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    let isDown = false;
+    let dragged = false;
+    let startX = 0;
+    let startScrollY = 0;
+    let runwayTop = 0;
+    let maxScrollY = 0;
+    let lastX = 0;
+    let velocity = 0;
+    let suppressClick = false;
+
+    const getTrack = () =>
+      viewport.querySelector<HTMLElement>(".handscroll-track");
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      if (maxScrollRef.current <= 0) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("button, input, textarea, select")) return;
+
+      const runway = runwayRef.current;
+      if (!runway) return;
+
+      isDown = true;
+      dragged = false;
+      suppressClick = false;
+      startX = e.clientX;
+      lastX = e.clientX;
+      velocity = 0;
+      const rect = runway.getBoundingClientRect();
+      runwayTop = rect.top + window.scrollY;
+      maxScrollY = runwayTop + Math.max(0, rect.height - window.innerHeight);
+      // 若尚未完全吸顶，从当前位置起步；若在跑道内则直接跟随
+      startScrollY = Math.min(maxScrollY, Math.max(runwayTop, window.scrollY));
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      if (!dragged && Math.abs(dx) > 5) {
+        dragged = true;
+        suppressClick = true;
+        getTrack()?.setAttribute("data-dragging", "true");
+        // 避免拖拽过程中误选中文本
+        window.getSelection()?.removeAllRanges();
+      }
+      if (!dragged) return;
+
+      velocity = lastX - e.clientX;
+      lastX = e.clientX;
+
+      const nextTop = Math.min(
+        maxScrollY,
+        Math.max(runwayTop, startScrollY - dx * 1.15),
+      );
+      window.scrollTo({ top: nextTop, behavior: "instant" });
+    };
+
+    const endDrag = () => {
+      if (!isDown) return;
+      isDown = false;
+      if (dragged) {
+        getTrack()?.removeAttribute("data-dragging");
+        dragged = false;
+        window.setTimeout(() => {
+          suppressClick = false;
+        }, 80);
+
+        // 松手带一点轻柔惯性滑行，严格钳制在本卷范围内
+        if (Math.abs(velocity) > 1.5) {
+          const coastTop = Math.min(
+            maxScrollY,
+            Math.max(runwayTop, window.scrollY + velocity * 10),
+          );
+          window.scrollTo({ top: coastTop, behavior: "smooth" });
+        }
+      }
+    };
+
+    const onClickCapture = (e: MouseEvent) => {
+      if (suppressClick) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    const onDragStart = (e: DragEvent) => {
+      // 禁用浏览器原生链接拖拽幽灵图，让信笺任意位置皆可顺手拖动
+      e.preventDefault();
+    };
+
+    viewport.addEventListener("pointerdown", onPointerDown);
+    viewport.addEventListener("click", onClickCapture, true);
+    viewport.addEventListener("dragstart", onDragStart);
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
+
+    return () => {
+      getTrack()?.removeAttribute("data-dragging");
+      viewport.removeEventListener("pointerdown", onPointerDown);
+      viewport.removeEventListener("click", onClickCapture, true);
+      viewport.removeEventListener("dragstart", onDragStart);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
+    };
+  }, [volumeLetters.length, safeVolume, runwayHeight]);
+
   const answeredCount = useMemo(
     () => initialLetters.filter((l) => Boolean(l.answer)).length,
     [initialLetters],
@@ -687,7 +801,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                 </div>
 
                 <p className="hidden font-hei text-[11px] tracking-[0.16em] text-ink-faint/80 md:block">
-                  向下滚动页面即可展卷 · 卷毕续览页脚
+                  滚轮 · 鼠标拖拽 · ← → 展卷
                 </p>
               </div>
             </div>
