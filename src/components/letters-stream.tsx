@@ -13,8 +13,10 @@ interface LettersStreamProps {
 }
 
 const PER_VOLUME = 6;
-/** 解开丝线、左右扯开并徐徐展开画卷所占的纵向滚动距离（px） */
-const UNROLL_PX = 560;
+/** 扶正卷轴、拆解丝绦、双轴向左右徐徐分展所占的纵向滚动行程（px） */
+const UNROLL_PX = 640;
+/** 合卷状态时左右双轴之间的锦绫包首宽度（px） */
+const CLOSED_COVER_W = 88;
 
 const CN_NUM = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
 function toCnVolume(n: number): string {
@@ -24,10 +26,12 @@ function toCnVolume(n: number): string {
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const smoothstep = (a: number, b: number, x: number) => {
   const t = clamp01((x - a) / (b - a));
   return t * t * (3 - 2 * t);
 };
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - clamp01(t), 3);
 
 function ScrollRoller({ side }: { side: "left" | "right" }) {
   const shaft = (
@@ -78,21 +82,30 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
 
   const runwayRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const assemblyRef = useRef<HTMLDivElement | null>(null);
+  const clipRef = useRef<HTMLDivElement | null>(null);
   const sheetRef = useRef<HTMLDivElement | null>(null);
-  const closedWrapRef = useRef<HTMLDivElement | null>(null);
+  const paperRef = useRef<HTMLDivElement | null>(null);
+  const prevVolRef = useRef<HTMLDivElement | null>(null);
+  const coverRef = useRef<HTMLButtonElement | null>(null);
+  const dynamicRightRef = useRef<HTMLDivElement | null>(null);
+  const hintRef = useRef<HTMLParagraphElement | null>(null);
   const knotRef = useRef<SVGSVGElement | null>(null);
   const leftCordRef = useRef<SVGSVGElement | null>(null);
   const rightCordRef = useRef<SVGSVGElement | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   const panOverflowRef = useRef(0);
+  const paperStartXRef = useRef(0);
   const inViewRef = useRef(false);
   const hasArrivedRef = useRef(false);
   const isOpenedRef = useRef(false);
-  const switchTimersRef = useRef<number[]>([]);
+  const activeIndexRef = useRef(0);
+  const closingRef = useRef(false);
+  const switchRafRef = useRef(0);
+  const switchTimerRef = useRef(0);
 
-  // rAF 平滑阻尼驱动总进度（0 ~ UNROLL_PX 为解绦展卷，UNROLL_PX ~ 总长 为横移画卷）
+  // rAF 平滑阻尼驱动总进度（0 ~ UNROLL_PX 为解绦双轴分展，UNROLL_PX ~ 总长 为横移画卷）
   const targetPxRef = useRef(0);
   const currentPxRef = useRef(0);
   const rafRef = useRef(0);
@@ -126,7 +139,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       );
       mineIo.observe(runway);
 
-      // 首次滑到卷轴展台时，触发一次「斜放新卷上案」的落案动画
+      // 首次滑到卷轴展台时，触发「斜放新卷落案」动画
       viewIo = new IntersectionObserver(
         (entries) => {
           const visible = entries.some((entry) => entry.isIntersecting);
@@ -134,8 +147,10 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
           if (visible && !hasArrivedRef.current) {
             hasArrivedRef.current = true;
             setPhase("placing");
-            const t = window.setTimeout(() => setPhase("idle"), 920);
-            switchTimersRef.current.push(t);
+            switchTimerRef.current = window.setTimeout(
+              () => setPhase("idle"),
+              900,
+            );
           }
         },
         { threshold: 0.2 },
@@ -152,8 +167,8 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       mineIo?.disconnect();
       viewIo?.disconnect();
       window.removeEventListener("qasys-mine-refresh", load);
-      switchTimersRef.current.forEach((id) => window.clearTimeout(id));
-      switchTimersRef.current = [];
+      cancelAnimationFrame(switchRafRef.current);
+      window.clearTimeout(switchTimerRef.current);
     };
   }, []);
 
@@ -208,20 +223,208 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   useEffect(() => {
     setVolume(0);
     setActiveIndex(0);
+    activeIndexRef.current = 0;
   }, [filter, keyword]);
 
-  // 切换画卷仪式：旧卷收拢离案（680ms） -> 换上新卷回到卷首 -> 斜放落案（900ms）
+  /**
+   * 真正的双轴物理渲染函数：
+   * - u = 0：左、右两根紫檀玉轴夹着 88px 锦绫包首斜置案头，朱砂丝绦与活结紧束其上
+   * - u = 0 -> 0.28：斜卷扶正至水平，丝结拆开，左/右朱砂丝带携丝穗向两侧扯开
+   * - u = 0.22 -> 1.0：左紫檀轴从中央向左滚至页边距，动态右紫檀轴从中央向右滚出视口外，
+   *                    夹在两轴之间的宣纸画心丝毫不差地同步显露（零穿帮、零虚影淡切）
+   * - panX > 0：同一根左紫檀轴无缝衔接继续向左滑出屏幕，直至卷尾右紫檀轴与「下一卷」入画
+   */
+  const renderScrollFrame = useCallback(
+    (
+      u: number,
+      panX: number,
+      extraTransform?: { y: number; rot: number; scale: number; opacity: number },
+    ) => {
+      const assembly = assemblyRef.current;
+      const clip = clipRef.current;
+      const sheet = sheetRef.current;
+      const cover = coverRef.current;
+      const dynRight = dynamicRightRef.current;
+      const prevVol = prevVolRef.current;
+      const hint = hintRef.current;
+      const knot = knotRef.current;
+      const leftCord = leftCordRef.current;
+      const rightCord = rightCordRef.current;
+      if (!assembly || !clip || !sheet) return;
+
+      const stageW = assembly.clientWidth || window.innerWidth;
+      const centerX = stageW / 2;
+      const halfClosed = CLOSED_COVER_W / 2;
+      const paperStartX = paperStartXRef.current || 140;
+
+      // 1. 卷轴倾斜角：初始 -10deg 斜置案头，滚动前 28% 缓缓扶正
+      const straighten = smoothstep(0, 0.28, u);
+      const tiltDeg = -10 * (1 - straighten);
+
+      if (extraTransform) {
+        assembly.style.transform = `translate3d(0, ${extraTransform.y.toFixed(1)}px, 0) rotate(${(tiltDeg + extraTransform.rot).toFixed(2)}deg) scale(${extraTransform.scale.toFixed(3)})`;
+        assembly.style.opacity = extraTransform.opacity.toFixed(3);
+      } else {
+        assembly.style.transform =
+          Math.abs(tiltDeg) > 0.04 ? `rotate(${tiltDeg.toFixed(2)}deg)` : "";
+        assembly.style.opacity = "1";
+      }
+
+      // 2. 丝结拆开（0.02 -> 0.28）与左右丝带分别向两侧扯开（0.05 -> 0.86）
+      const knotOpen = smoothstep(0.02, 0.28, u);
+      if (knot) {
+        knot.style.opacity = (1 - knotOpen).toFixed(3);
+        knot.style.transform = `scale(${(1 + knotOpen * 0.45).toFixed(3)})`;
+      }
+
+      const pull = easeOutCubic(clamp01((u - 0.05) / 0.72));
+      const pullFade = 1 - smoothstep(0.58, 0.9, u);
+      const pullPx = pull * (stageW * 0.44);
+      const cordScaleX = 0.17 + pull * 0.9;
+      if (leftCord) {
+        leftCord.style.opacity = pullFade.toFixed(3);
+        leftCord.style.transform = `translate3d(${(-pullPx).toFixed(1)}px, -50%, 0) scaleX(${cordScaleX.toFixed(3)})`;
+      }
+      if (rightCord) {
+        rightCord.style.opacity = pullFade.toFixed(3);
+        rightCord.style.transform = `translate3d(${pullPx.toFixed(1)}px, -50%, 0) scaleX(${cordScaleX.toFixed(3)})`;
+      }
+
+      // 3. 双轴物理分展坐标（0.20 -> 1.00）
+      const openT = smoothstep(0.2, 1.0, u);
+      const winLeft = lerp(centerX - halfClosed, paperStartX, openT);
+      const winRight = lerp(centerX + halfClosed, stageW + 64, openT);
+
+      // 真实画卷紧贴 winLeft：同一根左紫檀轴从中央滚至左边界，再随 panX 无缝向左滑出屏幕
+      const sheetShiftX = winLeft - paperStartX - panX;
+      sheet.style.transform = `translate3d(${sheetShiftX.toFixed(1)}px, 0, 0)`;
+
+      // 右缘精确裁剪到动态右轴的左缘（-44px 留足上下玉轴头突出空间）
+      if (openT >= 0.999) {
+        clip.style.clipPath = "none";
+      } else {
+        const rightInset = Math.max(0, stageW - winRight);
+        clip.style.clipPath = `inset(-44px ${rightInset.toFixed(1)}px -44px -260px)`;
+      }
+
+      // 4. 动态右轴紧贴 winRight 向右一路滚出视口右侧
+      if (dynRight) {
+        const showRightRoller = openT < 0.999;
+        dynRight.style.opacity = showRightRoller ? "1" : "0";
+        dynRight.style.transform = `translate3d(${winRight.toFixed(1)}px, 0, 0)`;
+      }
+
+      // 5. 锦绫包首封面：合卷时严丝合缝夹在两轴之间，分展伊始柔和褪去露出画心引首
+      if (cover) {
+        const coverFade = 1 - smoothstep(0.03, 0.28, openT);
+        cover.style.opacity = coverFade.toFixed(3);
+        cover.style.transform = `translate3d(${winLeft.toFixed(1)}px, 0, 0)`;
+      }
+
+      // 6. 左轴外侧的「上一卷」在左轴归位时淡入，合卷时不露馅
+      if (prevVol) {
+        const prevOpacity = smoothstep(0.76, 0.98, openT);
+        prevVol.style.opacity = prevOpacity.toFixed(3);
+      }
+
+      // 7. 合卷提示语随解绦淡出
+      if (hint) {
+        const hintOpacity = 1 - smoothstep(0.02, 0.22, u);
+        hint.style.opacity = hintOpacity.toFixed(3);
+      }
+    },
+    [],
+  );
+
+  // 测量本卷横向总溢出宽度与左轴归位坐标
+  useEffect(() => {
+    const measure = () => {
+      const assembly = assemblyRef.current;
+      const sheet = sheetRef.current;
+      const paper = paperRef.current;
+      if (!assembly || !sheet || !paper || volumeLetters.length === 0) {
+        panOverflowRef.current = 0;
+        setRunwayHeight(null);
+        return;
+      }
+
+      paperStartXRef.current = paper.offsetLeft;
+      const overflow = Math.max(0, sheet.scrollWidth - assembly.clientWidth);
+      panOverflowRef.current = overflow;
+      setRunwayHeight(Math.round(window.innerHeight + UNROLL_PX + overflow));
+
+      if (!closingRef.current) {
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        const u = reduceMotion ? 1 : clamp01(currentPxRef.current / UNROLL_PX);
+        const panX = Math.min(overflow, Math.max(0, currentPxRef.current - UNROLL_PX));
+        renderScrollFrame(u, panX);
+      }
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (assemblyRef.current) ro.observe(assemblyRef.current);
+    if (sheetRef.current) ro.observe(sheetRef.current);
+    window.addEventListener("resize", measure, { passive: true });
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [volumeLetters.length, safeVolume, renderScrollFrame]);
+
+  // 切换画卷：物理双轴合拢收卷（560ms）-> 轻提离案（260ms）-> 换新卷斜放落案（880ms）
   const switchVolume = useCallback(
     (nextVolume: number) => {
-      if (phase !== "idle") return;
-      switchTimersRef.current.forEach((id) => window.clearTimeout(id));
-      switchTimersRef.current = [];
-
+      if (closingRef.current || phase !== "idle") return;
+      closingRef.current = true;
       setPhase("closing");
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+      cancelAnimationFrame(switchRafRef.current);
+      window.clearTimeout(switchTimerRef.current);
 
-      const t1 = window.setTimeout(() => {
+      const startPan = Math.min(
+        panOverflowRef.current,
+        Math.max(0, currentPxRef.current - UNROLL_PX),
+      );
+      const startU = clamp01(currentPxRef.current / UNROLL_PX);
+      const t0 = performance.now();
+      const ROLL_MS = 560;
+      const LIFT_MS = 280;
+
+      const animateClose = (now: number) => {
+        const elapsed = now - t0;
+        if (elapsed < ROLL_MS) {
+          // 双轴合拢、丝线系回
+          const k = smoothstep(0, 1, elapsed / ROLL_MS);
+          const uNow = lerp(startU, 0, k);
+          const panNow = lerp(startPan, 0, easeOutCubic(clamp01(k * 1.4)));
+          renderScrollFrame(uNow, panNow);
+          switchRafRef.current = requestAnimationFrame(animateClose);
+          return;
+        }
+
+        if (elapsed < ROLL_MS + LIFT_MS) {
+          // 合拢的旧卷微斜轻提离案
+          const k = easeOutCubic((elapsed - ROLL_MS) / LIFT_MS);
+          renderScrollFrame(0, 0, {
+            y: -40 * k,
+            rot: 10 * k,
+            scale: 1 - 0.08 * k,
+            opacity: 1 - k,
+          });
+          switchRafRef.current = requestAnimationFrame(animateClose);
+          return;
+        }
+
+        // 换入新卷并复位至跑道顶端
+        closingRef.current = false;
         setVolume(nextVolume);
         setActiveIndex(0);
+        activeIndexRef.current = 0;
         setIsOpened(false);
         isOpenedRef.current = false;
         targetPxRef.current = 0;
@@ -233,16 +436,16 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
           window.scrollTo({ top, behavior: "instant" });
         }
 
+        renderScrollFrame(0, 0);
         setPhase("placing");
-        const t2 = window.setTimeout(() => {
+        switchTimerRef.current = window.setTimeout(() => {
           setPhase("idle");
-        }, 920);
-        switchTimersRef.current.push(t2);
-      }, 680);
+        }, 900);
+      };
 
-      switchTimersRef.current.push(t1);
+      switchRafRef.current = requestAnimationFrame(animateClose);
     },
-    [phase],
+    [phase, renderScrollFrame],
   );
 
   // 点击未打开的斜置卷轴时，自动平滑滚过解绦段将其展开
@@ -253,106 +456,28 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     window.scrollTo({ top: runwayTop + UNROLL_PX, behavior: "smooth" });
   }, []);
 
-  // 测量本卷横向总溢出宽度，跑道总长 = 100vh + 解绦展卷段(UNROLL_PX) + 横向画卷溢出宽
-  useEffect(() => {
-    const measure = () => {
-      const viewport = viewportRef.current;
-      const sheet = sheetRef.current;
-      if (!viewport || !sheet || volumeLetters.length === 0) {
-        panOverflowRef.current = 0;
-        setRunwayHeight(null);
-        return;
-      }
-
-      const overflow = Math.max(0, sheet.scrollWidth - viewport.clientWidth);
-      panOverflowRef.current = overflow;
-      setRunwayHeight(Math.round(window.innerHeight + UNROLL_PX + overflow));
-    };
-
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (viewportRef.current) ro.observe(viewportRef.current);
-    if (sheetRef.current) ro.observe(sheetRef.current);
-    window.addEventListener("resize", measure, { passive: true });
-
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [volumeLetters.length, safeVolume]);
-
-  // 统一物理帧更新：将 currentPx 映射为「斜卷扶正 -> 丝结拆开 -> 丝线左右扯开 -> 画卷中开 -> 横向展读」
+  // 绑定 window 纵向滚动 -> rAF 平滑阻尼驱动双轴展卷与横向平移
   useEffect(() => {
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    const applyVisuals = (px: number) => {
-      const viewport = viewportRef.current;
-      const sheet = sheetRef.current;
-      const closedWrap = closedWrapRef.current;
-      const knot = knotRef.current;
-      const leftCord = leftCordRef.current;
-      const rightCord = rightCordRef.current;
-      if (!viewport || !sheet) return;
-
+    const applyPx = (px: number) => {
+      if (closingRef.current) return;
       const u = reduceMotion ? 1 : clamp01(px / UNROLL_PX);
       const panX = Math.min(panOverflowRef.current, Math.max(0, px - UNROLL_PX));
+      renderScrollFrame(u, panX);
 
-      // 1. 卷轴倾斜扶正：初落案头 -11deg，滚动前 35% 扶正至 0deg
-      const straighten = smoothstep(0, 0.36, u);
-      const tiltDeg = -11 * (1 - straighten);
-
-      // 2. 丝结解开（0.02 -> 0.32）
-      const knotOpen = smoothstep(0.02, 0.32, u);
-      if (knot) {
-        const knotScale = 1 + knotOpen * 0.45;
-        const knotOpacity = 1 - knotOpen;
-        knot.style.opacity = knotOpacity.toFixed(3);
-        knot.style.transform = `rotate(${tiltDeg.toFixed(2)}deg) scale(${knotScale.toFixed(3)})`;
-      }
-
-      // 3. 左右朱砂丝线从卷筒处拆开，分别向左与向右伸展扯开并淡出（0.04 -> 0.88）
-      const pull = smoothstep(0.04, 0.82, u);
-      const pullFade = 1 - smoothstep(0.58, 0.92, u);
-      const pullVw = pull * 36;
-      const cordScaleX = 0.16 + pull * 0.94;
-      if (leftCord) {
-        leftCord.style.opacity = pullFade.toFixed(3);
-        leftCord.style.transform = `translate3d(${(-pullVw).toFixed(2)}vw, -50%, 0) rotate(${(tiltDeg * 0.75).toFixed(2)}deg) scaleX(${cordScaleX.toFixed(3)})`;
-      }
-      if (rightCord) {
-        rightCord.style.opacity = pullFade.toFixed(3);
-        rightCord.style.transform = `translate3d(${pullVw.toFixed(2)}vw, -50%, 0) rotate(${(tiltDeg * 0.75).toFixed(2)}deg) scaleX(${cordScaleX.toFixed(3)})`;
-      }
-
-      // 4. 未展开的斜置卷轴随丝线拉开而渐渐交棒给真正展开的画卷（0.22 -> 0.46）
-      const bundleFade = 1 - smoothstep(0.22, 0.46, u);
-      if (closedWrap) {
-        closedWrap.style.opacity = bundleFade.toFixed(3);
-        closedWrap.style.transform = `rotate(${tiltDeg.toFixed(2)}deg) scale(${(1 + (1 - bundleFade) * 0.04).toFixed(3)})`;
-      }
-
-      // 5. 真正的画卷紧随左右丝线从正中央徐徐向两侧铺开（0.24 -> 1.0）
-      const openT = smoothstep(0.24, 1.0, u);
-      const insetPct = (1 - openT) * 48;
-      const vpOpacity = smoothstep(0.2, 0.44, u);
-      viewport.style.clipPath = `inset(0 ${insetPct.toFixed(2)}% 0 ${insetPct.toFixed(2)}%)`;
-      viewport.style.opacity = vpOpacity.toFixed(3);
-      viewport.style.transform =
-        Math.abs(tiltDeg) > 0.05 ? `rotate(${(tiltDeg * 0.4).toFixed(2)}deg)` : "";
-
-      // 6. 横向平移画卷（左轴头逐渐移出屏幕左侧，直到右轴头与「下一卷」露出）
-      sheet.style.transform = `translate3d(${-panX.toFixed(1)}px, 0, 0)`;
-
-      const nowOpened = u > 0.45;
+      const nowOpened = u > 0.35;
       if (nowOpened !== isOpenedRef.current) {
         isOpenedRef.current = nowOpened;
         setIsOpened(nowOpened);
       }
 
-      // 7. 实时计算最居中的信笺索引
-      const vpRect = viewport.getBoundingClientRect();
+      // 仅在居中卡片下标真实变化时触发一次状态更新（滚动过程 0 无效重渲染）
+      const assembly = assemblyRef.current;
+      if (!assembly) return;
+      const vpRect = assembly.getBoundingClientRect();
       const vpCenter = vpRect.left + vpRect.width / 2;
       let bestIdx = 0;
       let bestDist = Infinity;
@@ -366,23 +491,31 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
           bestIdx = i;
         }
       }
-      setActiveIndex(bestIdx);
+      if (bestIdx !== activeIndexRef.current) {
+        activeIndexRef.current = bestIdx;
+        setActiveIndex(bestIdx);
+      }
     };
 
     const tick = () => {
+      if (closingRef.current) {
+        rafRef.current = 0;
+        return;
+      }
       const diff = targetPxRef.current - currentPxRef.current;
       if (Math.abs(diff) < 0.4) {
         currentPxRef.current = targetPxRef.current;
-        applyVisuals(currentPxRef.current);
+        applyPx(currentPxRef.current);
         rafRef.current = 0;
         return;
       }
       currentPxRef.current += diff * 0.14;
-      applyVisuals(currentPxRef.current);
+      applyPx(currentPxRef.current);
       rafRef.current = requestAnimationFrame(tick);
     };
 
     const onScroll = () => {
+      if (closingRef.current) return;
       const runway = runwayRef.current;
       if (!runway) return;
       const totalSpan = UNROLL_PX + panOverflowRef.current;
@@ -396,26 +529,28 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       }
     };
 
-    applyVisuals(currentPxRef.current);
+    applyPx(currentPxRef.current);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = 0;
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
-  }, [volumeLetters.length, runwayHeight, safeVolume]);
+  }, [volumeLetters.length, runwayHeight, safeVolume, renderScrollFrame]);
 
-  // 点击刻度尺或方向键时，平滑滚到对应的页面纵滚位置（若未展开会自动一并展开）
+  // 点击刻度尺或方向键时，平滑滚到对应信笺位置（若未展卷会自动顺势展开）
   const scrollToCard = useCallback((idx: number) => {
     const runway = runwayRef.current;
-    const viewport = viewportRef.current;
+    const assembly = assemblyRef.current;
     const card = cardRefs.current[idx];
     const overflow = panOverflowRef.current;
-    if (!runway || !viewport || !card) return;
+    if (!runway || !assembly || !card) return;
 
     const currentPan = Math.max(0, currentPxRef.current - UNROLL_PX);
-    const vpRect = viewport.getBoundingClientRect();
+    const vpRect = assembly.getBoundingClientRect();
     const cardRect = card.getBoundingClientRect();
     const cardLeftUnshifted = cardRect.left - vpRect.left + currentPan;
     const desiredPan = Math.min(
@@ -432,7 +567,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   // 键盘 ← / → 展卷翻阅
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (randomModalOpen || !inViewRef.current) return;
+      if (randomModalOpen || !inViewRef.current || closingRef.current) return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (
         tag === "INPUT" ||
@@ -459,10 +594,10 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeIndex, randomModalOpen, scrollToCard, volumeLetters.length]);
 
-  // 鼠标拖拽画卷：与页面纵滚跑道 1:1 联动（包含解绦展卷 + 水平平移全过程）
+  // 鼠标拖拽画卷：与页面纵滚跑道 1:1 联动（解绦展卷与横移全过程皆可拖）
   useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
+    const assembly = assemblyRef.current;
+    if (!assembly) return;
 
     let isDown = false;
     let dragged = false;
@@ -475,10 +610,11 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     let suppressClick = false;
 
     const getTrack = () =>
-      viewport.querySelector<HTMLElement>(".handscroll-track");
+      assembly.querySelector<HTMLElement>(".handscroll-track");
 
     const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      if (e.pointerType !== "mouse" || e.button !== 0 || closingRef.current)
+        return;
       const target = e.target as HTMLElement | null;
       if (target?.closest("button, input, textarea, select")) return;
 
@@ -549,18 +685,18 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       e.preventDefault();
     };
 
-    viewport.addEventListener("pointerdown", onPointerDown);
-    viewport.addEventListener("click", onClickCapture, true);
-    viewport.addEventListener("dragstart", onDragStart);
+    assembly.addEventListener("pointerdown", onPointerDown);
+    assembly.addEventListener("click", onClickCapture, true);
+    assembly.addEventListener("dragstart", onDragStart);
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("pointerup", endDrag);
     window.addEventListener("pointercancel", endDrag);
 
     return () => {
       getTrack()?.removeAttribute("data-dragging");
-      viewport.removeEventListener("pointerdown", onPointerDown);
-      viewport.removeEventListener("click", onClickCapture, true);
-      viewport.removeEventListener("dragstart", onDragStart);
+      assembly.removeEventListener("pointerdown", onPointerDown);
+      assembly.removeEventListener("click", onClickCapture, true);
+      assembly.removeEventListener("dragstart", onDragStart);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", endDrag);
       window.removeEventListener("pointercancel", endDrag);
@@ -588,7 +724,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       style={runwayHeight ? { height: `${runwayHeight}px` } : undefined}
       className="relative"
     >
-      {/* 吸顶画卷展台：先斜置未开之卷，滚轮解绦展卷，卷毕续览页脚 */}
+      {/* 吸顶画卷展台：斜置未开之卷 -> 滚轮解绦双轴分展 -> 漫游展读 -> 卷毕放行至页脚 */}
       <div
         ref={stageRef}
         className="sticky top-0 flex min-h-dvh flex-col justify-center py-4 md:py-6"
@@ -708,283 +844,285 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
             </div>
           </div>
         ) : (
-          <div className="mt-3">
-            {/* 画卷仪式容器：承载「斜放落案」「卷收离案」「丝绦拆解」「展卷横移」 */}
+          <div className="mt-2">
+            {/* 画卷仪式外框：承载「新卷落案」动画 */}
             <div className="handscroll-ceremony" data-phase={phase}>
-              {/* 1. 未打开的斜置卷轴（卷首落案态，点击或向下滚动即可解绦展开） */}
-              <div
-                ref={closedWrapRef}
-                className="closed-scroll-wrap"
-                data-open={isOpened ? "true" : "false"}
-              >
-                <button
-                  type="button"
-                  onClick={autoUnroll}
-                  aria-label={`展开第${toCnVolume(safeVolume + 1)}卷`}
-                  className="closed-scroll-bundle border-0 bg-transparent p-0 text-left"
-                >
-                  <ScrollRoller side="left" />
-                  <div className="closed-scroll-body">
-                    <div className="closed-scroll-tag">
-                      <span
-                        className="font-song text-[18px] tracking-[0.26em] text-ink"
-                        style={{ writingMode: "vertical-rl" }}
+              {/* 统一物理装配层：实体画卷、锦绫包首、动态右轴与朱砂丝绦同体倾斜与展开 */}
+              <div ref={assemblyRef} className="handscroll-assembly">
+                {/* A. 实体画卷（左紫檀轴直接从中央滚向左侧，右缘在展卷中精确裁齐动态右轴） */}
+                <div ref={clipRef} className="handscroll-stage-clip">
+                  <div className="handscroll-track">
+                    <div ref={sheetRef} className="handscroll-sheet">
+                      {/* 左画轴外侧：上一卷 */}
+                      <div
+                        ref={prevVolRef}
+                        className="handscroll-vol handscroll-vol--prev"
                       >
-                        尺素来鸿
-                      </span>
-                      <span
-                        className="font-kai text-[11.5px] tracking-[0.22em] text-seal"
-                        style={{ writingMode: "vertical-rl" }}
-                      >
-                        第{toCnVolume(safeVolume + 1)}卷
-                      </span>
-                    </div>
-                  </div>
-                  <ScrollRoller side="right" />
-                </button>
+                        {safeVolume > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => switchVolume(safeVolume - 1)}
+                            className="group flex flex-col items-center gap-2.5 border border-rule/80 bg-paper-soft/85 px-3 py-5 text-ink-soft shadow-xs transition-all duration-300 hover:border-seal/60 hover:text-seal"
+                          >
+                            <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                            <span
+                              className="font-song text-[14px] tracking-[0.3em]"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              上一卷
+                            </span>
+                            <span className="font-mono text-[10px] text-ink-faint">
+                              第{toCnVolume(safeVolume)}卷
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 border border-dashed border-rule/60 px-3 py-5 text-ink-faint/70">
+                            <span
+                              className="font-kai text-[12.5px] tracking-[0.28em]"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              初卷伊始
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
-                <p className="mt-7 font-kai text-[12.5px] tracking-[0.22em] text-ink-faint">
-                  向下滚动或轻点卷轴 · 解绦展卷
-                </p>
-              </div>
+                      {/* 左精雕紫檀玉轴（唯一左轴：从中央物理滚至左侧，再无缝滑出左屏） */}
+                      <ScrollRoller side="left" />
 
-              {/* 2. 朱砂丝绦与中央活结：滚轮滚动时拆开丝结，丝线分别向左、向右扯开 */}
-              <div className="silk-rig" aria-hidden="true">
-                {/* 左侧丝线与丝穗（向左扯出） */}
-                <svg
-                  ref={leftCordRef}
-                  className="silk-cord silk-cord--left"
-                  viewBox="0 0 520 110"
-                  fill="none"
-                >
-                  <path
-                    d="M520 55 C 445 55, 388 47, 305 56 C 228 64, 152 46, 62 58 C 36 61, 18 66, 4 74"
-                    stroke="#a63226"
-                    strokeWidth="3.2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M520 54 C 445 54, 388 46, 305 55 C 228 63, 152 45, 62 57"
-                    stroke="#dd6b5b"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    opacity="0.7"
-                  />
-                  {/* 左端丝穗 */}
-                  <circle cx="42" cy="60" r="3.8" fill="#c99d58" />
-                  <path
-                    d="M39 62 C 26 70, 14 78, 2 84 M40 63 C 28 74, 18 84, 8 92 M42 64 C 33 76, 25 87, 17 96"
-                    stroke="#b23a2c"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-
-                {/* 中央朱砂活结 */}
-                <svg
-                  ref={knotRef}
-                  className="silk-knot"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                >
-                  <path
-                    d="M14 24 C 8 15, 20 8, 24 19 C 28 8, 40 15, 34 24 C 40 33, 28 40, 24 29 C 20 40, 8 33, 14 24 Z"
-                    stroke="#a63226"
-                    strokeWidth="3.2"
-                    strokeLinejoin="round"
-                    fill="#b83a2c"
-                    fillOpacity="0.18"
-                  />
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="4.2"
-                    fill="#b23a2c"
-                    stroke="#e3c083"
-                    strokeWidth="1.2"
-                  />
-                </svg>
-
-                {/* 右侧丝线与丝穗（向右扯出） */}
-                <svg
-                  ref={rightCordRef}
-                  className="silk-cord silk-cord--right"
-                  viewBox="0 0 520 110"
-                  fill="none"
-                >
-                  <path
-                    d="M0 55 C 75 55, 132 63, 215 54 C 292 46, 368 64, 458 52 C 484 49, 502 44, 516 36"
-                    stroke="#a63226"
-                    strokeWidth="3.2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M0 54 C 75 54, 132 62, 215 53 C 292 45, 368 63, 458 51"
-                    stroke="#dd6b5b"
-                    strokeWidth="1"
-                    strokeLinecap="round"
-                    opacity="0.7"
-                  />
-                  {/* 右端丝穗 */}
-                  <circle cx="478" cy="50" r="3.8" fill="#c99d58" />
-                  <path
-                    d="M481 48 C 494 40, 506 32, 518 26 M480 47 C 492 36, 502 26, 512 18 M478 46 C 487 34, 495 23, 503 14"
-                    stroke="#b23a2c"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-
-              {/* 3. 真正展开后的实体画卷视口 */}
-              <div ref={viewportRef} className="handscroll-viewport">
-                <div className="handscroll-track">
-                  <div ref={sheetRef} className="handscroll-sheet">
-                    {/* 左画轴外侧：上一卷 */}
-                    <div className="handscroll-vol handscroll-vol--prev">
-                      {safeVolume > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => switchVolume(safeVolume - 1)}
-                          className="group flex flex-col items-center gap-2.5 border border-rule/80 bg-paper-soft/85 px-3 py-5 text-ink-soft shadow-xs transition-all duration-300 hover:border-seal/60 hover:text-seal"
+                      {/* 连续绫裱宣纸画心（每封信 470px 定高、加宽横幅、四周留白） */}
+                      <div ref={paperRef} className="handscroll-paper">
+                        <aside
+                          className="handscroll-endpiece"
+                          aria-label="卷首引首"
                         >
-                          <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
-                          <span
-                            className="font-song text-[14px] tracking-[0.3em]"
-                            style={{ writingMode: "vertical-rl" }}
-                          >
-                            上一卷
-                          </span>
-                          <span className="font-mono text-[10px] text-ink-faint">
-                            第{toCnVolume(safeVolume)}卷
-                          </span>
-                        </button>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2 border border-dashed border-rule/60 px-3 py-5 text-ink-faint/70">
-                          <span
-                            className="font-kai text-[12.5px] tracking-[0.28em]"
-                            style={{ writingMode: "vertical-rl" }}
-                          >
-                            初卷伊始
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                          <div className="flex items-start gap-2.5">
+                            <span
+                              className="font-song text-[21px] tracking-[0.28em] text-ink"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              第{toCnVolume(safeVolume + 1)}卷
+                            </span>
+                            <span
+                              className="mt-1.5 font-kai text-[12px] tracking-[0.2em] text-ink-faint"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              尺素来鸿 · 本卷 {volumeLetters.length} 通
+                            </span>
+                          </div>
+                          <Seal text="展卷" size="2rem" tilt={-3} />
+                        </aside>
 
-                    {/* 左精雕紫檀玉轴 */}
-                    <ScrollRoller side="left" />
-
-                    {/* 连续绫裱宣纸画心（每封信 470px 定高、加宽横幅、四周留白） */}
-                    <div className="handscroll-paper">
-                      <aside
-                        className="handscroll-endpiece"
-                        aria-label="卷首引首"
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <span
-                            className="font-song text-[21px] tracking-[0.28em] text-ink"
-                            style={{ writingMode: "vertical-rl" }}
+                        {volumeLetters.map((q, i) => (
+                          <div
+                            key={q.id}
+                            ref={(el) => {
+                              cardRefs.current[i] = el;
+                            }}
+                            className="handscroll-card"
                           >
-                            第{toCnVolume(safeVolume + 1)}卷
-                          </span>
-                          <span
-                            className="mt-1.5 font-kai text-[12px] tracking-[0.2em] text-ink-faint"
-                            style={{ writingMode: "vertical-rl" }}
-                          >
-                            尺素来鸿 · 本卷 {volumeLetters.length} 通
-                          </span>
-                        </div>
-                        <Seal text="展卷" size="2rem" tilt={-3} />
-                      </aside>
+                            <Letter
+                              q={q}
+                              number={letterNumberMap.get(q.id) ?? 0}
+                              index={i}
+                              active={i === activeIndex}
+                            />
+                          </div>
+                        ))}
 
-                      {volumeLetters.map((q, i) => (
-                        <div
-                          key={q.id}
-                          ref={(el) => {
-                            cardRefs.current[i] = el;
-                          }}
-                          className="handscroll-card"
+                        <aside
+                          className="handscroll-endpiece"
+                          aria-label="卷尾题跋"
                         >
-                          <Letter
-                            q={q}
-                            number={letterNumberMap.get(q.id) ?? 0}
-                            index={i}
-                            active={i === activeIndex}
-                          />
-                        </div>
-                      ))}
+                          <div className="flex items-start gap-2.5">
+                            <span
+                              className="font-song text-[19px] tracking-[0.26em] text-ink"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              纸短情长
+                            </span>
+                            <span
+                              className="mt-1.5 font-kai text-[12px] tracking-[0.2em] text-ink-faint"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              第{toCnVolume(safeVolume + 1)}卷毕
+                            </span>
+                          </div>
+                          <Seal text="尺素" size="2rem" tilt={2} />
+                        </aside>
+                      </div>
 
-                      <aside
-                        className="handscroll-endpiece"
-                        aria-label="卷尾题跋"
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <span
-                            className="font-song text-[19px] tracking-[0.26em] text-ink"
-                            style={{ writingMode: "vertical-rl" }}
-                          >
-                            纸短情长
-                          </span>
-                          <span
-                            className="mt-1.5 font-kai text-[12px] tracking-[0.2em] text-ink-faint"
-                            style={{ writingMode: "vertical-rl" }}
-                          >
-                            第{toCnVolume(safeVolume + 1)}卷毕
-                          </span>
-                        </div>
-                        <Seal text="尺素" size="2rem" tilt={2} />
-                      </aside>
-                    </div>
+                      {/* 右精雕紫檀玉轴（滚至卷尾时自然露出） */}
+                      <ScrollRoller side="right" />
 
-                    {/* 右精雕紫檀玉轴 */}
-                    <ScrollRoller side="right" />
-
-                    {/* 右画轴外侧：下一卷 */}
-                    <div className="handscroll-vol handscroll-vol--next">
-                      {safeVolume < totalVolumes - 1 ? (
-                        <button
-                          type="button"
-                          onClick={() => switchVolume(safeVolume + 1)}
-                          className="group flex flex-col items-center gap-2.5 border border-seal/45 bg-paper-soft/90 px-3 py-5 text-seal shadow-xs transition-all duration-300 hover:border-seal hover:bg-seal/[0.06]"
-                        >
-                          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                          <span
-                            className="font-song text-[14px] tracking-[0.3em]"
-                            style={{ writingMode: "vertical-rl" }}
+                      {/* 右画轴外侧：下一卷 */}
+                      <div className="handscroll-vol handscroll-vol--next">
+                        {safeVolume < totalVolumes - 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => switchVolume(safeVolume + 1)}
+                            className="group flex flex-col items-center gap-2.5 border border-seal/45 bg-paper-soft/90 px-3 py-5 text-seal shadow-xs transition-all duration-300 hover:border-seal hover:bg-seal/[0.06]"
                           >
-                            下一卷
-                          </span>
-                          <span className="font-mono text-[10px] text-ink-faint">
-                            第{toCnVolume(safeVolume + 2)}卷
-                          </span>
-                        </button>
-                      ) : totalVolumes > 1 ? (
-                        <button
-                          type="button"
-                          onClick={() => switchVolume(0)}
-                          className="group flex flex-col items-center gap-2.5 border border-rule/80 bg-paper-soft/80 px-3 py-5 text-ink-faint transition-colors hover:border-seal/55 hover:text-seal"
-                        >
-                          <span
-                            className="font-kai text-[13px] tracking-[0.28em]"
-                            style={{ writingMode: "vertical-rl" }}
+                            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                            <span
+                              className="font-song text-[14px] tracking-[0.3em]"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              下一卷
+                            </span>
+                            <span className="font-mono text-[10px] text-ink-faint">
+                              第{toCnVolume(safeVolume + 2)}卷
+                            </span>
+                          </button>
+                        ) : totalVolumes > 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => switchVolume(0)}
+                            className="group flex flex-col items-center gap-2.5 border border-rule/80 bg-paper-soft/80 px-3 py-5 text-ink-faint transition-colors hover:border-seal/55 hover:text-seal"
                           >
-                            归至初卷
-                          </span>
-                        </button>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2 border border-dashed border-rule/60 px-3 py-5 text-ink-faint/70">
-                          <span
-                            className="font-kai text-[12.5px] tracking-[0.28em]"
-                            style={{ writingMode: "vertical-rl" }}
-                          >
-                            全卷已毕
-                          </span>
-                        </div>
-                      )}
+                            <span
+                              className="font-kai text-[13px] tracking-[0.28em]"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              归至初卷
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 border border-dashed border-rule/60 px-3 py-5 text-ink-faint/70">
+                            <span
+                              className="font-kai text-[12.5px] tracking-[0.28em]"
+                              style={{ writingMode: "vertical-rl" }}
+                            >
+                              全卷已毕
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* B. 锦绫包首封面：合卷时严丝合缝夹在双轴之间，轻点亦可自动解绦展卷 */}
+                <button
+                  ref={coverRef}
+                  type="button"
+                  onClick={autoUnroll}
+                  data-open={isOpened ? "true" : "false"}
+                  aria-label={`展开第${toCnVolume(safeVolume + 1)}卷`}
+                  className="scroll-cover-panel"
+                >
+                  <div className="closed-scroll-tag">
+                    <span
+                      className="font-song text-[18px] tracking-[0.26em] text-ink"
+                      style={{ writingMode: "vertical-rl" }}
+                    >
+                      尺素来鸿
+                    </span>
+                    <span
+                      className="font-kai text-[11.5px] tracking-[0.22em] text-seal"
+                      style={{ writingMode: "vertical-rl" }}
+                    >
+                      第{toCnVolume(safeVolume + 1)}卷
+                    </span>
+                  </div>
+                </button>
+
+                {/* C. 动态右紫檀玉轴：合卷时紧靠包首右侧，随滚轮一路向右滚出屏幕之外 */}
+                <div ref={dynamicRightRef} className="dynamic-right-roller">
+                  <ScrollRoller side="right" />
+                </div>
+
+                {/* D. 朱砂丝绦与中央活结：与卷轴同体倾斜，滚动时拆结并向左右扯开 */}
+                <div className="silk-rig" aria-hidden="true">
+                  <svg
+                    ref={leftCordRef}
+                    className="silk-cord silk-cord--left"
+                    viewBox="0 0 520 110"
+                    fill="none"
+                  >
+                    <path
+                      d="M520 55 C 445 55, 388 47, 305 56 C 228 64, 152 46, 62 58 C 36 61, 18 66, 4 74"
+                      stroke="#a63226"
+                      strokeWidth="3.4"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M520 54 C 445 54, 388 46, 305 55 C 228 63, 152 45, 62 57"
+                      stroke="#dd6b5b"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      opacity="0.72"
+                    />
+                    <circle cx="42" cy="60" r="4" fill="#c99d58" />
+                    <path
+                      d="M39 62 C 26 70, 14 78, 2 84 M40 63 C 28 74, 18 84, 8 92 M42 64 C 33 76, 25 87, 17 96"
+                      stroke="#b23a2c"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+
+                  <svg
+                    ref={knotRef}
+                    className="silk-knot"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                  >
+                    <path
+                      d="M14 24 C 8 15, 20 8, 24 19 C 28 8, 40 15, 34 24 C 40 33, 28 40, 24 29 C 20 40, 8 33, 14 24 Z"
+                      stroke="#a63226"
+                      strokeWidth="3.2"
+                      strokeLinejoin="round"
+                      fill="#b83a2c"
+                      fillOpacity="0.2"
+                    />
+                    <circle
+                      cx="24"
+                      cy="24"
+                      r="4.2"
+                      fill="#b23a2c"
+                      stroke="#e3c083"
+                      strokeWidth="1.2"
+                    />
+                  </svg>
+
+                  <svg
+                    ref={rightCordRef}
+                    className="silk-cord silk-cord--right"
+                    viewBox="0 0 520 110"
+                    fill="none"
+                  >
+                    <path
+                      d="M0 55 C 75 55, 132 63, 215 54 C 292 46, 368 64, 458 52 C 484 49, 502 44, 516 36"
+                      stroke="#a63226"
+                      strokeWidth="3.4"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M0 54 C 75 54, 132 62, 215 53 C 292 45, 368 63, 458 51"
+                      stroke="#dd6b5b"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      opacity="0.72"
+                    />
+                    <circle cx="478" cy="50" r="4" fill="#c99d58" />
+                    <path
+                      d="M481 48 C 494 40, 506 32, 518 26 M480 47 C 492 36, 502 26, 512 18 M478 46 C 487 34, 495 23, 503 14"
+                      stroke="#b23a2c"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
               </div>
+
+              {/* 合卷案头指引 */}
+              <p
+                ref={hintRef}
+                className="closed-scroll-hint font-kai text-[12.5px] tracking-[0.22em] text-ink-faint"
+              >
+                向下滚动或轻点卷轴 · 解绦展卷
+              </p>
             </div>
 
             {/* 底部卷轴刻度与分卷指引 */}

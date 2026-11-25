@@ -825,44 +825,21 @@ html[data-theme="night"] {
     z-index: 70;
   }
 
-  /* ── 古画手卷：置卷入案 · 滚轮解绦 · 丝扯展卷 · 卷收换卷 ── */
+  /* ── 古画手卷：置卷入案 · 滚轮解绦 · 双轴分展 · 卷收换卷 ── */
   .handscroll-ceremony {
     position: relative;
     width: 100%;
-    min-height: 560px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     overflow: hidden;
-  }
-
-  /* 换卷：旧卷向中央收拢并轻提离案 */
-  @keyframes scroll-pack-away {
-    0% {
-      clip-path: inset(0 0 0 0);
-      transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-      opacity: 1;
-    }
-    55% {
-      clip-path: inset(0 44% 0 44%);
-      transform: translate3d(0, -6px, 0) rotate(5deg) scale(0.96);
-      opacity: 0.92;
-    }
-    100% {
-      clip-path: inset(0 46% 0 46%);
-      transform: translate3d(-24px, -36px, 0) rotate(11deg) scale(0.9);
-      opacity: 0;
-    }
   }
 
   /* 置卷：未打开的新卷斜落案头，如轻手置于书案 */
   @keyframes scroll-place-down {
     0% {
-      transform: translate3d(26px, -46px, 0) rotate(-8deg) scale(1.04);
+      transform: translate3d(28px, -48px, 0) rotate(-7deg) scale(1.04);
       opacity: 0;
     }
-    70% {
-      transform: translate3d(-2px, 3px, 0) rotate(0.6deg) scale(0.995);
+    72% {
+      transform: translate3d(-2px, 3px, 0) rotate(0.5deg) scale(0.996);
       opacity: 1;
     }
     100% {
@@ -871,55 +848,39 @@ html[data-theme="night"] {
     }
   }
 
-  .handscroll-ceremony[data-phase="closing"] {
-    animation: scroll-pack-away 0.68s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    pointer-events: none;
-  }
   .handscroll-ceremony[data-phase="placing"] {
-    animation: scroll-place-down 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: scroll-place-down 0.88s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  /* 未展开的斜置卷轴（锦绫卷筒 + 玉轴头 + 竖排题签） */
-  .closed-scroll-wrap {
-    position: absolute;
-    inset: 0;
-    z-index: 15;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    pointer-events: auto;
+  /* 统一物理装配层：整卷、包首、动态右轴与朱砂丝绦同频旋转与平动，绝不错位 */
+  .handscroll-assembly {
+    position: relative;
+    width: 100%;
+    transform-origin: 50% 50%;
     will-change: transform, opacity;
   }
-  .closed-scroll-wrap[data-open="true"] {
-    pointer-events: none;
+
+  /* 画卷右缘裁剪框：双轴分展时紧贴动态右轴左侧裁出画心，全开后解除裁剪 */
+  .handscroll-stage-clip {
+    position: relative;
+    width: 100%;
+    will-change: clip-path;
   }
 
-  .closed-scroll-bundle {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    height: 468px;
-    cursor: pointer;
-    filter: drop-shadow(0 26px 34px rgba(24, 16, 10, 0.32));
-    transition: filter 0.35s ease;
-  }
-  .closed-scroll-bundle:hover {
-    filter: drop-shadow(0 30px 40px rgba(24, 16, 10, 0.42));
-  }
-  html[data-theme="night"] .closed-scroll-bundle {
-    filter: drop-shadow(0 28px 42px rgba(0, 0, 0, 0.72));
-  }
-
-  /* 卷拢的锦绫包首筒身 */
-  .closed-scroll-body {
-    position: relative;
-    width: 82px;
+  /* 锦绫包首封面：合卷时严丝合缝夹在左右两根紫檀玉轴之间，展卷伊始渐隐露出引首 */
+  .scroll-cover-panel {
+    position: absolute;
+    top: 34px;
+    bottom: 36px;
+    left: 0;
+    z-index: 12;
+    width: 88px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-block: 11px solid color-mix(in oklab, var(--color-kraft) 72%, #3a2a1c);
+    cursor: pointer;
+    border-block: 12px solid color-mix(in oklab, var(--color-kraft) 72%, #3a2a1c);
     background: linear-gradient(
       90deg,
       color-mix(in oklab, var(--color-kraft) 68%, #2c1e14) 0%,
@@ -930,7 +891,12 @@ html[data-theme="night"] {
     );
     box-shadow:
       inset 0 2px 0 color-mix(in oklab, var(--color-seal) 30%, var(--color-rule)),
-      inset 0 -2px 0 color-mix(in oklab, var(--color-seal) 30%, var(--color-rule));
+      inset 0 -2px 0 color-mix(in oklab, var(--color-seal) 30%, var(--color-rule)),
+      0 26px 40px -16px rgba(24, 16, 10, 0.42);
+    will-change: transform, opacity;
+  }
+  .scroll-cover-panel[data-open="true"] {
+    pointer-events: none;
   }
 
   /* 卷面上的宣纸题签 */
@@ -939,13 +905,38 @@ html[data-theme="night"] {
     flex-direction: column;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.9rem 0.55rem;
+    padding: 0.95rem 0.55rem;
     background-color: var(--color-paper);
     border: 1px solid color-mix(in oklab, var(--color-ink) 32%, transparent);
     box-shadow:
       inset 0 0 0 2px var(--color-paper),
       inset 0 0 0 3px color-mix(in oklab, var(--color-ink) 14%, transparent),
       0 2px 6px rgba(0, 0, 0, 0.14);
+  }
+
+  /* 展卷动态右轴：合卷时紧靠包首右侧，随滚轮一路向右滚出屏幕之外 */
+  .dynamic-right-roller {
+    position: absolute;
+    top: 34px;
+    bottom: 36px;
+    left: 0;
+    z-index: 14;
+    display: flex;
+    align-items: stretch;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  /* 合卷时的案头轻提示（解绦后自动淡出） */
+  .closed-scroll-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 4px;
+    transform: translateX(-50%);
+    z-index: 16;
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: opacity, transform;
   }
 
   /* 朱砂丝绦与结扣层（随滚轮解结并分别向左右扯开） */
@@ -979,21 +970,13 @@ html[data-theme="night"] {
   .silk-knot {
     position: relative;
     z-index: 2;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     will-change: transform, opacity;
     filter: drop-shadow(0 3px 6px rgba(110, 24, 16, 0.35));
   }
 
-  /* 真正展开的画卷视口：由滚轮进度实时驱动 clip-path 从中央随丝线展开 */
-  .handscroll-viewport {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-    will-change: clip-path, opacity, transform;
-  }
   @media (prefers-reduced-motion: reduce) {
-    .handscroll-ceremony[data-phase="closing"],
     .handscroll-ceremony[data-phase="placing"] {
       animation: none;
     }
