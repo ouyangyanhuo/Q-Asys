@@ -1,8 +1,7 @@
 "use client";
 
-import { Share, Sparkle } from "lucide-react";
+import { Maximize2, Share, Sparkle } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
 import { formatDay, formatFullDate } from "@/lib/format";
 import type { Question } from "@/lib/types";
 import { ShareModal } from "./share-modal";
@@ -18,20 +17,25 @@ export function Letter({
   q,
   number,
   active = true,
-  onSelect,
+  resonated: controlledResonated,
+  onResonate,
+  onOpenFull,
 }: {
   q: Question;
   number: number;
   index?: number;
   active?: boolean;
-  onSelect?: () => void;
+  resonated?: boolean;
+  onResonate?: () => void;
+  onOpenFull?: (q: Question) => void;
 }) {
-  const [resonated, setResonated] = useState(false);
-  const [resonanceCount, setResonanceCount] = useState(
+  const [localResonated, setLocalResonated] = useState(false);
+  const resonated = controlledResonated ?? localResonated;
+  const baseCount =
     Math.abs(
       q.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) % 24,
-    ) + 6,
-  );
+    ) + 6;
+  const resonanceCount = baseCount + (resonated ? 1 : 0);
   const [shareOpen, setShareOpen] = useState(false);
   const [sparks, setSparks] = useState<Spark[]>([]);
 
@@ -43,8 +47,8 @@ export function Letter({
     e.stopPropagation();
 
     if (!resonated) {
-      setResonated(true);
-      setResonanceCount((prev) => prev + 1);
+      if (onResonate) onResonate();
+      else setLocalResonated(true);
 
       const newSparks: Spark[] = [
         { id: Date.now() + 1, x: -14 },
@@ -133,17 +137,24 @@ export function Letter({
           </div>
         </div>
 
-        {/* 信件正文 + 回信（随 470px 卡片定高自适应撑满，长信内部顺滑纵滚） */}
+        {/* 信件正文 + 回信（随 470px 卡片定高自适应撑满，长信内部顺滑纵滚；点击可案头取笺精读） */}
         <div className="handscroll-body relative mt-5 min-h-0 flex-1 overflow-y-auto pr-1.5">
-          <Link
-            href={q.status === "pending" ? `/p/${q.id}` : `/q/${q.id}`}
-            prefetch={false}
-            className="group/link block"
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => onOpenFull?.(q)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onOpenFull?.(q);
+              }
+            }}
+            className="group/link block cursor-pointer"
           >
             <p className="whitespace-pre-wrap font-kai text-[19.5px] leading-[1.9] text-ink transition-colors duration-300 group-hover/link:text-seal md:text-[21.5px]">
               {q.body}
             </p>
-          </Link>
+          </div>
 
           <p className="mt-3.5 text-right font-kai text-[13px] text-ink-faint">
             —— {q.nickname || "匿名旅人"}
@@ -178,10 +189,20 @@ export function Letter({
 
         {/* 底部操作与微互动 */}
         {q.status === "pending" ? (
-          <div className="relative mt-6 border-t border-rule/60 pt-4">
+          <div className="relative mt-6 flex items-center justify-between gap-2 border-t border-rule/60 pt-4">
             <p className="font-kai text-[11.5px] text-ink-faint">
               此函仅君可见。待收信人作复，自当示人。
             </p>
+            {onOpenFull && (
+              <button
+                type="button"
+                onClick={() => onOpenFull(q)}
+                className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal"
+              >
+                <Maximize2 className="h-3 w-3" strokeWidth={1.8} />
+                <span>取笺精读</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="relative mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-rule/60 pt-4">
@@ -227,14 +248,16 @@ export function Letter({
               </button>
             </div>
 
-            <Link
-              href={`/q/${q.id}`}
-              prefetch={false}
-              className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal"
-            >
-              <span>专属页</span>
-              <span aria-hidden="true">→</span>
-            </Link>
+            {onOpenFull && (
+              <button
+                type="button"
+                onClick={() => onOpenFull(q)}
+                className="ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap font-hei text-[11px] tracking-wider text-ink-faint transition-colors duration-300 hover:text-seal"
+              >
+                <Maximize2 className="h-3 w-3" strokeWidth={1.8} />
+                <span>取笺精读</span>
+              </button>
+            )}
           </div>
         )}
       </article>

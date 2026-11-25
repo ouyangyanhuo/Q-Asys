@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Question } from "@/lib/types";
 import { Letter } from "./letter";
+import { LetterReadModal } from "./letter-read-modal";
 import { RandomLetterModal } from "./random-letter-modal";
 import { PostageStamp, Seal } from "./stamp-badge";
 
@@ -75,6 +76,10 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   const [filter, setFilter] = useState<"all" | "answered" | "waiting">("all");
   const [keyword, setKeyword] = useState("");
   const [randomModalOpen, setRandomModalOpen] = useState(false);
+  const [readingId, setReadingId] = useState<string | null>(null);
+  const [resonatedIds, setResonatedIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const [volume, setVolume] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpened, setIsOpened] = useState(false);
@@ -615,10 +620,81 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     });
   }, []);
 
+  // 案头取笺精读：页内提起展开全篇并同步 URL（/q/[id] 或 /p/[id]），合上后画卷原位不动
+  const readingIndex = useMemo(
+    () => (readingId ? filteredLetters.findIndex((l) => l.id === readingId) : -1),
+    [filteredLetters, readingId],
+  );
+  const readingLetter =
+    readingIndex >= 0 ? filteredLetters[readingIndex] : null;
+
+  const openLetterModal = useCallback((q: Question) => {
+    const path = q.status === "pending" ? `/p/${q.id}` : `/q/${q.id}`;
+    setReadingId(q.id);
+    if (typeof window !== "undefined") {
+      if (window.history.state?.chisuLetterModal) {
+        window.history.replaceState({ chisuLetterModal: q.id }, "", path);
+      } else {
+        window.history.pushState({ chisuLetterModal: q.id }, "", path);
+      }
+    }
+  }, []);
+
+  const stepLetterModal = useCallback(
+    (nextIdx: number) => {
+      const next = filteredLetters[nextIdx];
+      if (!next) return;
+      const path =
+        next.status === "pending" ? `/p/${next.id}` : `/q/${next.id}`;
+      setReadingId(next.id);
+      if (typeof window !== "undefined") {
+        window.history.replaceState({ chisuLetterModal: next.id }, "", path);
+      }
+    },
+    [filteredLetters],
+  );
+
+  const closeLetterModal = useCallback(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.history.state?.chisuLetterModal
+    ) {
+      window.history.back();
+    } else {
+      setReadingId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const modalId = window.history.state?.chisuLetterModal as
+        | string
+        | undefined;
+      setReadingId(modalId ?? null);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const handleResonate = useCallback((id: string) => {
+    setResonatedIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
   // 键盘 ← / → 展卷翻阅
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (randomModalOpen || !inViewRef.current || closingRef.current) return;
+      if (
+        randomModalOpen ||
+        readingId !== null ||
+        !inViewRef.current ||
+        closingRef.current
+      )
+        return;
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (
         tag === "INPUT" ||
@@ -643,7 +719,13 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeIndex, randomModalOpen, scrollToCard, volumeLetters.length]);
+  }, [
+    activeIndex,
+    randomModalOpen,
+    readingId,
+    scrollToCard,
+    volumeLetters.length,
+  ]);
 
   // 鼠标拖拽画卷：与页面纵滚跑道 1:1 联动（解绦展卷与横移全过程皆可拖）
   useEffect(() => {
@@ -977,6 +1059,9 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                               number={letterNumberMap.get(q.id) ?? 0}
                               index={i}
                               active={i === activeIndex}
+                              resonated={resonatedIds.has(q.id)}
+                              onResonate={() => handleResonate(q.id)}
+                              onOpenFull={openLetterModal}
                             />
                           </div>
                         ))}
@@ -1323,6 +1408,31 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
           </div>
         )}
       </div>
+
+      {/* 案头取笺精读弹层（同步地址栏 /q/[id]） */}
+      <LetterReadModal
+        question={readingLetter}
+        number={
+          readingLetter ? (letterNumberMap.get(readingLetter.id) ?? 0) : 0
+        }
+        resonated={readingLetter ? resonatedIds.has(readingLetter.id) : false}
+        onResonate={() => {
+          if (readingLetter) handleResonate(readingLetter.id);
+        }}
+        onClose={closeLetterModal}
+        onPrev={
+          readingIndex > 0 ? () => stepLetterModal(readingIndex - 1) : undefined
+        }
+        onNext={
+          readingIndex >= 0 && readingIndex < filteredLetters.length - 1
+            ? () => stepLetterModal(readingIndex + 1)
+            : undefined
+        }
+        hasPrev={readingIndex > 0}
+        hasNext={
+          readingIndex >= 0 && readingIndex < filteredLetters.length - 1
+        }
+      />
 
       {/* 偶遇随机弹窗 */}
       <RandomLetterModal

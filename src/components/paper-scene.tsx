@@ -550,8 +550,13 @@ export function PaperScene() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const depthRef = useRef<HTMLDivElement | null>(null);
 
-  // 纸场 WebGL 只在首页跑：详情页、后台省下几百 KB 与每帧开销，但仍享有纯 CSS 的晴窗、竹影与远山
-  const enableScene = usePathname() === "/";
+  // 纸场 WebGL 只在首页跑：详情页、后台省下几百 KB 与每帧开销，但仍享有纯 CSS 的晴窗、竹影与远山；
+  // 首页通过「案头取笺」弹层同步地址栏为 /q/[id] 时保持纸场不断开。
+  const pathname = usePathname();
+  const isHomeModal =
+    typeof window !== "undefined" &&
+    Boolean(window.history.state?.chisuLetterModal);
+  const enableScene = pathname === "/" || isHomeModal;
 
   // 全站轻量级微互动：远山滚动手卷视差 + 持烛/案头微光跟随指针
   useEffect(() => {
