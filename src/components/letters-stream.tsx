@@ -90,6 +90,8 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   const coverRef = useRef<HTMLButtonElement | null>(null);
   const dynamicRightRef = useRef<HTMLDivElement | null>(null);
   const hintRef = useRef<HTMLParagraphElement | null>(null);
+  const closedPrevRef = useRef<HTMLDivElement | null>(null);
+  const closedNextRef = useRef<HTMLDivElement | null>(null);
   const knotRef = useRef<SVGSVGElement | null>(null);
   const leftCordRef = useRef<SVGSVGElement | null>(null);
   const rightCordRef = useRef<SVGSVGElement | null>(null);
@@ -327,10 +329,16 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
         prevVol.style.opacity = prevOpacity.toFixed(3);
       }
 
-      // 7. 合卷提示语随解绦淡出
+      // 7. 合卷提示语与合卷态左右换卷按钮随解绦淡出
+      const closedUiOpacity = 1 - smoothstep(0.02, 0.24, u);
       if (hint) {
-        const hintOpacity = 1 - smoothstep(0.02, 0.22, u);
-        hint.style.opacity = hintOpacity.toFixed(3);
+        hint.style.opacity = closedUiOpacity.toFixed(3);
+      }
+      if (closedPrevRef.current) {
+        closedPrevRef.current.style.opacity = closedUiOpacity.toFixed(3);
+      }
+      if (closedNextRef.current) {
+        closedNextRef.current.style.opacity = closedUiOpacity.toFixed(3);
       }
     },
     [],
@@ -392,7 +400,8 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       );
       const startU = clamp01(currentPxRef.current / UNROLL_PX);
       const t0 = performance.now();
-      const ROLL_MS = 560;
+      // 若当前本就处于合卷状态，无需再耗时卷收，直接轻提离案换新卷
+      const ROLL_MS = startU > 0.04 ? 540 : 0;
       const LIFT_MS = 280;
 
       const animateClose = (now: number) => {
@@ -1032,7 +1041,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                   <ScrollRoller side="right" />
                 </div>
 
-                {/* D. 朱砂丝绦与中央活结：与卷轴同体倾斜，滚动时拆结并向左右扯开 */}
+                {/* D. 古茶金素丝丝绦与中央青玉活结：与卷轴同体倾斜，滚动时拆结并向左右扯开 */}
                 <div className="silk-rig" aria-hidden="true">
                   <svg
                     ref={leftCordRef}
@@ -1042,22 +1051,22 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                   >
                     <path
                       d="M520 55 C 445 55, 388 47, 305 56 C 228 64, 152 46, 62 58 C 36 61, 18 66, 4 74"
-                      stroke="#a63226"
-                      strokeWidth="3.4"
+                      stroke="var(--silk-main)"
+                      strokeWidth="3.2"
                       strokeLinecap="round"
                     />
                     <path
                       d="M520 54 C 445 54, 388 46, 305 55 C 228 63, 152 45, 62 57"
-                      stroke="#dd6b5b"
+                      stroke="var(--silk-light)"
                       strokeWidth="1"
                       strokeLinecap="round"
-                      opacity="0.72"
+                      opacity="0.75"
                     />
-                    <circle cx="42" cy="60" r="4" fill="#c99d58" />
+                    <circle cx="42" cy="60" r="4.1" fill="var(--silk-bead)" />
                     <path
                       d="M39 62 C 26 70, 14 78, 2 84 M40 63 C 28 74, 18 84, 8 92 M42 64 C 33 76, 25 87, 17 96"
-                      stroke="#b23a2c"
-                      strokeWidth="1.7"
+                      stroke="var(--silk-tassel)"
+                      strokeWidth="1.6"
                       strokeLinecap="round"
                     />
                   </svg>
@@ -1070,18 +1079,18 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                   >
                     <path
                       d="M14 24 C 8 15, 20 8, 24 19 C 28 8, 40 15, 34 24 C 40 33, 28 40, 24 29 C 20 40, 8 33, 14 24 Z"
-                      stroke="#a63226"
-                      strokeWidth="3.2"
+                      stroke="var(--silk-main)"
+                      strokeWidth="3"
                       strokeLinejoin="round"
-                      fill="#b83a2c"
-                      fillOpacity="0.2"
+                      fill="var(--silk-light)"
+                      fillOpacity="0.22"
                     />
                     <circle
                       cx="24"
                       cy="24"
-                      r="4.2"
-                      fill="#b23a2c"
-                      stroke="#e3c083"
+                      r="4.4"
+                      fill="var(--silk-bead)"
+                      stroke="var(--silk-light)"
                       strokeWidth="1.2"
                     />
                   </svg>
@@ -1094,27 +1103,104 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                   >
                     <path
                       d="M0 55 C 75 55, 132 63, 215 54 C 292 46, 368 64, 458 52 C 484 49, 502 44, 516 36"
-                      stroke="#a63226"
-                      strokeWidth="3.4"
+                      stroke="var(--silk-main)"
+                      strokeWidth="3.2"
                       strokeLinecap="round"
                     />
                     <path
                       d="M0 54 C 75 54, 132 62, 215 53 C 292 45, 368 63, 458 51"
-                      stroke="#dd6b5b"
+                      stroke="var(--silk-light)"
                       strokeWidth="1"
                       strokeLinecap="round"
-                      opacity="0.72"
+                      opacity="0.75"
                     />
-                    <circle cx="478" cy="50" r="4" fill="#c99d58" />
+                    <circle cx="478" cy="50" r="4.1" fill="var(--silk-bead)" />
                     <path
                       d="M481 48 C 494 40, 506 32, 518 26 M480 47 C 492 36, 502 26, 512 18 M478 46 C 487 34, 495 23, 503 14"
-                      stroke="#b23a2c"
-                      strokeWidth="1.7"
+                      stroke="var(--silk-tassel)"
+                      strokeWidth="1.6"
                       strokeLinecap="round"
                     />
                   </svg>
                 </div>
               </div>
+
+              {/* 未展开时左右直达「上一卷 / 下一卷」，不必先展卷即可直接切卷 */}
+              {totalVolumes > 1 && (
+                <>
+                  <div
+                    ref={closedPrevRef}
+                    className="closed-vol-nav closed-vol-nav--prev"
+                    data-hidden={isOpened ? "true" : "false"}
+                  >
+                    {safeVolume > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => switchVolume(safeVolume - 1)}
+                        className="group flex flex-col items-center gap-2 border border-rule/80 bg-paper-soft/85 px-3 py-4 text-ink-soft shadow-xs backdrop-blur-2xs transition-all duration-300 hover:border-seal/55 hover:text-seal"
+                      >
+                        <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                        <span
+                          className="font-song text-[13.5px] tracking-[0.28em]"
+                          style={{ writingMode: "vertical-rl" }}
+                        >
+                          上一卷
+                        </span>
+                        <span className="font-mono text-[10px] text-ink-faint">
+                          第{toCnVolume(safeVolume)}卷
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 border border-dashed border-rule/55 px-3 py-4 text-ink-faint/65">
+                        <span
+                          className="font-kai text-[12px] tracking-[0.26em]"
+                          style={{ writingMode: "vertical-rl" }}
+                        >
+                          初卷伊始
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    ref={closedNextRef}
+                    className="closed-vol-nav closed-vol-nav--next"
+                    data-hidden={isOpened ? "true" : "false"}
+                  >
+                    {safeVolume < totalVolumes - 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => switchVolume(safeVolume + 1)}
+                        className="group flex flex-col items-center gap-2 border border-seal/45 bg-paper-soft/90 px-3 py-4 text-seal shadow-xs backdrop-blur-2xs transition-all duration-300 hover:border-seal hover:bg-seal/[0.06]"
+                      >
+                        <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                        <span
+                          className="font-song text-[13.5px] tracking-[0.28em]"
+                          style={{ writingMode: "vertical-rl" }}
+                        >
+                          下一卷
+                        </span>
+                        <span className="font-mono text-[10px] text-ink-faint">
+                          第{toCnVolume(safeVolume + 2)}卷
+                        </span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => switchVolume(0)}
+                        className="group flex flex-col items-center gap-2 border border-rule/80 bg-paper-soft/80 px-3 py-4 text-ink-faint backdrop-blur-2xs transition-colors hover:border-seal/55 hover:text-seal"
+                      >
+                        <span
+                          className="font-kai text-[12.5px] tracking-[0.26em]"
+                          style={{ writingMode: "vertical-rl" }}
+                        >
+                          归至初卷
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* 合卷案头指引 */}
               <p

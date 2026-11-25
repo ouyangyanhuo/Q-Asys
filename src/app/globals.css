@@ -82,6 +82,12 @@
   --scene-mountain-mid: rgba(84, 88, 78, 0.145);
   --scene-mountain-near: rgba(68, 62, 52, 0.095);
   --scene-cursor: rgba(255, 246, 218, 0.48);
+  /* 丝绦与玉珠配色：古茶金素丝 + 青白玉珠（不抢朱印，与紫檀宣纸浑然一体） */
+  --silk-main: #8a724e;
+  --silk-light: #d2be96;
+  --silk-tassel: #7a6242;
+  --silk-bead: #6e8175;
+  --silk-shadow: rgba(58, 44, 26, 0.24);
 
   --shadow-sheet:
     inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 1px 2px rgba(28, 25, 23, 0.04),
@@ -129,6 +135,12 @@ html[data-theme="night"] {
   --scene-mountain-mid: rgba(50, 64, 78, 0.25);
   --scene-mountain-near: rgba(24, 30, 38, 0.36);
   --scene-cursor: rgba(248, 188, 104, 0.11);
+  /* 夜间丝绦：暗金素丝 + 月白青玉珠 */
+  --silk-main: #b49a6c;
+  --silk-light: #e5d2ab;
+  --silk-tassel: #9c8256;
+  --silk-bead: #8da598;
+  --silk-shadow: rgba(0, 0, 0, 0.45);
 
   --shadow-sheet:
     inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 3px rgba(0, 0, 0, 0.3),
@@ -939,7 +951,25 @@ html[data-theme="night"] {
     will-change: opacity, transform;
   }
 
-  /* 朱砂丝绦与结扣层（随滚轮解结并分别向左右扯开） */
+  /* 合卷态两侧的直达换卷按钮（展开后自动淡出，让位于两端画轴外侧的卷签） */
+  .closed-vol-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 24;
+    transform: translateY(-50%);
+    will-change: opacity, transform;
+  }
+  .closed-vol-nav--prev {
+    left: max(1.25rem, calc(50% - min(340px, 42vw)));
+  }
+  .closed-vol-nav--next {
+    right: max(1.25rem, calc(50% - min(340px, 42vw)));
+  }
+  .closed-vol-nav[data-hidden="true"] {
+    pointer-events: none;
+  }
+
+  /* 素丝丝绦与结扣层（随滚轮解结并分别向左右扯开） */
   .silk-rig {
     position: absolute;
     inset: 0;
@@ -957,7 +987,7 @@ html[data-theme="night"] {
     width: min(46vw, 560px);
     overflow: visible;
     will-change: transform, opacity;
-    filter: drop-shadow(0 3px 5px rgba(100, 22, 16, 0.28));
+    filter: drop-shadow(0 3px 5px var(--silk-shadow));
   }
   .silk-cord--left {
     right: 50%;
@@ -973,7 +1003,7 @@ html[data-theme="night"] {
     width: 46px;
     height: 46px;
     will-change: transform, opacity;
-    filter: drop-shadow(0 3px 6px rgba(110, 24, 16, 0.35));
+    filter: drop-shadow(0 3px 6px var(--silk-shadow));
   }
 
   @media (prefers-reduced-motion: reduce) {
