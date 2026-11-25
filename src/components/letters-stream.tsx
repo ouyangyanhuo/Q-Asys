@@ -32,6 +32,11 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - clamp01(t), 3);
+const easeOutQuart = (t: number) => 1 - Math.pow(1 - clamp01(t), 4);
+const easeInOutCubic = (t: number) => {
+  const x = clamp01(t);
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+};
 
 function ScrollRoller({ side }: { side: "left" | "right" }) {
   const shaft = (
@@ -141,18 +146,19 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       );
       mineIo.observe(runway);
 
-      // 首次滑到卷轴展台时，触发「斜放新卷落案」动画
+      // 首次滑到卷轴展台时，仅让物理卷轴轻柔落案（不晃动两侧按钮与文字）
       viewIo = new IntersectionObserver(
         (entries) => {
           const visible = entries.some((entry) => entry.isIntersecting);
           inViewRef.current = visible;
           if (visible && !hasArrivedRef.current) {
             hasArrivedRef.current = true;
-            setPhase("placing");
-            switchTimerRef.current = window.setTimeout(
-              () => setPhase("idle"),
-              900,
-            );
+            if (
+              !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+              currentPxRef.current < 8
+            ) {
+              playPlaceDown(1);
+            }
           }
         },
         { threshold: 0.2 },
@@ -240,7 +246,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     (
       u: number,
       panX: number,
-      extraTransform?: { y: number; rot: number; scale: number; opacity: number },
+      lift?: { x: number; y: number; rot: number; scale: number; opacity: number },
     ) => {
       const assembly = assemblyRef.current;
       const clip = clipRef.current;
@@ -263,9 +269,9 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       const straighten = smoothstep(0, 0.28, u);
       const tiltDeg = -10 * (1 - straighten);
 
-      if (extraTransform) {
-        assembly.style.transform = `translate3d(0, ${extraTransform.y.toFixed(1)}px, 0) rotate(${(tiltDeg + extraTransform.rot).toFixed(2)}deg) scale(${extraTransform.scale.toFixed(3)})`;
-        assembly.style.opacity = extraTransform.opacity.toFixed(3);
+      if (lift) {
+        assembly.style.transform = `translate3d(${lift.x.toFixed(1)}px, ${lift.y.toFixed(1)}px, 0) rotate(${(tiltDeg + lift.rot).toFixed(2)}deg) scale(${lift.scale.toFixed(4)})`;
+        assembly.style.opacity = lift.opacity.toFixed(3);
       } else {
         assembly.style.transform =
           Math.abs(tiltDeg) > 0.04 ? `rotate(${tiltDeg.toFixed(2)}deg)` : "";
@@ -383,7 +389,43 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
     };
   }, [volumeLetters.length, safeVolume, renderScrollFrame]);
 
-  // 切换画卷：物理双轴合拢收卷（560ms）-> 轻提离案（260ms）-> 换新卷斜放落案（880ms）
+  // 置卷落案物理动效：自略高处随重力阻尼轻落案头（仅作用于卷轴本体，不带动两侧按钮）
+  const playPlaceDown = useCallback(
+    (dir: 1 | -1) => {
+      cancelAnimationFrame(switchRafRef.current);
+      closingRef.current = true;
+      setPhase("placing");
+      const t0 = performance.now();
+      const PLACE_MS = 640;
+
+      const stepPlace = (now: number) => {
+        const t = clamp01((now - t0) / PLACE_MS);
+        const k = easeOutQuart(t);
+        const fade = smoothstep(0, 0.36, t);
+
+        renderScrollFrame(0, 0, {
+          x: lerp(dir * 44, 0, k),
+          y: lerp(-26, 0, k),
+          rot: lerp(dir * 3.2, 0, k),
+          scale: lerp(1.045, 1, k),
+          opacity: fade,
+        });
+
+        if (t < 1) {
+          switchRafRef.current = requestAnimationFrame(stepPlace);
+        } else {
+          closingRef.current = false;
+          renderScrollFrame(0, 0);
+          setPhase("idle");
+        }
+      };
+
+      switchRafRef.current = requestAnimationFrame(stepPlace);
+    },
+    [renderScrollFrame],
+  );
+
+  // 切换画卷：物理双轴合拢收卷 -> 手持微抬侧移离案（略放大显景深）-> 新卷自对侧轻柔落案
   const switchVolume = useCallback(
     (nextVolume: number) => {
       if (closingRef.current || phase !== "idle") return;
@@ -394,15 +436,21 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       cancelAnimationFrame(switchRafRef.current);
       window.clearTimeout(switchTimerRef.current);
 
+      const dir: 1 | -1 =
+        nextVolume === 0 && safeVolume > 0
+          ? 1
+          : nextVolume > safeVolume
+            ? 1
+            : -1;
+
       const startPan = Math.min(
         panOverflowRef.current,
         Math.max(0, currentPxRef.current - UNROLL_PX),
       );
       const startU = clamp01(currentPxRef.current / UNROLL_PX);
       const t0 = performance.now();
-      // 若当前本就处于合卷状态，无需再耗时卷收，直接轻提离案换新卷
-      const ROLL_MS = startU > 0.04 ? 540 : 0;
-      const LIFT_MS = 280;
+      const ROLL_MS = startU > 0.04 ? 520 : 0;
+      const LIFT_MS = 420;
 
       const animateClose = (now: number) => {
         const elapsed = now - t0;
@@ -417,20 +465,22 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
         }
 
         if (elapsed < ROLL_MS + LIFT_MS) {
-          // 合拢的旧卷微斜轻提离案
-          const k = easeOutCubic((elapsed - ROLL_MS) / LIFT_MS);
+          // 取卷离案：先轻提微近（scale 1 -> 1.045），再顺手势侧移淡出
+          const t = clamp01((elapsed - ROLL_MS) / LIFT_MS);
+          const move = easeInOutCubic(t);
+          const fade = 1 - smoothstep(0.42, 1.0, t);
           renderScrollFrame(0, 0, {
-            y: -40 * k,
-            rot: 10 * k,
-            scale: 1 - 0.08 * k,
-            opacity: 1 - k,
+            x: -dir * 52 * move,
+            y: -32 * move,
+            rot: -dir * 4.2 * move,
+            scale: 1 + 0.045 * move,
+            opacity: fade,
           });
           switchRafRef.current = requestAnimationFrame(animateClose);
           return;
         }
 
-        // 换入新卷并复位至跑道顶端
-        closingRef.current = false;
+        // 换入新卷并复位至跑道顶端，随即从对侧轻柔落案
         setVolume(nextVolume);
         setActiveIndex(0);
         activeIndexRef.current = 0;
@@ -445,16 +495,12 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
           window.scrollTo({ top, behavior: "instant" });
         }
 
-        renderScrollFrame(0, 0);
-        setPhase("placing");
-        switchTimerRef.current = window.setTimeout(() => {
-          setPhase("idle");
-        }, 900);
+        playPlaceDown(dir);
       };
 
       switchRafRef.current = requestAnimationFrame(animateClose);
     },
-    [phase, renderScrollFrame],
+    [phase, playPlaceDown, renderScrollFrame, safeVolume],
   );
 
   // 点击未打开的斜置卷轴时，自动平滑滚过解绦段将其展开

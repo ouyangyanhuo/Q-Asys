@@ -844,32 +844,12 @@ html[data-theme="night"] {
     overflow: hidden;
   }
 
-  /* 置卷：未打开的新卷斜落案头，如轻手置于书案 */
-  @keyframes scroll-place-down {
-    0% {
-      transform: translate3d(28px, -48px, 0) rotate(-7deg) scale(1.04);
-      opacity: 0;
-    }
-    72% {
-      transform: translate3d(-2px, 3px, 0) rotate(0.5deg) scale(0.996);
-      opacity: 1;
-    }
-    100% {
-      transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-      opacity: 1;
-    }
-  }
-
-  .handscroll-ceremony[data-phase="placing"] {
-    animation: scroll-place-down 0.88s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  /* 统一物理装配层：整卷、包首、动态右轴与朱砂丝绦同频旋转与平动，绝不错位 */
+  /* 统一物理装配层：整卷、包首、动态右轴与朱砂丝绦同频倾斜、起落与展开 */
   .handscroll-assembly {
     position: relative;
     width: 100%;
     transform-origin: 50% 50%;
-    will-change: transform, opacity;
+    will-change: transform, opacity, filter;
   }
 
   /* 画卷右缘裁剪框：双轴分展时紧贴动态右轴左侧裁出画心，全开后解除裁剪 */
@@ -968,6 +948,10 @@ html[data-theme="night"] {
   .closed-vol-nav[data-hidden="true"] {
     pointer-events: none;
   }
+  .handscroll-ceremony[data-phase="closing"] .closed-vol-nav,
+  .handscroll-ceremony[data-phase="placing"] .closed-vol-nav {
+    pointer-events: none;
+  }
 
   /* 素丝丝绦与结扣层（随滚轮解结并分别向左右扯开） */
   .silk-rig {
@@ -1004,12 +988,6 @@ html[data-theme="night"] {
     height: 46px;
     will-change: transform, opacity;
     filter: drop-shadow(0 3px 6px var(--silk-shadow));
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .handscroll-ceremony[data-phase="placing"] {
-      animation: none;
-    }
   }
 
   /* 横向平移舞台：上下留足精雕轴头突出余量，由页面纵滚或鼠标拖拽平滑驱动 translate3d */
