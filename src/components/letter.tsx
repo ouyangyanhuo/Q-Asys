@@ -134,29 +134,29 @@ export function Letter({
         </div>
 
         {/* 信件正文 + 回信（长信可在册页内顺滑纵滚，保持手卷天际线齐整） */}
-        <div className="handscroll-body relative mt-5 flex-1 overflow-y-auto pr-1 max-h-[min(46vh,360px)]">
+        <div className="handscroll-body relative mt-6 flex-1 overflow-y-auto pr-1.5 max-h-[min(50vh,480px)]">
           <Link
             href={q.status === "pending" ? `/p/${q.id}` : `/q/${q.id}`}
             prefetch={false}
             className="group/link block"
           >
-            <p className="whitespace-pre-wrap font-kai text-[18.5px] leading-[1.88] text-ink transition-colors duration-300 group-hover/link:text-seal md:text-[20.5px]">
+            <p className="whitespace-pre-wrap font-kai text-[19.5px] leading-[1.9] text-ink transition-colors duration-300 group-hover/link:text-seal md:text-[21.5px]">
               {q.body}
             </p>
           </Link>
 
-          <p className="mt-3 text-right font-kai text-[12.5px] text-ink-faint">
+          <p className="mt-3.5 text-right font-kai text-[13px] text-ink-faint">
             —— {q.nickname || "匿名旅人"}
           </p>
 
           {q.answer ? (
             <div className="mt-6 border-t border-dashed border-rule/90 pt-5">
-              <div className="flex items-start gap-3.5">
-                <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11px] leading-none text-seal shadow-xs">
+              <div className="flex items-start gap-4">
+                <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center border border-seal/50 font-kai text-[11.5px] leading-none text-seal shadow-xs">
                   答
                 </span>
-                <div className="space-y-1.5">
-                  <p className="whitespace-pre-wrap font-song text-[14.5px] leading-[2.08] text-ink-soft md:text-[15.5px]">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="whitespace-pre-wrap font-song text-[15.5px] leading-[2.12] text-ink-soft md:text-[16px]">
                     {q.answer}
                   </p>
                   {q.answeredAt && (

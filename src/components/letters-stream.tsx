@@ -21,6 +21,37 @@ function toCnVolume(n: number): string {
   return String(n);
 }
 
+function ScrollRoller({ side }: { side: "left" | "right" }) {
+  const shaft = (
+    <div className="scroll-roller__shaft">
+      <span className="scroll-roller__finial scroll-roller__finial--top" />
+      <span className="scroll-roller__band scroll-roller__band--top" />
+      <span className="scroll-roller__band scroll-roller__band--bottom" />
+      <span className="scroll-roller__finial scroll-roller__finial--bottom" />
+    </div>
+  );
+  const wrap = <div className="scroll-roller__wrap" />;
+
+  return (
+    <div
+      className={`scroll-roller scroll-roller--${side}`}
+      aria-hidden="true"
+    >
+      {side === "left" ? (
+        <>
+          {shaft}
+          {wrap}
+        </>
+      ) : (
+        <>
+          {wrap}
+          {shaft}
+        </>
+      )}
+    </div>
+  );
+}
+
 export function LettersStream({ initialLetters, total }: LettersStreamProps) {
   const [filter, setFilter] = useState<"all" | "answered" | "waiting">("all");
   const [keyword, setKeyword] = useState("");
@@ -463,7 +494,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       className="relative"
     >
       {/* 吸顶画卷展台：滚到此区域时稳稳驻留，纵滚即展卷，卷毕自动放行至页脚 */}
-      <div className="sticky top-0 flex min-h-dvh flex-col justify-center py-8 md:py-10">
+      <div className="sticky top-0 flex min-h-dvh flex-col justify-center py-4 md:py-6">
         {/* 顶部题头 + 筛选与寻笺栏 */}
         <div className="mx-auto w-full max-w-[1180px] px-6 md:px-10">
           <div className="flex flex-col gap-4 border-b border-rule/70 pb-4 lg:flex-row lg:items-end lg:justify-between">
@@ -620,8 +651,8 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                     )}
                   </div>
 
-                  {/* 左紫檀画轴 */}
-                  <div className="handscroll-roller" aria-hidden="true" />
+                  {/* 左精雕紫檀玉轴 */}
+                  <ScrollRoller side="left" />
 
                   {/* 连续绫裱宣纸画心（信件与画卷上下及左右均有舒朗间距） */}
                   <div className="handscroll-paper">
@@ -688,8 +719,8 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                     </aside>
                   </div>
 
-                  {/* 右紫檀画轴 */}
-                  <div className="handscroll-roller" aria-hidden="true" />
+                  {/* 右精雕紫檀玉轴 */}
+                  <ScrollRoller side="right" />
 
                   {/* 右画轴外侧：下一卷 */}
                   <div className="handscroll-vol handscroll-vol--next">
