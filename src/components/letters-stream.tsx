@@ -405,7 +405,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
 
         renderScrollFrame(0, 0, {
           x: lerp(dir * 44, 0, k),
-          y: lerp(-26, 0, k),
+          y: lerp(dir * 26, 0, k),
           rot: lerp(dir * 3.2, 0, k),
           scale: lerp(1.045, 1, k),
           opacity: fade,
@@ -427,7 +427,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
 
   // 切换画卷：物理双轴合拢收卷 -> 手持微抬侧移离案（略放大显景深）-> 新卷自对侧轻柔落案
   const switchVolume = useCallback(
-    (nextVolume: number) => {
+    (nextVolume: number, explicitDir?: 1 | -1) => {
       if (closingRef.current || phase !== "idle") return;
       closingRef.current = true;
       setPhase("closing");
@@ -437,11 +437,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
       window.clearTimeout(switchTimerRef.current);
 
       const dir: 1 | -1 =
-        nextVolume === 0 && safeVolume > 0
-          ? 1
-          : nextVolume > safeVolume
-            ? 1
-            : -1;
+        explicitDir ?? (nextVolume >= safeVolume ? 1 : -1);
 
       const startPan = Math.min(
         panOverflowRef.current,
@@ -471,7 +467,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
           const fade = 1 - smoothstep(0.42, 1.0, t);
           renderScrollFrame(0, 0, {
             x: -dir * 52 * move,
-            y: -32 * move,
+            y: -dir * 32 * move,
             rot: -dir * 4.2 * move,
             scale: 1 + 0.045 * move,
             opacity: fade,
@@ -916,7 +912,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                         {safeVolume > 0 ? (
                           <button
                             type="button"
-                            onClick={() => switchVolume(safeVolume - 1)}
+                            onClick={() => switchVolume(safeVolume - 1, -1)}
                             className="group flex flex-col items-center gap-2.5 border border-rule/80 bg-paper-soft/85 px-3 py-5 text-ink-soft shadow-xs transition-all duration-300 hover:border-seal/60 hover:text-seal"
                           >
                             <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
@@ -1015,7 +1011,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                         {safeVolume < totalVolumes - 1 ? (
                           <button
                             type="button"
-                            onClick={() => switchVolume(safeVolume + 1)}
+                            onClick={() => switchVolume(safeVolume + 1, 1)}
                             className="group flex flex-col items-center gap-2.5 border border-seal/45 bg-paper-soft/90 px-3 py-5 text-seal shadow-xs transition-all duration-300 hover:border-seal hover:bg-seal/[0.06]"
                           >
                             <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -1032,7 +1028,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                         ) : totalVolumes > 1 ? (
                           <button
                             type="button"
-                            onClick={() => switchVolume(0)}
+                            onClick={() => switchVolume(0, 1)}
                             className="group flex flex-col items-center gap-2.5 border border-rule/80 bg-paper-soft/80 px-3 py-5 text-ink-faint transition-colors hover:border-seal/55 hover:text-seal"
                           >
                             <span
@@ -1182,7 +1178,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                     {safeVolume > 0 ? (
                       <button
                         type="button"
-                        onClick={() => switchVolume(safeVolume - 1)}
+                        onClick={() => switchVolume(safeVolume - 1, -1)}
                         className="group flex flex-col items-center gap-2 border border-rule/80 bg-paper-soft/85 px-3 py-4 text-ink-soft shadow-xs backdrop-blur-2xs transition-all duration-300 hover:border-seal/55 hover:text-seal"
                       >
                         <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
@@ -1216,7 +1212,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                     {safeVolume < totalVolumes - 1 ? (
                       <button
                         type="button"
-                        onClick={() => switchVolume(safeVolume + 1)}
+                        onClick={() => switchVolume(safeVolume + 1, 1)}
                         className="group flex flex-col items-center gap-2 border border-seal/45 bg-paper-soft/90 px-3 py-4 text-seal shadow-xs backdrop-blur-2xs transition-all duration-300 hover:border-seal hover:bg-seal/[0.06]"
                       >
                         <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -1233,7 +1229,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => switchVolume(0)}
+                        onClick={() => switchVolume(0, 1)}
                         className="group flex flex-col items-center gap-2 border border-rule/80 bg-paper-soft/80 px-3 py-4 text-ink-faint backdrop-blur-2xs transition-colors hover:border-seal/55 hover:text-seal"
                       >
                         <span
