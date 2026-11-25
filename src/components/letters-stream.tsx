@@ -1052,6 +1052,7 @@ export function LettersStream({ initialLetters, total }: LettersStreamProps) {
                             ref={(el) => {
                               cardRefs.current[i] = el;
                             }}
+                            data-drawn={readingId === q.id ? "true" : undefined}
                             className="handscroll-card"
                           >
                             <Letter

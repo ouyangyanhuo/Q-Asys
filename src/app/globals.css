@@ -821,6 +821,64 @@ html[data-theme="night"] {
     }
   }
 
+  /* 取笺精读专用：自画卷抽出信笺（竖向拔出、展露底边、微倾扶正）与放回画卷 */
+  dialog.modal.modal-draw {
+    transition-property:
+      opacity, translate, scale, rotate, clip-path, display, overlay;
+    transition-duration: 0.44s;
+    transition-timing-function: cubic-bezier(0.32, 0.04, 0.2, 1);
+
+    @media (prefers-reduced-motion: no-preference) {
+      translate: 0 4.5rem;
+      scale: 0.93;
+      rotate: -1.4deg;
+      clip-path: inset(0 0 22% 0);
+    }
+
+    &::backdrop {
+      transition-duration: 0.42s;
+    }
+  }
+
+  dialog.modal.modal-draw[open]:where(:not([data-closing])) {
+    transition-duration: 0.56s;
+    transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+
+    @media (prefers-reduced-motion: no-preference) {
+      translate: 0 0;
+      scale: 1;
+      rotate: 0deg;
+      clip-path: inset(0 0 0% 0);
+
+      @starting-style {
+        translate: 0 4.5rem;
+        scale: 0.93;
+        rotate: -1.4deg;
+        clip-path: inset(0 0 22% 0);
+      }
+    }
+  }
+
+  /* 精读弹层内切换上下封时的轻柔换笺 */
+  @keyframes letter-draw-swap {
+    from {
+      opacity: 0;
+      translate: 0 14px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  .letter-draw-swap {
+    animation: letter-draw-swap 0.36s var(--ease-paper) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .letter-draw-swap {
+      animation: none;
+    }
+  }
+
   /* 提示条的容器：进顶层，盖得住一切 */
   .toast-region {
     position: fixed;
@@ -1269,12 +1327,19 @@ html[data-theme="night"] {
     background: color-mix(in oklab, var(--color-paper) 55%, transparent);
   }
 
-  /* 铺在画卷上的单封信：定高 470px、加宽横幅比例，读信开阔舒朗 */
+  /* 铺在画卷上的单封信：定高 470px、加宽横幅比例，抽出精读时原位上提留影 */
   .handscroll-card {
     position: relative;
     flex: 0 0 min(740px, 88vw);
     width: min(740px, 88vw);
     height: 470px;
+    transition:
+      transform 0.48s var(--ease-paper),
+      opacity 0.38s ease;
+  }
+  .handscroll-card[data-drawn="true"] {
+    transform: translate3d(0, -18px, 0) scale(0.985);
+    opacity: 0.26;
   }
 
   /* 长信内部极细滚动条 */

@@ -50,6 +50,7 @@ export function Modal({
   labelledBy,
   label,
   width,
+  className,
   children,
 }: {
   open: boolean;
@@ -60,6 +61,8 @@ export function Modal({
   label?: string;
   /** 最大宽度，任意 CSS 长度；缺省 35rem */
   width?: string;
+  /** 附加到 <dialog> 上的动效/外观类名 */
+  className?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
@@ -79,7 +82,7 @@ export function Modal({
     let alive = true;
     closeWithExit(dialog).then(() => {
       // 留足退场的时间再清空内容
-      window.setTimeout(() => alive && setFilled(false), 320);
+      window.setTimeout(() => alive && setFilled(false), 460);
     });
     return () => {
       alive = false;
@@ -137,7 +140,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className="modal"
+      className={className ? `modal ${className}` : "modal"}
       aria-labelledby={labelledBy}
       aria-label={labelledBy ? undefined : label}
       style={width ? ({ "--modal-w": width } as React.CSSProperties) : undefined}

@@ -118,9 +118,13 @@ export function LetterReadModal({
         onClose={onClose}
         label="案头展读全笺"
         width="48rem"
+        className="modal-draw"
       >
         {question && stamp && (
-          <article className="sheet frame relative overflow-hidden px-6 py-7 md:px-12 md:py-11">
+          <article
+            key={question.id}
+            className="letter-draw-swap sheet frame relative overflow-hidden px-6 py-7 md:px-12 md:py-11"
+          >
             {/* 八行笺内框装饰 */}
             <div
               className="pointer-events-none absolute inset-3 border border-seal/15"
